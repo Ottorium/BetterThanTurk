@@ -39,4 +39,28 @@ public class BoardViewController implements Initializable {
             }
         }
     }
+
+    private Square getChosenSquare() {
+        throw new UnsupportedOperationException("getChosenSquare not implemented");
+    }
+
+    private void drawPieces(Piece[][] board) {
+        throw new UnsupportedOperationException("drawPieces not implemented");
+    }
+
+    private void drawHighlights() {
+        throw new UnsupportedOperationException("drawHighlights not implemented");
+    }
+
+    private void drawPossibleMoves() {
+        throw new UnsupportedOperationException("drawPossibleMoves not implemented");
+    }
+
+    private void handleMove() {
+        throw new UnsupportedOperationException("handleMove not implemented");
+    }
+
+    private void chooseSquare() {
+        throw new UnsupportedOperationException("chooseSquare not implemented");
+    }
 }
