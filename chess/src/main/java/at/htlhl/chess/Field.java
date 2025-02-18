@@ -5,7 +5,7 @@ package at.htlhl.chess;
  */
 public class Field {
 
-    private BoardViewController.Piece[][] board;
+    private byte[][] board;
     private boolean blackTurn;
 
     /**
@@ -60,7 +60,7 @@ public class Field {
      *
      * @return 2D array representing the board
      */
-    public BoardViewController.Piece[][] getBoard() {
+    public byte[][] getBoard() {
         throw new UnsupportedOperationException("getBoard not implemented");
     }
 
@@ -70,7 +70,7 @@ public class Field {
      * @param simBoard Simulated board state to check
      * @return The player in check, or null if no one is in check
      */
-    private Player getCheckOnBoard(BoardViewController.Piece[][] simBoard) {
+    private Player getCheckOnBoard(byte[][] simBoard) {
         throw new UnsupportedOperationException("getCheckOnBoard not implemented");
     }
 

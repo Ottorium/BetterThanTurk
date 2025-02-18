@@ -44,7 +44,7 @@ public class BoardViewController implements Initializable {
         throw new UnsupportedOperationException("getChosenSquare not implemented");
     }
 
-    private void drawPieces(Piece[][] board) {
+    private void drawPieces(byte[][] board) {
         throw new UnsupportedOperationException("drawPieces not implemented");
     }
 
