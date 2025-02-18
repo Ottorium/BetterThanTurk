@@ -5,13 +5,13 @@
 
 ## Teammitglieder:
 1. Michael Ludwig
-2. Danylo Korobokov
+2. Danylo Korobkov
 3. Ivan Maierhofer
 
 # Datum
 18.02.2025
 
-# YouTrack(Danylo Korobokov)
+# YouTrack(Danylo Korobkov)
 # GUI(Ivan Maierhofer)
 # SW(Michael Ludwig)
 
