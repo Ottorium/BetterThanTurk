@@ -1,12 +1,42 @@
 package at.htlhl.chess;
 
+import at.htlhl.chess.util.FENParser;
+import at.htlhl.chess.util.InvalidFENException;
+
 /**
  * Represents a chess field/board and its state
  */
 public class Field {
 
     private byte[][] board;
+
     private boolean blackTurn;
+
+    /**
+     * Stores the current castling rights using bit flags.
+     * Each bit represents a specific castling possibility:
+     * - Bit 0 (0x1): White kingside castling
+     * - Bit 1 (0x2): White queenside castling
+     * - Bit 2 (0x4): Black kingside castling
+     * - Bit 3 (0x8): Black queenside castling
+     * <p>
+     * A set bit (1) indicates that the corresponding castling is still possible.
+     * A cleared bit (0) indicates that the corresponding castling is no longer possible.
+     * <p>
+     * Use RochadeInformation utility methods to manipulate this field:
+     * - {@link RochadeInformation#hasFlag(byte, RochadeInformation)} to check if a specific castling is possible
+     * - {@link RochadeInformation#combine(RochadeInformation...)} to initialize or set multiple rights
+     * - {@link RochadeInformation#remove(byte, RochadeInformation)} to remove specific castling rights
+     *
+     * @see RochadeInformation
+     */
+    private byte rochadeInformation;
+
+    private Move possibleEnPassantMove;
+
+    private int playedHalfMovesSinceLastPawnMoveOrCapture;
+
+    private int numberOfNextMove;
 
     /**
      * Attempts to set the board state using FEN notation
@@ -15,7 +45,20 @@ public class Field {
      * @return true if FEN was valid and set successfully, false otherwise
      */
     public boolean trySetFEN(String fen) {
-        throw new UnsupportedOperationException("trySetFEN not implemented");
+        try {
+            var parser = new FENParser(fen);
+
+            board = parser.parseBoard();
+            blackTurn = parser.parseIsBlacksTurn();
+            rochadeInformation = parser.parseRochadeInformation();
+            possibleEnPassantMove = parser.parsePossibleEnPassantMove();
+            playedHalfMovesSinceLastPawnMoveOrCapture = parser.parsePlayedHalfMovesSinceLastPawnMoveOrCapture();
+            numberOfNextMove = parser.parseNumberOfNextMove();
+
+        } catch (InvalidFENException e) {
+            return false;
+        }
+        return true;
     }
 
     /**
