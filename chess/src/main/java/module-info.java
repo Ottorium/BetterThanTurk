@@ -13,4 +13,6 @@ module at.htlhl.chess {
 
     opens at.htlhl.chess to javafx.fxml;
     exports at.htlhl.chess;
+    exports at.htlhl.chess.util;
+    opens at.htlhl.chess.util to javafx.fxml;
 }
