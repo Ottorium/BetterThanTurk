@@ -1,5 +1,10 @@
 package at.htlhl.chess.util;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+
 public final class PieceUtil {
 
     private PieceUtil() {
@@ -58,5 +63,39 @@ public final class PieceUtil {
 
     public static boolean isKing(byte binaryInformation) {
         return (binaryInformation & KING_MASK) != 0;
+    }
+
+    public static Image getImage(byte piece) {
+        final int imageWidth = 1885;
+        final int imageHeight = 605;
+        int widthOfOnePiece = imageWidth / 6;
+        int heightOfOnePiece = imageHeight / 2;
+
+        int startPixelX = 0;
+        int startPixelY = isBlack(piece) ? heightOfOnePiece : 0;
+        piece = (byte) (piece & ~BLACK);
+
+        if (piece == 0) return null;
+
+        while (piece != 1) {
+            startPixelX += widthOfOnePiece;
+            piece >>= 1;
+        }
+
+        WritableImage croppedImage = new WritableImage(widthOfOnePiece, heightOfOnePiece);
+        Image spriteSheet = new Image("pieces.png");
+        PixelReader pixelReader = spriteSheet.getPixelReader();
+        PixelWriter pixelWriter = croppedImage.getPixelWriter();
+        pixelWriter.setPixels(
+                0,
+                0,
+                widthOfOnePiece,
+                heightOfOnePiece,
+                pixelReader,
+                startPixelX,
+                startPixelY
+        );
+
+        return croppedImage;
     }
 }
