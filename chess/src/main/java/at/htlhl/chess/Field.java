@@ -1,12 +1,31 @@
 package at.htlhl.chess;
 
+import at.htlhl.chess.util.FENParser;
+import at.htlhl.chess.util.InvalidFENException;
+import at.htlhl.chess.util.CastlingUtil;
+
 /**
  * Represents a chess field/board and its state
  */
 public class Field {
 
+    /**
+     * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link at.htlhl.chess.util.PieceUtil}.
+     */
     private byte[][] board;
+
     private boolean blackTurn;
+
+    /**
+     * Stores the current castling rights using bit flags. To set or modify this value please use {@link CastlingUtil}.
+     */
+    private byte castlingInformation;
+
+    private Square possibleEnPassantSquare;
+
+    private int playedHalfMovesSinceLastPawnMoveOrCapture;
+
+    private int numberOfNextMove;
 
     /**
      * Attempts to set the board state using FEN notation
@@ -15,7 +34,20 @@ public class Field {
      * @return true if FEN was valid and set successfully, false otherwise
      */
     public boolean trySetFEN(String fen) {
-        throw new UnsupportedOperationException("trySetFEN not implemented");
+        try {
+            var parser = new FENParser(fen);
+
+            board = parser.parseBoard();
+            blackTurn = parser.parseIsBlacksTurn();
+            castlingInformation = parser.parseCastlingInformation();
+            possibleEnPassantSquare = parser.parsePossibleEnPassantMove();
+            playedHalfMovesSinceLastPawnMoveOrCapture = parser.parsePlayedHalfMovesSinceLastPawnMoveOrCapture();
+            numberOfNextMove = parser.parseNumberOfNextMove();
+
+        } catch (InvalidFENException e) {
+            return false;
+        }
+        return true;
     }
 
     /**
