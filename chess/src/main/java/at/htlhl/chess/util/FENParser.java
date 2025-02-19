@@ -66,7 +66,7 @@ public class FENParser {
         String castlingString = fen.split(" ")[2];
         if (castlingString.length() >= 5) throw new InvalidFENException(fen);
 
-        byte castlingByte = 0;
+        byte castlingByte = CastlingUtil.INITIAL_NO_RIGHTS;
         if (castlingString.contains("k")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.BLACK_KING_SIDE);
         if (castlingString.contains("K")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.WHITE_KING_SIDE);
         if (castlingString.contains("q")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.BLACK_QUEEN_SIDE);
