@@ -13,7 +13,7 @@ public record Square(int x, int y) {
         if (Character.isUpperCase(c)) c = (char) (c + 32);
         var x = c - 97;
 
-        var y = Integer.parseInt(Character.toString(charArr[1])) - 1;
+        var y = 8 - Integer.parseInt(Character.toString(charArr[1]));
 
         return new Square(x, y);
     }
