@@ -1,5 +1,10 @@
 package at.htlhl.chess.util;
 
+import at.htlhl.chess.Square;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.scene.image.Image;
 
 import java.io.FileNotFoundException;
@@ -37,6 +42,10 @@ public final class PieceUtil {
 
     public static boolean isBlack(byte binaryInformation) {
         return (binaryInformation & BLACK) != 0;
+    }
+
+    public static boolean isEmpty(byte binaryInformation) {
+        return binaryInformation == EMPTY;
     }
 
     public static boolean isWhite(byte binaryInformation) {
