@@ -2,6 +2,7 @@ package at.htlhl.chess.util;
 
 import at.htlhl.chess.Square;
 
+import java.security.InvalidParameterException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -75,14 +76,28 @@ public class FENParser {
     }
 
     public Square parsePossibleEnPassantMove() {
-        return Square.parseString(fen.split(" ")[3]);
+        var s = fen.split(" ")[3];
+        if (s.equals("-")) return null;
+        try {
+            return Square.parseString(s);
+        } catch (InvalidParameterException e) {
+            throw new InvalidFENException(fen);
+        }
     }
 
     public int parsePlayedHalfMovesSinceLastPawnMoveOrCapture() {
-        return Integer.parseInt(fen.split(" ")[4]);
+        try {
+            return Integer.parseInt(fen.split(" ")[4]);
+        } catch (NumberFormatException e) {
+            throw new InvalidFENException(fen);
+        }
     }
 
     public int parseNumberOfNextMove() {
-        return Integer.parseInt(fen.split(" ")[5]);
+        try {
+            return Integer.parseInt(fen.split(" ")[5]);
+        } catch (NumberFormatException e) {
+            throw new InvalidFENException(fen);
+        }
     }
 }

@@ -1,12 +1,20 @@
 package at.htlhl.chess;
 
+import at.htlhl.chess.util.PieceUtil;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -18,9 +26,14 @@ public class BoardViewController implements Initializable {
     private static final int BOARD_SIZE = 8;
     private static final int INITIAL_SQUARE_SIZE = 60;
 
+    private Field field;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         createEmptyChessBoard();
+        field = new Field();
+        field.trySetFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        drawPieces();
     }
 
     private void createEmptyChessBoard() {
@@ -44,8 +57,57 @@ public class BoardViewController implements Initializable {
         throw new UnsupportedOperationException("getChosenSquare not implemented");
     }
 
-    private void drawPieces(byte[][] board) {
-        throw new UnsupportedOperationException("drawPieces not implemented");
+    private void drawPieces() {
+        for (int row = 0; row < field.getBoard().length; row++) {
+            for (int col = 0; col < field.getBoard()[row].length; col++) {
+                StackPane squarePane = (StackPane) getNodeFromGridPane(chessBoard, col, row);
+
+                // Remove any existing piece
+                if (squarePane != null) {
+                    squarePane.getChildren().removeIf(node -> node instanceof javafx.scene.image.ImageView);
+                } else
+                    throw new RuntimeException("Board is in an invalid state: either board is too large or the GridPane is not fully initialized");
+
+                Image pieceImage;
+                try {
+                    pieceImage = PieceUtil.getImage(field.getBoard()[row][col]);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (pieceImage != null) {
+
+                    var bufferedImage = SwingFXUtils.fromFXImage(pieceImage, null);
+
+                    // Save the image
+                    try {
+                        ImageIO.write(bufferedImage, "png", new File("/home/mint/temp/test.png"));
+                    } catch (IOException e) {
+                        ;
+                    }
+
+                    javafx.scene.image.ImageView pieceView = new javafx.scene.image.ImageView(pieceImage);
+
+                    pieceView.setFitWidth(INITIAL_SQUARE_SIZE - 2);
+                    pieceView.setFitHeight(INITIAL_SQUARE_SIZE - 2);
+
+                    // Preserve ratio and use better quality filtering
+                    pieceView.setPreserveRatio(true);
+                    pieceView.setSmooth(true);
+
+                    squarePane.getChildren().add(pieceView);
+                }
+            }
+        }
+    }
+
+    private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
+        for (Node node : gridPane.getChildren()) {
+            if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
+                return node;
+            }
+        }
+        return null;
     }
 
     private void drawHighlights() {

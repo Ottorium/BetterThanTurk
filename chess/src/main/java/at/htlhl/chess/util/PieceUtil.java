@@ -1,16 +1,21 @@
 package at.htlhl.chess.util;
 
+import javafx.scene.image.Image;
+
+import java.io.FileNotFoundException;
+import java.net.URL;
+
 public final class PieceUtil {
 
     private PieceUtil() {
     }
 
-    public static final byte PAWN_MASK = 0x1;
-    public static final byte KNIGHT_MASK = 0x2;
+    public static final byte KING_MASK = 0x1;
+    public static final byte QUEEN_MASK = 0x2;
     public static final byte BISHOP_MASK = 0x4;
-    public static final byte ROOK_MASK = 0x8;
-    public static final byte QUEEN_MASK = 0x10;
-    public static final byte KING_MASK = 0x20;
+    public static final byte KNIGHT_MASK = 0x8;
+    public static final byte ROOK_MASK = 0x10;
+    public static final byte PAWN_MASK = 0x20;
 
     public static final byte BLACK = (byte) 0x40;
 
@@ -58,5 +63,25 @@ public final class PieceUtil {
 
     public static boolean isKing(byte binaryInformation) {
         return (binaryInformation & KING_MASK) != 0;
+    }
+
+    public static Image getImage(byte piece) throws FileNotFoundException {
+        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + PieceUtil.toString(piece) + ".png");
+        if (resource == null) throw new FileNotFoundException(PieceUtil.toString(piece) + ".png not found.");
+        return new Image(resource.toExternalForm());
+    }
+
+    private static String toString(byte piece) {
+        String name = PieceUtil.isBlack(piece) ? "black_" : "white_";
+
+        if (PieceUtil.isPawn(piece)) name += "pawn";
+        else if (PieceUtil.isBishop(piece)) name += "bishop";
+        else if (PieceUtil.isRook(piece)) name += "rook";
+        else if (PieceUtil.isKnight(piece)) name += "knight";
+        else if (PieceUtil.isQueen(piece)) name += "queen";
+        else if (PieceUtil.isKing(piece)) name += "king";
+        else return null;
+
+        return name;
     }
 }
