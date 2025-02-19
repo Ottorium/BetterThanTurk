@@ -66,8 +66,10 @@ public final class PieceUtil {
     }
 
     public static Image getImage(byte piece) throws FileNotFoundException {
-        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + PieceUtil.toString(piece) + ".png");
-        if (resource == null) throw new FileNotFoundException(PieceUtil.toString(piece) + ".png not found.");
+        String name = PieceUtil.toString(piece);
+        if (name == null) return null;
+        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + name + ".png");
+        if (resource == null) throw new FileNotFoundException(name + ".png not found.");
         return new Image(resource.toExternalForm());
     }
 
