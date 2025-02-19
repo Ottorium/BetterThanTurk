@@ -2,7 +2,7 @@ package at.htlhl.chess;
 
 import at.htlhl.chess.util.FENParser;
 import at.htlhl.chess.util.InvalidFENException;
-import at.htlhl.chess.util.RochadeUtil;
+import at.htlhl.chess.util.CastlingUtil;
 
 /**
  * Represents a chess field/board and its state
@@ -17,9 +17,9 @@ public class Field {
     private boolean blackTurn;
 
     /**
-     * Stores the current castling rights using bit flags. To set or modify this value please use {@link RochadeUtil}.
+     * Stores the current castling rights using bit flags. To set or modify this value please use {@link CastlingUtil}.
      */
-    private byte rochadeInformation;
+    private byte castlingInformation;
 
     private Square possibleEnPassantSquare;
 
@@ -39,7 +39,7 @@ public class Field {
 
             board = parser.parseBoard();
             blackTurn = parser.parseIsBlacksTurn();
-            rochadeInformation = parser.parseRochadeInformation();
+            castlingInformation = parser.parseCastlingInformation();
             possibleEnPassantSquare = parser.parsePossibleEnPassantMove();
             playedHalfMovesSinceLastPawnMoveOrCapture = parser.parsePlayedHalfMovesSinceLastPawnMoveOrCapture();
             numberOfNextMove = parser.parseNumberOfNextMove();

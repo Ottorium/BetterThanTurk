@@ -62,16 +62,16 @@ public class FENParser {
         else throw new InvalidFENException(fen);
     }
 
-    public byte parseRochadeInformation() {
-        String rochadeString = fen.split(" ")[2];
-        if (rochadeString.length() >= 5) throw new InvalidFENException(fen);
+    public byte parseCastlingInformation() {
+        String castlingString = fen.split(" ")[2];
+        if (castlingString.length() >= 5) throw new InvalidFENException(fen);
 
-        byte rochadeByte = 0;
-        if (rochadeString.contains("k")) rochadeByte = RochadeUtil.add(rochadeByte, RochadeUtil.BLACK_KING_SIDE);
-        if (rochadeString.contains("K")) rochadeByte = RochadeUtil.add(rochadeByte, RochadeUtil.WHITE_KING_SIDE);
-        if (rochadeString.contains("q")) rochadeByte = RochadeUtil.add(rochadeByte, RochadeUtil.BLACK_QUEEN_SIDE);
-        if (rochadeString.contains("Q")) rochadeByte = RochadeUtil.add(rochadeByte, RochadeUtil.WHITE_QUEEN_SIDE);
-        return rochadeByte;
+        byte castlingByte = 0;
+        if (castlingString.contains("k")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.BLACK_KING_SIDE);
+        if (castlingString.contains("K")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.WHITE_KING_SIDE);
+        if (castlingString.contains("q")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.BLACK_QUEEN_SIDE);
+        if (castlingString.contains("Q")) castlingByte = CastlingUtil.add(castlingByte, CastlingUtil.WHITE_QUEEN_SIDE);
+        return castlingByte;
     }
 
     public Square parsePossibleEnPassantMove() {

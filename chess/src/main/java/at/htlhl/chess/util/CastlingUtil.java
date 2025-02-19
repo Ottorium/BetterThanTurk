@@ -1,6 +1,6 @@
 package at.htlhl.chess.util;
 
-public final class RochadeUtil {
+public final class CastlingUtil {
     public static final byte WHITE_KING_SIDE = ((byte) 0x1);
     public static final byte WHITE_QUEEN_SIDE = ((byte) 0x2);
     public static final byte BLACK_KING_SIDE = ((byte) 0x4);
