@@ -2,37 +2,26 @@ package at.htlhl.chess;
 
 import at.htlhl.chess.util.FENParser;
 import at.htlhl.chess.util.InvalidFENException;
+import at.htlhl.chess.util.RochadeUtil;
 
 /**
  * Represents a chess field/board and its state
  */
 public class Field {
 
+    /**
+     * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link at.htlhl.chess.util.PieceUtil}.
+     */
     private byte[][] board;
 
     private boolean blackTurn;
 
     /**
-     * Stores the current castling rights using bit flags.
-     * Each bit represents a specific castling possibility:
-     * - Bit 0 (0x1): White kingside castling
-     * - Bit 1 (0x2): White queenside castling
-     * - Bit 2 (0x4): Black kingside castling
-     * - Bit 3 (0x8): Black queenside castling
-     * <p>
-     * A set bit (1) indicates that the corresponding castling is still possible.
-     * A cleared bit (0) indicates that the corresponding castling is no longer possible.
-     * <p>
-     * Use RochadeInformation utility methods to manipulate this field:
-     * - {@link RochadeInformation#hasFlag(byte, RochadeInformation)} to check if a specific castling is possible
-     * - {@link RochadeInformation#combine(RochadeInformation...)} to initialize or set multiple rights
-     * - {@link RochadeInformation#remove(byte, RochadeInformation)} to remove specific castling rights
-     *
-     * @see RochadeInformation
+     * Stores the current castling rights using bit flags. To set or modify this value please use {@link RochadeUtil}.
      */
     private byte rochadeInformation;
 
-    private Move possibleEnPassantMove;
+    private Square possibleEnPassantSquare;
 
     private int playedHalfMovesSinceLastPawnMoveOrCapture;
 
@@ -51,7 +40,7 @@ public class Field {
             board = parser.parseBoard();
             blackTurn = parser.parseIsBlacksTurn();
             rochadeInformation = parser.parseRochadeInformation();
-            possibleEnPassantMove = parser.parsePossibleEnPassantMove();
+            possibleEnPassantSquare = parser.parsePossibleEnPassantMove();
             playedHalfMovesSinceLastPawnMoveOrCapture = parser.parsePlayedHalfMovesSinceLastPawnMoveOrCapture();
             numberOfNextMove = parser.parseNumberOfNextMove();
 
