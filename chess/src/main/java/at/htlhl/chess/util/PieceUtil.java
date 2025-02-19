@@ -5,12 +5,12 @@ public final class PieceUtil {
     private PieceUtil() {
     }
 
-    public static final byte PAWN_MASK = 0x1;
-    public static final byte KNIGHT_MASK = 0x2;
+    public static final byte KING_MASK = 0x1;
+    public static final byte QUEEN_MASK = 0x2;
     public static final byte BISHOP_MASK = 0x4;
-    public static final byte ROOK_MASK = 0x8;
-    public static final byte QUEEN_MASK = 0x10;
-    public static final byte KING_MASK = 0x20;
+    public static final byte KNIGHT_MASK = 0x8;
+    public static final byte ROOK_MASK = 0x10;
+    public static final byte PAWN_MASK = 0x20;
 
     public static final byte BLACK = (byte) 0x40;
 
