@@ -5,6 +5,9 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
+import java.io.FileNotFoundException;
+import java.net.URL;
+
 public final class PieceUtil {
 
     private PieceUtil() {
@@ -65,7 +68,7 @@ public final class PieceUtil {
         return (binaryInformation & KING_MASK) != 0;
     }
 
-    public static Image getImage(byte piece) {
+    public static Image getImage(byte piece) throws FileNotFoundException {
         final int imageWidth = 1885;
         final int imageHeight = 605;
         int widthOfOnePiece = imageWidth / 6;
@@ -84,8 +87,9 @@ public final class PieceUtil {
 
         WritableImage croppedImage = new WritableImage(widthOfOnePiece, heightOfOnePiece);
 
-
-        Image spriteSheet = new Image(PieceUtil.class.getResource("/at/htlhl/chess/resources/pieces.png").toExternalForm());
+        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/pieces.png");
+        if (resource == null) throw new FileNotFoundException("pieces.png not found.");
+        Image spriteSheet = new Image(resource.toExternalForm());
 
         PixelReader pixelReader = spriteSheet.getPixelReader();
         PixelWriter pixelWriter = croppedImage.getPixelWriter();

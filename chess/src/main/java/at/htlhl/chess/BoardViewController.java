@@ -10,6 +10,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -63,7 +64,12 @@ public class BoardViewController implements Initializable {
                 } else
                     throw new RuntimeException("Board is in an invalid state: either board is too large or the GridPane is not fully initialized");
 
-                Image pieceImage = PieceUtil.getImage(field.getBoard()[row][col]);
+                Image pieceImage;
+                try {
+                    pieceImage = PieceUtil.getImage(field.getBoard()[row][col]);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
 
                 if (pieceImage != null) {
                     javafx.scene.image.ImageView pieceView = new javafx.scene.image.ImageView(pieceImage);
