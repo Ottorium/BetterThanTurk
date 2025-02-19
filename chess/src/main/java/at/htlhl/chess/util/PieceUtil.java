@@ -1,9 +1,6 @@
 package at.htlhl.chess.util;
 
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
@@ -69,7 +66,12 @@ public final class PieceUtil {
     }
 
     public static Image getImage(byte piece) throws FileNotFoundException {
+        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + PieceUtil.toString(piece) + ".png");
+        if (resource == null) throw new FileNotFoundException(PieceUtil.toString(piece) + ".png not found.");
+        return new Image(resource.toExternalForm());
+    }
 
+    private static String toString(byte piece) {
         String name = PieceUtil.isBlack(piece) ? "black_" : "white_";
 
         if (PieceUtil.isPawn(piece)) name += "pawn";
@@ -80,8 +82,6 @@ public final class PieceUtil {
         else if (PieceUtil.isKing(piece)) name += "king";
         else return null;
 
-        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + name + ".png");
-        if (resource == null) throw new FileNotFoundException(name + ".png not found.");
-        return new Image(resource.toExternalForm());
+        return name;
     }
 }
