@@ -10,6 +10,7 @@ module at.htlhl.chess {
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
+    requires javafx.swing;
 
     opens at.htlhl.chess to javafx.fxml;
     exports at.htlhl.chess;

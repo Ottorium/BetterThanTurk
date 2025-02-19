@@ -69,40 +69,19 @@ public final class PieceUtil {
     }
 
     public static Image getImage(byte piece) throws FileNotFoundException {
-        final int imageWidth = 1885;
-        final int imageHeight = 605;
-        int widthOfOnePiece = imageWidth / 6;
-        int heightOfOnePiece = imageHeight / 2;
 
-        int startPixelX = 0;
-        int startPixelY = isBlack(piece) ? heightOfOnePiece : 0;
-        piece = (byte) (piece & ~BLACK);
+        String name = PieceUtil.isBlack(piece) ? "black_" : "white_";
 
-        if (piece == 0) return null;
+        if (PieceUtil.isPawn(piece)) name += "pawn";
+        else if (PieceUtil.isBishop(piece)) name += "bishop";
+        else if (PieceUtil.isRook(piece)) name += "rook";
+        else if (PieceUtil.isKnight(piece)) name += "knight";
+        else if (PieceUtil.isQueen(piece)) name += "queen";
+        else if (PieceUtil.isKing(piece)) name += "king";
+        else return null;
 
-        while (piece != 1) {
-            startPixelX += widthOfOnePiece;
-            piece >>= 1;
-        }
-
-        WritableImage croppedImage = new WritableImage(widthOfOnePiece, heightOfOnePiece);
-
-        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/pieces.png");
-        if (resource == null) throw new FileNotFoundException("pieces.png not found.");
-        Image spriteSheet = new Image(resource.toExternalForm());
-
-        PixelReader pixelReader = spriteSheet.getPixelReader();
-        PixelWriter pixelWriter = croppedImage.getPixelWriter();
-        pixelWriter.setPixels(
-                0,
-                0,
-                widthOfOnePiece,
-                heightOfOnePiece,
-                pixelReader,
-                startPixelX,
-                startPixelY
-        );
-
-        return croppedImage;
+        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + name + ".png");
+        if (resource == null) throw new FileNotFoundException(name + ".png not found.");
+        return new Image(resource.toExternalForm());
     }
 }

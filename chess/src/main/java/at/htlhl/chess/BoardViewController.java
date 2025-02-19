@@ -1,6 +1,7 @@
 package at.htlhl.chess;
 
 import at.htlhl.chess.util.PieceUtil;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -10,7 +11,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -72,10 +76,20 @@ public class BoardViewController implements Initializable {
                 }
 
                 if (pieceImage != null) {
+
+                    var bufferedImage = SwingFXUtils.fromFXImage(pieceImage, null);
+
+                    // Save the image
+                    try {
+                        ImageIO.write(bufferedImage, "png", new File("/home/mint/temp/test.png"));
+                    } catch (IOException e) {
+                        ;
+                    }
+
                     javafx.scene.image.ImageView pieceView = new javafx.scene.image.ImageView(pieceImage);
 
-                    pieceView.setFitWidth(INITIAL_SQUARE_SIZE - 10);
-                    pieceView.setFitHeight(INITIAL_SQUARE_SIZE - 10);
+                    pieceView.setFitWidth(INITIAL_SQUARE_SIZE - 2);
+                    pieceView.setFitHeight(INITIAL_SQUARE_SIZE - 2);
 
                     // Preserve ratio and use better quality filtering
                     pieceView.setPreserveRatio(true);
