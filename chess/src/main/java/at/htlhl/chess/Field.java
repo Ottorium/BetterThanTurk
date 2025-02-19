@@ -3,6 +3,7 @@ package at.htlhl.chess;
 import at.htlhl.chess.util.FENParser;
 import at.htlhl.chess.util.InvalidFENException;
 import at.htlhl.chess.util.CastlingUtil;
+import at.htlhl.chess.util.PieceUtil;
 
 /**
  * Represents a chess field/board and its state
@@ -84,7 +85,13 @@ public class Field {
      * @param move The move to execute
      */
     public void move(Move move) {
-        throw new UnsupportedOperationException("move not implemented");
+        if (validateMove(move)) {
+            // move piece to target square
+            board[move.targetSquare().y()][move.targetSquare().x()] = board[move.startingSquare().y()][move.startingSquare().x()];
+            board[move.startingSquare().y()][move.startingSquare().x()] = PieceUtil.EMPTY;
+
+            //TODO: Add capture material calculation
+        }
     }
 
     /**

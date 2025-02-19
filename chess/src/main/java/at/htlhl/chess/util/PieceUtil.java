@@ -19,6 +19,8 @@ public final class PieceUtil {
 
     public static final byte BLACK = (byte) 0x40;
 
+    public static final byte EMPTY = (byte) 0;
+
     public static final byte WHITE_PAWN = PAWN_MASK;
     public static final byte WHITE_KNIGHT = KNIGHT_MASK;
     public static final byte WHITE_BISHOP = BISHOP_MASK;
