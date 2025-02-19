@@ -93,7 +93,7 @@ public class Field {
      * @return 2D array representing the board
      */
     public byte[][] getBoard() {
-        throw new UnsupportedOperationException("getBoard not implemented");
+        return board;
     }
 
     /**

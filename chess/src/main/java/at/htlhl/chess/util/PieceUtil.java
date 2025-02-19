@@ -83,7 +83,10 @@ public final class PieceUtil {
         }
 
         WritableImage croppedImage = new WritableImage(widthOfOnePiece, heightOfOnePiece);
-        Image spriteSheet = new Image("pieces.png");
+
+
+        Image spriteSheet = new Image(PieceUtil.class.getResource("/at/htlhl/chess/resources/pieces.png").toExternalForm());
+
         PixelReader pixelReader = spriteSheet.getPixelReader();
         PixelWriter pixelWriter = croppedImage.getPixelWriter();
         pixelWriter.setPixels(
