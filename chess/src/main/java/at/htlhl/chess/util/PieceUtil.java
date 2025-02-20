@@ -114,7 +114,7 @@ public final class PieceUtil {
 
 
 
-    private static String toString(byte piece) {
+    public static String toString(byte piece) {
         String name = PieceUtil.isBlack(piece) ? "black_" : "white_";
 
         if (PieceUtil.isPawn(piece)) name += "pawn";
