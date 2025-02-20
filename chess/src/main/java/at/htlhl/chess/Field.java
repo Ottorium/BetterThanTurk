@@ -1,9 +1,8 @@
 package at.htlhl.chess;
 
-import at.htlhl.chess.util.FENParser;
-import at.htlhl.chess.util.InvalidFENException;
-import at.htlhl.chess.util.CastlingUtil;
-import at.htlhl.chess.util.PieceUtil;
+import at.htlhl.chess.util.*;
+
+import java.util.List;
 
 /**
  * Represents a chess field/board and its state
@@ -76,7 +75,30 @@ public class Field {
      * @return true if the move is valid, false otherwise
      */
     public boolean validateMove(Move move) {
-        throw new UnsupportedOperationException("validateMove not implemented");
+        if (move == null) {
+            return false;
+        }
+
+        // check if player color is ok
+        if (PieceUtil.isBlack(getPieceBySquare(move.startingSquare())) ^ blackTurn) { // if colors are not equal
+            return false;
+        }
+
+        // Get possible targets
+        List<Square> possibleTargets = getMovesForPiece(move.startingSquare());
+        if (possibleTargets.isEmpty()) {
+            return false;
+        }
+
+        // look if target square is possible
+        for (Square target : possibleTargets) {
+            if (target.equals(move.targetSquare())){
+                //TODO  Check check
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -87,8 +109,8 @@ public class Field {
     public void move(Move move) {
         if (validateMove(move)) {
             // move piece to target square
-            board[move.targetSquare().y()][move.targetSquare().x()] = board[move.startingSquare().y()][move.startingSquare().x()];
-            board[move.startingSquare().y()][move.startingSquare().x()] = PieceUtil.EMPTY;
+            setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
+            setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
 
             //TODO: Add capture material calculation
         }
@@ -117,9 +139,30 @@ public class Field {
      * Gets all possible moves for a piece at a given position
      *
      * @param position The square containing the piece
-     * @return Array of possible moves for the piece
+     * @return List of possible target squares for the piece
      */
-    private Move[] getMovesForPiece(Square position) {
-        throw new UnsupportedOperationException("getMovesForPiece not implemented");
+    private List<Square> getMovesForPiece(Square position) {
+        MoveChecker moveChecker = new MoveChecker(board, position, possibleEnPassantSquare);
+        return moveChecker.getMoves();
+    }
+
+    /**
+     * Gets piece byte from board
+     *
+     * @param square position of piece
+     * @return piece value
+     */
+    private byte getPieceBySquare(Square square) {
+        return board[square.y()][square.x()];
+    }
+
+    /**
+     * Sets piece byte on board
+     *
+     * @param square
+     * @param piece
+     */
+    private void setPieceBySquare(Square square, byte piece) {
+        board[square.y()][square.x()] = piece;
     }
 }

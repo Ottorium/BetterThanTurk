@@ -240,4 +240,36 @@ public class MoveChecker {
         }
         return squares;
     }
+
+    /**
+     * Looks what piece is on board and calls corresponding methods
+     * checks are not calculated here !
+     * @return List of possible target squares
+     */
+    public List<Square> getMoves(){
+        byte piece = board[position.y()][position.x()];
+        if (PieceUtil.isEmpty(piece)) {
+            return new ArrayList<Square>();
+        }
+        if (PieceUtil.isBishop(piece)) {
+            return getPossibleBishopTargetSquares();
+        }
+        if (PieceUtil.isRook(piece)) {
+            return getPossibleRookTargetSquares();
+        }
+        if (PieceUtil.isKnight(piece)) {
+            return getPossibleKnightTargetSquares();
+        }
+        if (PieceUtil.isQueen(piece)) {
+            return getPossibleQueenTargetSquares();
+        }
+        if (PieceUtil.isPawn(piece)) {
+            return getPossiblePawnTargetSquares();
+        }
+        if (PieceUtil.isKing(piece)) {
+            // TODO: King moves
+        }
+        return new ArrayList<Square>();
+    }
+
 }
