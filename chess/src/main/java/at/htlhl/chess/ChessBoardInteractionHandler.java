@@ -123,6 +123,8 @@ public class ChessBoardInteractionHandler {
         square.setOnDragDetected(event -> {
             if (!hasPiece(square)) return;
 
+            selectSquare((Square) square.getUserData());
+
             ImageView piece = (ImageView) square.getChildren().get(1);
             Square sourceSquare = (Square) square.getUserData();
             Dragboard db = piece.startDragAndDrop(TransferMode.MOVE);
@@ -162,6 +164,9 @@ public class ChessBoardInteractionHandler {
 
     private void handleDrop(javafx.scene.input.DragEvent event, StackPane square) {
         Dragboard db = event.getDragboard();
+
+        clearSelection();
+
         boolean success = false;
 
         if (db.hasString()) {
