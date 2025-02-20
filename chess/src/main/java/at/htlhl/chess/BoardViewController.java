@@ -3,7 +3,6 @@ package at.htlhl.chess;
 import at.htlhl.chess.util.PieceUtil;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -63,7 +62,7 @@ public class BoardViewController implements Initializable {
         for (int row = 0; row < field.getBoard().length; row++) {
             for (int col = 0; col < field.getBoard()[row].length; col++) {
 
-                StackPane square = (StackPane) getNodeFromGridPane(chessBoard, col, row);
+                StackPane square = getSquarePane(chessBoard, col, row);
                 var piece = field.getBoard()[row][col];
 
                 if (square == null) continue;
@@ -83,12 +82,11 @@ public class BoardViewController implements Initializable {
         }
     }
 
-    private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
-        for (Node node : gridPane.getChildren()) {
-            if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
-                return node;
-            }
-        }
-        throw new RuntimeException("Could not find Node at position " + col + ", " + row);
+    public static StackPane getSquarePane(GridPane board, int col, int row) {
+        return (StackPane) board.getChildren().stream()
+                .filter(node -> GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(
+                        String.format("Could not find square at coordinates %d %d", col, row)));
     }
 }

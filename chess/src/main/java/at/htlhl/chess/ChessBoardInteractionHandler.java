@@ -85,7 +85,7 @@ public class ChessBoardInteractionHandler {
     }
 
     private void highlightSquare(Square square) {
-        StackPane squarePane = getSquarePane(square.x(), square.y());
+        StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
 
         Circle highlight = new Circle(squareSize / 6.0);
         highlight.setFill(HIGHLIGHT_COLOR);
@@ -97,7 +97,7 @@ public class ChessBoardInteractionHandler {
     private void clearHighlights() {
         if (highlightedSquares != null) {
             highlightedSquares.forEach(square -> {
-                StackPane squarePane = getSquarePane(square.x(), square.y());
+                StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
                 if (squarePane.getChildren().size() > 1) {
                     squarePane.getChildren().removeLast();
                 }
@@ -194,13 +194,5 @@ public class ChessBoardInteractionHandler {
 
     private boolean hasPiece(StackPane square) {
         return square.getChildren().size() > 1;
-    }
-
-    private StackPane getSquarePane(int col, int row) {
-        return (StackPane) chessBoard.getChildren().stream()
-                .filter(node -> GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(
-                        String.format("Could not find square at coordinates %d %d", col, row)));
     }
 }
