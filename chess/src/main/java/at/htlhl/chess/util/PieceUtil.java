@@ -1,8 +1,6 @@
 package at.htlhl.chess.util;
 
 import javafx.scene.image.Image;
-
-import java.io.FileNotFoundException;
 import java.net.URL;
 
 public final class PieceUtil {
