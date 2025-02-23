@@ -162,6 +162,9 @@ public class MoveChecker {
         }
 
         // EnPassant
+        if (enPassantSquare == null){
+            return false;
+        }
         if (isWhite && enPassantSquare.y() == y) {
             return enPassantSquare.x() == x;
         }
@@ -207,17 +210,17 @@ public class MoveChecker {
         // Captures
         if (isWhite) {
             if (isPawnCaptureSquarePossible(position.x() - 1, position.y() - 1)) {
-                squares.add(new Square(position.x() - 1, position.y()));
+                squares.add(new Square(position.x() - 1, position.y() - 1));
             }
             if (isPawnCaptureSquarePossible(position.x() + 1, position.y() - 1)) {
-                squares.add(new Square(position.x() - 1, position.y()));
+                squares.add(new Square(position.x() - 1, position.y() - 1));
             }
         } else {
             if (isPawnCaptureSquarePossible(position.x() - 1, position.y() + 1)) {
-                squares.add(new Square(position.x() - 1, position.y()));
+                squares.add(new Square(position.x() - 1, position.y() + 1));
             }
             if (isPawnCaptureSquarePossible(position.x() + 1, position.y() + 1)) {
-                squares.add(new Square(position.x() - 1, position.y()));
+                squares.add(new Square(position.x() - 1, position.y() + 1));
             }
         }
 
@@ -227,14 +230,14 @@ public class MoveChecker {
             if (isPawnTargetSquarePossible(position.x(), position.y() - 1)) {
                 squares.add(new Square(position.x(), position.y() - 1));
             }
-            if (isPawnFirstMove() && isPawnCaptureSquarePossible(position.x(), position.y() - 2)) {
+            if (isPawnFirstMove() && isPawnTargetSquarePossible(position.x(), position.y() - 2)) {
                 squares.add(new Square(position.x(), position.y() - 2));
             }
         } else {
             if (isPawnTargetSquarePossible(position.x(), position.y() + 1)) {
                 squares.add(new Square(position.x(), position.y() + 1));
             }
-            if (isPawnFirstMove() && isPawnCaptureSquarePossible(position.x(), position.y() + 2)) {
+            if (isPawnFirstMove() && isPawnTargetSquarePossible(position.x(), position.y() + 2)) {
                 squares.add(new Square(position.x(), position.y() + 2));
             }
         }
