@@ -237,6 +237,19 @@ public class MoveChecker {
         return squares;
     }
 
+    private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
+        List<Square> squares = new ArrayList<>();
+        int[][] targets = {{0,1},{0,-1},{1,1},{1,-1},{1,0},{-1,1},{-1,-1},{-1,0}};
+        for (int[] move : targets) {
+            int x = position.x() + move[0];
+            int y = position.y() + move[1];
+            if (isTargetSquarePossible(x, y, isStartWhite)) {
+                squares.add(new Square(x, y));
+            }
+        }
+        return squares;
+    }
+
     /**
      * Looks what piece is on board and calls corresponding methods
      * checks are not calculated here !
@@ -267,7 +280,7 @@ public class MoveChecker {
             return getPossiblePawnTargetSquares(position, isStartWhite);
         }
         if (PieceUtil.isKing(piece)) {
-            // TODO: King moves
+            return getPossibleKingTargetSquares(position, isStartWhite);
         }
         return new ArrayList<Square>();
     }
