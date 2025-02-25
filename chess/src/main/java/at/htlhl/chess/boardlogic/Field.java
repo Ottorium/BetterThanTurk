@@ -1,6 +1,6 @@
-package at.htlhl.chess;
+package at.htlhl.chess.boardlogic;
 
-import at.htlhl.chess.util.*;
+import at.htlhl.chess.boardlogic.util.*;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
 public class Field {
 
     /**
-     * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link at.htlhl.chess.util.PieceUtil}.
+     * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link PieceUtil}.
      */
     private byte[][] board;
 
@@ -26,6 +26,8 @@ public class Field {
     private int playedHalfMovesSinceLastPawnMoveOrCapture;
 
     private int numberOfNextMove;
+
+    private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     /**
      * Attempts to set the board state using FEN notation
@@ -65,7 +67,7 @@ public class Field {
      * @return true if reset was successful
      */
     public boolean resetBoard() {
-        throw new UnsupportedOperationException("resetBoard not implemented");
+        return trySetFEN(INITIAL_FEN);
     }
 
     /**

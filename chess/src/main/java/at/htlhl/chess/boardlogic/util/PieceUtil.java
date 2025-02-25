@@ -1,14 +1,4 @@
-package at.htlhl.chess.util;
-
-import at.htlhl.chess.Square;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javafx.scene.image.Image;
-
-import java.io.FileNotFoundException;
-import java.net.URL;
+package at.htlhl.chess.boardlogic.util;
 
 public final class PieceUtil {
 
@@ -76,15 +66,9 @@ public final class PieceUtil {
         return (binaryInformation & KING_MASK) != 0;
     }
 
-    public static Image getImage(byte piece) throws FileNotFoundException {
-        String name = PieceUtil.toString(piece);
-        if (name == null) return null;
-        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + name + ".png");
-        if (resource == null) throw new FileNotFoundException(name + ".png not found.");
-        return new Image(resource.toExternalForm());
-    }
 
-    private static String toString(byte piece) {
+
+    public static String toString(byte piece) {
         String name = PieceUtil.isBlack(piece) ? "black_" : "white_";
 
         if (PieceUtil.isPawn(piece)) name += "pawn";

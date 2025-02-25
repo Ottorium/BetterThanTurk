@@ -1,4 +1,4 @@
-package at.htlhl.chess;
+package at.htlhl.chess.boardlogic;
 
 public enum Player {
     WHITE,

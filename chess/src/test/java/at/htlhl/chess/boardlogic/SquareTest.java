@@ -1,4 +1,4 @@
-package at.htlhl.chess;
+package at.htlhl.chess.boardlogic;
 
 import org.junit.jupiter.api.Test;
 

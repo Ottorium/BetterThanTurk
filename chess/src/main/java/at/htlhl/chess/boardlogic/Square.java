@@ -1,4 +1,4 @@
-package at.htlhl.chess;
+package at.htlhl.chess.boardlogic;
 
 import java.security.InvalidParameterException;
 import java.util.Objects;

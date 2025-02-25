@@ -12,8 +12,10 @@ module at.htlhl.chess {
     requires com.almasb.fxgl.all;
     requires javafx.swing;
 
-    opens at.htlhl.chess to javafx.fxml;
-    exports at.htlhl.chess;
-    exports at.htlhl.chess.util;
-    opens at.htlhl.chess.util to javafx.fxml;
+    exports at.htlhl.chess.boardlogic.util;
+    opens at.htlhl.chess.boardlogic.util to javafx.fxml;
+    exports at.htlhl.chess.boardlogic;
+    opens at.htlhl.chess.boardlogic to javafx.fxml;
+    exports at.htlhl.chess.gui;
+    opens at.htlhl.chess.gui to javafx.fxml;
 }

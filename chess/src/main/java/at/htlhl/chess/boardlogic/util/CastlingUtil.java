@@ -1,4 +1,4 @@
-package at.htlhl.chess.util;
+package at.htlhl.chess.boardlogic.util;
 
 /**
  * Utility class for managing castling rights in a chess game using bitwise flags.
