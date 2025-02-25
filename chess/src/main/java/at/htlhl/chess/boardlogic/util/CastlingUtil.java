@@ -1,5 +1,7 @@
 package at.htlhl.chess.boardlogic.util;
 
+import at.htlhl.chess.boardlogic.Player;
+
 /**
  * Utility class for managing castling rights in a chess game using bitwise flags.
  * Each castling right (kingside/queenside for both colors) is represented by a single bit.
@@ -43,5 +45,12 @@ public final class CastlingUtil {
      */
     public static byte remove(byte currentFlags, byte flagToRemove) {
         return (byte) (currentFlags & ~flagToRemove);
+    }
+
+    public static byte removeCastlingRights(byte castlingInformation, Player player) {
+        byte flagsToRemove = player == Player.BLACK ?
+                CastlingUtil.add(CastlingUtil.BLACK_KING_SIDE, CastlingUtil.BLACK_QUEEN_SIDE) :
+                CastlingUtil.add(CastlingUtil.WHITE_KING_SIDE, CastlingUtil.WHITE_QUEEN_SIDE);
+        return CastlingUtil.remove(castlingInformation, flagsToRemove);
     }
 }
