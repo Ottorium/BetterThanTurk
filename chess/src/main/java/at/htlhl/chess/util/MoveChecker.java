@@ -21,16 +21,6 @@ public class MoveChecker {
     }
 
     /**
-     * Checks if the given position is on the board.
-     *
-     * @param position The square to check.
-     * @return True if the position is on the board, false otherwise.
-     */
-    private boolean isOnBoard(Square position) {
-        return position.x() >= 0 && position.y() >= 0 && position.x() < 8 && position.y() < 8;
-    }
-
-    /**
      * Checks if the given coordinates are on the board.
      *
      * @param x The x-coordinate.
@@ -148,7 +138,7 @@ public class MoveChecker {
             return false;
         }
 
-        if (!PieceUtil.isEmpty(field.getBoard()[y][x]) && (PieceUtil.isWhite(field.getBoard()[y][x]) ^ isStartWhite)) {
+        if (!PieceUtil.isEmpty(field.getBoard()[y][x]) && (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite)) {
             return true;
         }
 
@@ -166,7 +156,7 @@ public class MoveChecker {
     }
 
     /**
-     * Checks if a given square (x, y) is a valid target for a pawn to move to.
+     * Checks if a given square (x, y) is a valid target for a pawn to move forward to
      *
      * @param x The x-coordinate of the square.
      * @param y The y-coordinate of the square.
@@ -200,40 +190,27 @@ public class MoveChecker {
     private List<Square> getPossiblePawnTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
 
+        int step = 1;
+        if (!isStartWhite) {
+            step = -1;
+        }
+
         // Captures
-        if (isStartWhite) {
-            if (isPawnCaptureSquarePossible(position.x() - 1, position.y() - 1, isStartWhite)) {
-                squares.add(new Square(position.x() - 1, position.y() - 1));
-            }
-            if (isPawnCaptureSquarePossible(position.x() + 1, position.y() - 1, isStartWhite)) {
-                squares.add(new Square(position.x() - 1, position.y() - 1));
-            }
-        } else {
-            if (isPawnCaptureSquarePossible(position.x() - 1, position.y() + 1, isStartWhite)) {
-                squares.add(new Square(position.x() - 1, position.y() + 1));
-            }
-            if (isPawnCaptureSquarePossible(position.x() + 1, position.y() + 1, isStartWhite)) {
-                squares.add(new Square(position.x() - 1, position.y() + 1));
-            }
+        if (isPawnCaptureSquarePossible(position.x() - 1, position.y() - step, isStartWhite)) {
+            squares.add(new Square(position.x() - 1, position.y() - step));
+        }
+        if (isPawnCaptureSquarePossible(position.x() + 1, position.y() - step, isStartWhite)) {
+            squares.add(new Square(position.x() - 1, position.y() - step));
         }
 
         // Move forward
-
-        if (isStartWhite) {
-            if (isPawnTargetSquarePossible(position.x(), position.y() - 1)) {
-                squares.add(new Square(position.x(), position.y() - 1));
-            }
-            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - 2)) {
-                squares.add(new Square(position.x(), position.y() - 2));
-            }
-        } else {
-            if (isPawnTargetSquarePossible(position.x(), position.y() + 1)) {
-                squares.add(new Square(position.x(), position.y() + 1));
-            }
-            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() + 2)) {
-                squares.add(new Square(position.x(), position.y() + 2));
-            }
+        if (isPawnTargetSquarePossible(position.x(), position.y() - step)) {
+            squares.add(new Square(position.x(), position.y() - step));
         }
+        if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step*2))) {
+            squares.add(new Square(position.x(), position.y() - (step*2)));
+        }
+
         return squares;
     }
 
