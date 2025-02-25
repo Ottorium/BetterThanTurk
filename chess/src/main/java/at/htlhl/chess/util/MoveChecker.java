@@ -138,7 +138,7 @@ public class MoveChecker {
             return false;
         }
 
-        if (!PieceUtil.isEmpty(field.getBoard()[y][x]) && (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite)) {
+        if (!PieceUtil.isEmpty(field.getBoard()[y][x]) && (PieceUtil.isWhite(field.getBoard()[y][x]) != isStartWhite)) {
             return true;
         }
 
@@ -146,10 +146,7 @@ public class MoveChecker {
         if (field.getPossibleEnPassantSquare() == null) {
             return false;
         }
-        if (isStartWhite && field.getPossibleEnPassantSquare().y() == y) {
-            return field.getPossibleEnPassantSquare().x() == x;
-        }
-        if (!isStartWhite && field.getPossibleEnPassantSquare().y() == y) {
+        if (field.getPossibleEnPassantSquare().y() == y) {
             return field.getPossibleEnPassantSquare().x() == x;
         }
         return false;
@@ -200,15 +197,15 @@ public class MoveChecker {
             squares.add(new Square(position.x() - 1, position.y() - step));
         }
         if (isPawnCaptureSquarePossible(position.x() + 1, position.y() - step, isStartWhite)) {
-            squares.add(new Square(position.x() - 1, position.y() - step));
+            squares.add(new Square(position.x() + 1, position.y() - step));
         }
 
         // Move forward
         if (isPawnTargetSquarePossible(position.x(), position.y() - step)) {
             squares.add(new Square(position.x(), position.y() - step));
-        }
-        if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step*2))) {
-            squares.add(new Square(position.x(), position.y() - (step*2)));
+            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step*2))) {
+                squares.add(new Square(position.x(), position.y() - (step*2)));
+            }
         }
 
         return squares;
