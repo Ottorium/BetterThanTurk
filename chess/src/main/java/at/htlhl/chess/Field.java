@@ -73,7 +73,7 @@ public class Field {
      *
      * @param move The move to execute
      */
-    public void move(Move move) {
+    public boolean move(Move move) {
         MoveChecker moveChecker = new MoveChecker(this);
         if (moveChecker.isMoveLegal(move)) {
             // move piece to target square
@@ -81,7 +81,10 @@ public class Field {
             setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
 
             //TODO: Add capture material calculation
+            blackTurn = !blackTurn;
+            return true;
         }
+        return false;
     }
 
     /**
