@@ -57,7 +57,7 @@ public class ChessBoardInteractionHandler {
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
-            makeMove(new Move(selectedSquare, clickedSquare));
+            field.move(new Move(selectedSquare, clickedSquare));
             clearSelection();
             updateBoard();
         } else {
@@ -80,7 +80,7 @@ public class ChessBoardInteractionHandler {
 
     private void highlightPossibleMoves(Square square) {
         clearHighlights();
-        highlightedSquares = field.getMovesForPiece(square);
+        highlightedSquares = field.getLegalTargetsForSquare(square);
         highlightedSquares.forEach(this::highlightSquare);
     }
 
@@ -179,22 +179,13 @@ public class ChessBoardInteractionHandler {
 
             if (!sourceSquare.equals(targetSquare)) {
                 Move move = new Move(sourceSquare, targetSquare);
-                if (field.validateMove(move)) {
-                    makeMove(move);
-                    success = true;
-                }
+                success = field.move(move);
+                if (success) updateBoard();
             }
         }
 
         event.setDropCompleted(success);
         event.consume();
-    }
-
-    private void makeMove(Move move) {
-        if (field.validateMove(move)) {
-            field.move(move);
-            updateBoard();
-        }
     }
 
     private boolean hasPiece(StackPane square) {
