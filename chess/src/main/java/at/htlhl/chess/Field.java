@@ -116,9 +116,6 @@ public class Field {
 
     /**
      * Gets piece byte from board
-     *
-     * @param square position of piece
-     * @return piece value
      */
     private byte getPieceBySquare(Square square) {
         return board[square.y()][square.x()];
@@ -126,9 +123,6 @@ public class Field {
 
     /**
      * Sets piece byte on board
-     *
-     * @param square
-     * @param piece
      */
     private void setPieceBySquare(Square square, byte piece) {
         board[square.y()][square.x()] = piece;

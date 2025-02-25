@@ -334,9 +334,6 @@ public class MoveChecker {
 
     /**
      * Gets piece byte from board
-     *
-     * @param square position of piece
-     * @return piece value
      */
     private byte getPieceBySquare(Square square) {
         return field.getBoard()[square.y()][square.x()];
@@ -344,9 +341,6 @@ public class MoveChecker {
 
     /**
      * Sets piece byte on board
-     *
-     * @param square
-     * @param piece
      */
     private void setPieceBySquare(Square square, byte piece) {
         field.getBoard()[square.y()][square.x()] = piece;
