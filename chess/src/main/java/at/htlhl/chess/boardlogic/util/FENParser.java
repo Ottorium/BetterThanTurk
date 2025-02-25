@@ -16,7 +16,7 @@ public class FENParser {
     }
 
 
-    private final Dictionary<Character, Byte> fenPieceMap = new Hashtable<>();
+    private static final Dictionary<Character, Byte> fenPieceMap = new Hashtable<>();
 
     {
         fenPieceMap.put('p', PieceUtil.BLACK_PAWN);
@@ -99,5 +99,59 @@ public class FENParser {
         } catch (NumberFormatException e) {
             throw new InvalidFENException(fen);
         }
+    }
+
+    public static String exportToFEN(byte[][] board, boolean blackTurn, byte castlingInformation,
+                                     Square possibleEnPassantSquare, int playedHalfMovesSinceLastPawnMoveOrCapture,
+                                     int numberOfNextMove) {
+        StringBuilder fenBuilder = new StringBuilder();
+
+        // Figure mapping as an array (index = piece + 6 to handle negative values)
+        char[] pieceChars = { 'k', 'q', 'r', 'b', 'n', 'p', ' ', 'P', 'N', 'B', 'R', 'Q', 'K' };
+
+        // 1. Board notation (top to bottom)
+        for (int row = 7; row >= 0; row--) {
+            int emptySquares = 0;
+            for (int col = 0; col < 8; col++) {
+                byte piece = board[row][col];
+                if (piece == 0) {
+                    emptySquares++;
+                } else {
+                    if (emptySquares > 0) {
+                        fenBuilder.append(emptySquares);
+                        emptySquares = 0;
+                    }
+                    fenBuilder.append(pieceChars[piece + 6]); // Direkte Umwandlung aus Array
+                }
+            }
+            if (emptySquares > 0) {
+                fenBuilder.append(emptySquares);
+            }
+            if (row > 0) {
+                fenBuilder.append('/');
+            }
+        }
+
+        // 2. who's turn
+        fenBuilder.append(" ").append(blackTurn ? 'b' : 'w');
+
+        // 3. castling rights
+        String castling = "";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.WHITE_KING_SIDE)) castling += "K";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.WHITE_QUEEN_SIDE)) castling += "Q";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.BLACK_KING_SIDE)) castling += "k";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.BLACK_QUEEN_SIDE)) castling += "q";
+        fenBuilder.append(" ").append(castling.isEmpty() ? "-" : castling);
+
+        // 4. En-Passant possible
+        fenBuilder.append(" ").append(possibleEnPassantSquare != null ? possibleEnPassantSquare.toString() : "-");
+
+        // 5. half moves since last pawn move or capture
+        fenBuilder.append(" ").append(playedHalfMovesSinceLastPawnMoveOrCapture);
+
+        // 6. number of next move
+        fenBuilder.append(" ").append(numberOfNextMove);
+
+        return fenBuilder.toString();
     }
 }
