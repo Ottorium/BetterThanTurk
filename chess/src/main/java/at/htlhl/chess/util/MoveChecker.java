@@ -1,5 +1,7 @@
 package at.htlhl.chess.util;
 
+import at.htlhl.chess.Field;
+import at.htlhl.chess.Move;
 import at.htlhl.chess.Square;
 
 import java.util.ArrayList;
@@ -9,24 +11,13 @@ import java.util.List;
  * Utility class to check possible moves for different chess pieces.
  */
 public class MoveChecker {
-
-    private final byte[][] board;
-    private final Square position;
-    private final Square enPassantSquare;
-    private final boolean isWhite;
+    private final Field field;
 
     /**
      * Constructs a MoveChecker object.
-     *
-     * @param board           The current state of the chessboard.
-     * @param position        The position of the piece to check moves for.
-     * @param enPassantSquare The square available for en passant.
      */
-    public MoveChecker(byte[][] board, Square position, Square enPassantSquare) {
-        this.board = board;
-        this.position = position;
-        this.enPassantSquare = enPassantSquare;
-        this.isWhite = PieceUtil.isWhite(board[position.y()][position.x()]);
+    public MoveChecker(Field field) {
+        this.field = field;
     }
 
     /**
@@ -57,8 +48,8 @@ public class MoveChecker {
      * @param y The y-coordinate.
      * @return True if the target square is empty or occupied by an opponent's piece.
      */
-    private boolean isTargetSquarePossible(int x, int y) {
-        return isOnBoard(x, y) && (PieceUtil.isEmpty(board[y][x]) || PieceUtil.isWhite(board[y][x]) != isWhite);
+    private boolean isTargetSquarePossible(int x, int y, boolean isStartWhite) {
+        return isOnBoard(x, y) && (PieceUtil.isEmpty(field.getBoard()[y][x]) || PieceUtil.isWhite(field.getBoard()[y][x]) != isStartWhite);
     }
 
     /**
@@ -66,7 +57,7 @@ public class MoveChecker {
      *
      * @return A list of valid squares the bishop can move to.
      */
-    private List<Square> getPossibleBishopTargetSquares() {
+    private List<Square> getPossibleBishopTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
         int[][] directions = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
@@ -74,9 +65,9 @@ public class MoveChecker {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (isTargetSquarePossible(x, y)) {
+                if (isTargetSquarePossible(x, y, isStartWhite)) {
                     squares.add(new Square(x, y));
-                    if (!PieceUtil.isEmpty(board[y][x])) {
+                    if (!PieceUtil.isEmpty(field.getBoard()[y][x])) {
                         break;
                     }
                 } else {
@@ -92,7 +83,7 @@ public class MoveChecker {
      *
      * @return A list of valid squares the rook can move to.
      */
-    private List<Square> getPossibleRookTargetSquares() {
+    private List<Square> getPossibleRookTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
@@ -100,9 +91,9 @@ public class MoveChecker {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (isTargetSquarePossible(x, y)) {
+                if (isTargetSquarePossible(x, y, isStartWhite)) {
                     squares.add(new Square(x, y));
-                    if (!PieceUtil.isEmpty(board[y][x])) {
+                    if (!PieceUtil.isEmpty(field.getBoard()[y][x])) {
                         break;
                     }
                 } else {
@@ -118,10 +109,10 @@ public class MoveChecker {
      *
      * @return A list of valid squares the queen can move to.
      */
-    private List<Square> getPossibleQueenTargetSquares() {
+    private List<Square> getPossibleQueenTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
-        squares.addAll(getPossibleBishopTargetSquares());
-        squares.addAll(getPossibleRookTargetSquares());
+        squares.addAll(getPossibleBishopTargetSquares(position, isStartWhite));
+        squares.addAll(getPossibleRookTargetSquares(position, isStartWhite));
         return squares;
     }
 
@@ -130,8 +121,7 @@ public class MoveChecker {
      *
      * @return A list of valid squares the knight can move to.
      */
-    private List<Square> getPossibleKnightTargetSquares() {
-        boolean isWhite = PieceUtil.isWhite(board[position.y()][position.x()]);
+    private List<Square> getPossibleKnightTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
 
         int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
@@ -139,7 +129,7 @@ public class MoveChecker {
         for (int[] move : knightMoves) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
-            if (isTargetSquarePossible(x, y)) {
+            if (isTargetSquarePossible(x, y, isStartWhite)) {
                 squares.add(new Square(x, y));
             }
         }
@@ -148,28 +138,29 @@ public class MoveChecker {
 
     /**
      * Returns True if the pawn can capture other piece there or do en passant
+     *
      * @param x x coordinate of target
      * @param y y coordinate of target
      * @return Either can or not
      */
-    private boolean isPawnCaptureSquarePossible(int x, int y) {
+    private boolean isPawnCaptureSquarePossible(int x, int y, boolean isStartWhite) {
         if (!isOnBoard(x, y)) {
             return false;
         }
 
-        if (!PieceUtil.isEmpty(board[y][x]) && (PieceUtil.isWhite(board[y][x]) ^ isWhite)) {
+        if (!PieceUtil.isEmpty(field.getBoard()[y][x]) && (PieceUtil.isWhite(field.getBoard()[y][x]) ^ isStartWhite)) {
             return true;
         }
 
         // EnPassant
-        if (enPassantSquare == null){
+        if (field.getPossibleEnPassantSquare() == null) {
             return false;
         }
-        if (isWhite && enPassantSquare.y() == y) {
-            return enPassantSquare.x() == x;
+        if (isStartWhite && field.getPossibleEnPassantSquare().y() == y) {
+            return field.getPossibleEnPassantSquare().x() == x;
         }
-        if (!isWhite && enPassantSquare.y() == y) {
-            return enPassantSquare.x() == x;
+        if (!isStartWhite && field.getPossibleEnPassantSquare().y() == y) {
+            return field.getPossibleEnPassantSquare().x() == x;
         }
         return false;
     }
@@ -183,17 +174,18 @@ public class MoveChecker {
      */
     private boolean isPawnTargetSquarePossible(int x, int y) {
         if (isOnBoard(x, y)) {
-            return PieceUtil.isEmpty(board[y][x]);
+            return PieceUtil.isEmpty(field.getBoard()[y][x]);
         }
         return false;
     }
 
     /**
      * Checks if this pawn moves for the first time
+     *
      * @return true if yes, false otherwise
      */
-    private boolean isPawnFirstMove() {
-        if (isWhite) {
+    private boolean isPawnFirstMove(Square position, boolean isStartWhite) {
+        if (isStartWhite) {
             return position.y() == 6;
         } else {
             return position.y() == 1;
@@ -202,42 +194,43 @@ public class MoveChecker {
 
     /**
      * Looks for all possible moves for this pawn
-     * @return ArrayList of squares where pawn can legaly move
+     *
+     * @return ArrayList of squares where pawn can legally move
      */
-    private List<Square> getPossiblePawnTargetSquares() {
+    private List<Square> getPossiblePawnTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
 
         // Captures
-        if (isWhite) {
-            if (isPawnCaptureSquarePossible(position.x() - 1, position.y() - 1)) {
+        if (isStartWhite) {
+            if (isPawnCaptureSquarePossible(position.x() - 1, position.y() - 1, isStartWhite)) {
                 squares.add(new Square(position.x() - 1, position.y() - 1));
             }
-            if (isPawnCaptureSquarePossible(position.x() + 1, position.y() - 1)) {
+            if (isPawnCaptureSquarePossible(position.x() + 1, position.y() - 1, isStartWhite)) {
                 squares.add(new Square(position.x() - 1, position.y() - 1));
             }
         } else {
-            if (isPawnCaptureSquarePossible(position.x() - 1, position.y() + 1)) {
+            if (isPawnCaptureSquarePossible(position.x() - 1, position.y() + 1, isStartWhite)) {
                 squares.add(new Square(position.x() - 1, position.y() + 1));
             }
-            if (isPawnCaptureSquarePossible(position.x() + 1, position.y() + 1)) {
+            if (isPawnCaptureSquarePossible(position.x() + 1, position.y() + 1, isStartWhite)) {
                 squares.add(new Square(position.x() - 1, position.y() + 1));
             }
         }
 
         // Move forward
 
-        if (isWhite) {
+        if (isStartWhite) {
             if (isPawnTargetSquarePossible(position.x(), position.y() - 1)) {
                 squares.add(new Square(position.x(), position.y() - 1));
             }
-            if (isPawnFirstMove() && isPawnTargetSquarePossible(position.x(), position.y() - 2)) {
+            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - 2)) {
                 squares.add(new Square(position.x(), position.y() - 2));
             }
         } else {
             if (isPawnTargetSquarePossible(position.x(), position.y() + 1)) {
                 squares.add(new Square(position.x(), position.y() + 1));
             }
-            if (isPawnFirstMove() && isPawnTargetSquarePossible(position.x(), position.y() + 2)) {
+            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() + 2)) {
                 squares.add(new Square(position.x(), position.y() + 2));
             }
         }
@@ -247,32 +240,116 @@ public class MoveChecker {
     /**
      * Looks what piece is on board and calls corresponding methods
      * checks are not calculated here !
+     *
      * @return List of possible target squares
      */
-    public List<Square> getMoves(){
-        byte piece = board[position.y()][position.x()];
+    public List<Square> getTargetSquares(Square position, boolean isStartWhite) {
+        byte piece = field.getBoard()[position.y()][position.x()];
+
+        // TODO: replace with switch case
+
         if (PieceUtil.isEmpty(piece)) {
             return new ArrayList<Square>();
         }
         if (PieceUtil.isBishop(piece)) {
-            return getPossibleBishopTargetSquares();
+            return getPossibleBishopTargetSquares(position, isStartWhite);
         }
         if (PieceUtil.isRook(piece)) {
-            return getPossibleRookTargetSquares();
+            return getPossibleRookTargetSquares(position, isStartWhite);
         }
         if (PieceUtil.isKnight(piece)) {
-            return getPossibleKnightTargetSquares();
+            return getPossibleKnightTargetSquares(position, isStartWhite);
         }
         if (PieceUtil.isQueen(piece)) {
-            return getPossibleQueenTargetSquares();
+            return getPossibleQueenTargetSquares(position, isStartWhite);
         }
         if (PieceUtil.isPawn(piece)) {
-            return getPossiblePawnTargetSquares();
+            return getPossiblePawnTargetSquares(position, isStartWhite);
         }
         if (PieceUtil.isKing(piece)) {
             // TODO: King moves
         }
         return new ArrayList<Square>();
+    }
+
+    /**
+     * Checks if a given move is legal.
+     *
+     * @param move The move to check.
+     * @return {@code true} if the move is legal, {@code false} otherwise.
+     */
+    public boolean isMoveLegal(Move move) {
+
+        if (move == null) {
+            return false;
+        }
+
+        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.startingSquare()));
+
+
+        // check if player color is ok
+        if (isStartWhite ^ field.isBlackTurn()) { // if colors are not equal
+            return false;
+        }
+
+        //Get possible targets
+        List<Square> possibleTargets = getTargetSquares(move.startingSquare(), isStartWhite);
+        if (possibleTargets.isEmpty()) {
+            return false;
+        }
+
+        // look if target square is possible
+        for (Square target : possibleTargets) {
+            if (target.equals(move.targetSquare())) {
+                //TODO  Check check
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieves a list of legal target squares for a piece at a given position.
+     *
+     * @param position The starting position of the piece.
+     * @return A list of squares to which the piece can legally move.
+     */
+    public List<Square> getLegalTargetsSquares(Square position) {
+        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
+        List<Square> targets = getTargetSquares(position, isStartWhite);
+        if (!targets.isEmpty()) {
+            List<Square> legalTargets = new ArrayList<>();
+            for (Square target : targets) {
+                if (isMoveLegal(new Move(position, target))) {
+                    legalTargets.add(target);
+                }
+            }
+            return legalTargets;
+        }
+
+        return new ArrayList<>();
+    }
+
+
+    /**
+     * Gets piece byte from board
+     *
+     * @param square position of piece
+     * @return piece value
+     */
+    private byte getPieceBySquare(Square square) {
+        return field.getBoard()[square.y()][square.x()];
+    }
+
+    /**
+     * Sets piece byte on board
+     *
+     * @param square
+     * @param piece
+     */
+    private void setPieceBySquare(Square square, byte piece) {
+        field.getBoard()[square.y()][square.x()] = piece;
     }
 
 }

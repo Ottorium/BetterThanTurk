@@ -69,45 +69,13 @@ public class Field {
     }
 
     /**
-     * Validates if a move is legal
-     *
-     * @param move The move to validate
-     * @return true if the move is valid, false otherwise
-     */
-    public boolean validateMove(Move move) {
-        if (move == null) {
-            return false;
-        }
-
-        // check if player color is ok
-        if (PieceUtil.isBlack(getPieceBySquare(move.startingSquare())) ^ blackTurn) { // if colors are not equal
-            return false;
-        }
-
-        // Get possible targets
-        List<Square> possibleTargets = getMovesForPiece(move.startingSquare());
-        if (possibleTargets.isEmpty()) {
-            return false;
-        }
-
-        // look if target square is possible
-        for (Square target : possibleTargets) {
-            if (target.equals(move.targetSquare())){
-                //TODO  Check check
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Executes a move on the board
+     * Executes a move on the board,  if the move is valid
      *
      * @param move The move to execute
      */
     public void move(Move move) {
-        if (validateMove(move)) {
+        MoveChecker moveChecker = new MoveChecker(this);
+        if (moveChecker.isMoveLegal(move)) {
             // move piece to target square
             setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
             setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
@@ -136,14 +104,14 @@ public class Field {
     }
 
     /**
-     * Gets all possible moves for a piece at a given position
+     * Gets all legal targets for a piece at a given position
      *
      * @param position The square containing the piece
      * @return List of possible target squares for the piece
      */
-    private List<Square> getMovesForPiece(Square position) {
-        MoveChecker moveChecker = new MoveChecker(board, position, possibleEnPassantSquare);
-        return moveChecker.getMoves();
+    public List<Square> getLegalTargetsForSquare(Square position) {
+        MoveChecker moveChecker = new MoveChecker(this);
+        return moveChecker.getLegalTargetsSquares(position);
     }
 
     /**
@@ -164,5 +132,27 @@ public class Field {
      */
     private void setPieceBySquare(Square square, byte piece) {
         board[square.y()][square.x()] = piece;
+    }
+
+
+    // Getters and setters
+    public boolean isBlackTurn() {
+        return blackTurn;
+    }
+
+    public byte getCastlingInformation() {
+        return castlingInformation;
+    }
+
+    public Square getPossibleEnPassantSquare() {
+        return possibleEnPassantSquare;
+    }
+
+    public int getPlayedHalfMovesSinceLastPawnMoveOrCapture() {
+        return playedHalfMovesSinceLastPawnMoveOrCapture;
+    }
+
+    public int getNumberOfNextMove() {
+        return numberOfNextMove;
     }
 }
