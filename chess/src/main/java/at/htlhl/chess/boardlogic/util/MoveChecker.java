@@ -263,7 +263,7 @@ public class MoveChecker {
     }
 
     /**
-     * Checks if a given move is legal.
+     * Checks if a given move is legal. This Method is inefficient.
      *
      * @param move The move to check.
      * @return {@code true} if the move is legal, {@code false} otherwise.

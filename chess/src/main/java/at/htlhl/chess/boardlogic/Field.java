@@ -74,7 +74,7 @@ public class Field {
      * Executes a move on the board,  if the move is valid
      *
      * @param move The move to execute
-     * @return true if moved successfully, false otherwise
+     * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
         MoveChecker moveChecker = new MoveChecker(this);
