@@ -1,6 +1,6 @@
-package at.htlhl.chess.util;
+package at.htlhl.chess.boardlogic.util;
 
-import at.htlhl.chess.Square;
+import at.htlhl.chess.boardlogic.Square;
 
 import java.security.InvalidParameterException;
 import java.util.Dictionary;

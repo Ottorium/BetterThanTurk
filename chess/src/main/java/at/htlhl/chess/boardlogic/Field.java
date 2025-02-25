@@ -1,6 +1,6 @@
-package at.htlhl.chess;
+package at.htlhl.chess.boardlogic;
 
-import at.htlhl.chess.util.*;
+import at.htlhl.chess.boardlogic.util.*;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
 public class Field {
 
     /**
-     * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link at.htlhl.chess.util.PieceUtil}.
+     * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link PieceUtil}.
      */
     private byte[][] board;
 

@@ -1,5 +1,8 @@
-package at.htlhl.chess;
+package at.htlhl.chess.gui;
 
+import at.htlhl.chess.boardlogic.Field;
+import at.htlhl.chess.boardlogic.Move;
+import at.htlhl.chess.boardlogic.Square;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.ImageView;

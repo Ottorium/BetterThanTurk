@@ -1,6 +1,8 @@
-package at.htlhl.chess;
+package at.htlhl.chess.gui;
 
-import at.htlhl.chess.util.PieceUtil;
+import at.htlhl.chess.boardlogic.Field;
+import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.boardlogic.util.PieceUtil;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.image.Image;
@@ -72,7 +74,7 @@ public class BoardViewController implements Initializable {
                     square.getChildren().remove(1);
 
                 if (!PieceUtil.isEmpty(piece)) {
-                    Image img = PieceUtil.getImage(piece);
+                    Image img = PieceImageUtil.getImage(piece);
                     ImageView imageView = new ImageView(img);
                     imageView.setFitWidth(SQUARE_SIZE);
                     imageView.setFitHeight(SQUARE_SIZE);

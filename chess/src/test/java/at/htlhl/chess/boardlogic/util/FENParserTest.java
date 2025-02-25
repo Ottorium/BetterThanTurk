@@ -1,6 +1,6 @@
-package at.htlhl.chess.util;
+package at.htlhl.chess.boardlogic.util;
 
-import at.htlhl.chess.Square;
+import at.htlhl.chess.boardlogic.Square;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,4 +1,4 @@
-package at.htlhl.chess;
+package at.htlhl.chess.gui;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

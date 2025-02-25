@@ -1,7 +1,4 @@
-package at.htlhl.chess.util;
-
-import javafx.scene.image.Image;
-import java.net.URL;
+package at.htlhl.chess.boardlogic.util;
 
 public final class PieceUtil {
 
@@ -68,47 +65,6 @@ public final class PieceUtil {
     public static boolean isKing(byte binaryInformation) {
         return (binaryInformation & KING_MASK) != 0;
     }
-
-    public static Image getImage(byte piece) {
-        if (isEmpty(piece)) return null;
-
-        return switch (piece) {
-            case WHITE_PAWN -> WHITE_PAWN_IMAGE;
-            case WHITE_KNIGHT -> WHITE_KNIGHT_IMAGE;
-            case WHITE_BISHOP -> WHITE_BISHOP_IMAGE;
-            case WHITE_ROOK -> WHITE_ROOK_IMAGE;
-            case WHITE_QUEEN -> WHITE_QUEEN_IMAGE;
-            case WHITE_KING -> WHITE_KING_IMAGE;
-            case BLACK_PAWN -> BLACK_PAWN_IMAGE;
-            case BLACK_KNIGHT -> BLACK_KNIGHT_IMAGE;
-            case BLACK_BISHOP -> BLACK_BISHOP_IMAGE;
-            case BLACK_ROOK -> BLACK_ROOK_IMAGE;
-            case BLACK_QUEEN -> BLACK_QUEEN_IMAGE;
-            case BLACK_KING -> BLACK_KING_IMAGE;
-            default -> throw new RuntimeException("Invalid Piece: " + piece);
-        };
-    }
-
-    public static Image loadImageFromDisk(byte piece) {
-        String name = PieceUtil.toString(piece);
-        if (name == null) return null;
-        URL resource = PieceUtil.class.getResource("/at/htlhl/chess/sprites/" + name + ".png");
-        if (resource == null) throw new RuntimeException(name + ".png not found.");
-        return new Image(resource.toExternalForm());
-    }
-
-    public static final Image WHITE_PAWN_IMAGE = loadImageFromDisk(WHITE_PAWN);
-    public static final Image WHITE_KNIGHT_IMAGE = loadImageFromDisk(WHITE_KNIGHT);
-    public static final Image WHITE_BISHOP_IMAGE = loadImageFromDisk(WHITE_BISHOP);
-    public static final Image WHITE_ROOK_IMAGE = loadImageFromDisk(WHITE_ROOK);
-    public static final Image WHITE_QUEEN_IMAGE = loadImageFromDisk(WHITE_QUEEN);
-    public static final Image WHITE_KING_IMAGE = loadImageFromDisk(WHITE_KING);
-    public static final Image BLACK_PAWN_IMAGE = loadImageFromDisk(BLACK_PAWN);
-    public static final Image BLACK_KNIGHT_IMAGE = loadImageFromDisk(BLACK_KNIGHT);
-    public static final Image BLACK_BISHOP_IMAGE = loadImageFromDisk(BLACK_BISHOP);
-    public static final Image BLACK_ROOK_IMAGE = loadImageFromDisk(BLACK_ROOK);
-    public static final Image BLACK_QUEEN_IMAGE = loadImageFromDisk(BLACK_QUEEN);
-    public static final Image BLACK_KING_IMAGE = loadImageFromDisk(BLACK_KING);
 
 
 
