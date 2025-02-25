@@ -27,6 +27,8 @@ public class Field {
 
     private int numberOfNextMove;
 
+    private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     /**
      * Attempts to set the board state using FEN notation
      *
@@ -65,7 +67,7 @@ public class Field {
      * @return true if reset was successful
      */
     public boolean resetBoard() {
-        throw new UnsupportedOperationException("resetBoard not implemented");
+        return trySetFEN(INITIAL_FEN);
     }
 
     /**

@@ -5,7 +5,20 @@ import javafx.scene.image.Image;
 
 import java.net.URL;
 
+/**
+ * Utility class for loading and retrieving images of chess pieces.
+ * Provides static methods to access piece images based on their type and color,
+ * and preloads all piece images from disk at class initialization.
+ */
 public class PieceImageUtil {
+
+    /**
+     * Retrieves the {@link Image} corresponding to the specified chess piece.
+     *
+     * @param piece The byte value representing the chess piece, as defined in {@link PieceUtil}.
+     * @return The {@link Image} of the specified piece, or null if the piece is empty.
+     * @throws RuntimeException if the piece value is invalid.
+     */
     public static Image getImage(byte piece) {
         if (PieceUtil.isEmpty(piece)) return null;
 
@@ -26,6 +39,14 @@ public class PieceImageUtil {
         };
     }
 
+    /**
+     * Loads an image for a specific chess piece from disk based on its string representation.
+     * Images are expected to be located in the "/at/htlhl/chess/gui/sprites/" resource directory.
+     *
+     * @param piece The byte value representing the chess piece, as defined in {@link PieceUtil}.
+     * @return The loaded {@link Image}, or null if the piece is empty.
+     * @throws RuntimeException if the image file for the piece is not found.
+     */
     public static Image loadImageFromDisk(byte piece) {
         String name = PieceUtil.toString(piece);
         if (name == null) return null;
