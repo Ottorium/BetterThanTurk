@@ -1,8 +1,8 @@
 package at.htlhl.chess;
 
-import at.htlhl.chess.util.FENParser;
-import at.htlhl.chess.util.InvalidFENException;
-import at.htlhl.chess.util.CastlingUtil;
+import at.htlhl.chess.util.*;
+
+import java.util.List;
 
 /**
  * Represents a chess field/board and its state
@@ -69,22 +69,33 @@ public class Field {
     }
 
     /**
-     * Validates if a move is legal
-     *
-     * @param move The move to validate
-     * @return true if the move is valid, false otherwise
-     */
-    public boolean validateMove(Move move) {
-        throw new UnsupportedOperationException("validateMove not implemented");
-    }
-
-    /**
-     * Executes a move on the board
+     * Executes a move on the board,  if the move is valid
      *
      * @param move The move to execute
+     * @return true if moved successfully, false otherwise
      */
-    public void move(Move move) {
-        throw new UnsupportedOperationException("move not implemented");
+    public boolean move(Move move) {
+        MoveChecker moveChecker = new MoveChecker(this);
+        if (moveChecker.isMoveLegal(move)) {
+            // move piece to target square
+            setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
+            setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
+
+            //En passant
+            //Delete captured pawn if enPassant happened
+            if (move.targetSquare().equals(possibleEnPassantSquare)
+                    && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
+                setPieceBySquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
+            }
+
+
+            possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
+
+            //TODO: Add capture material calculation
+            blackTurn = !blackTurn;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -107,12 +118,49 @@ public class Field {
     }
 
     /**
-     * Gets all possible moves for a piece at a given position
+     * Gets all legal targets for a piece at a given position
      *
      * @param position The square containing the piece
-     * @return Array of possible moves for the piece
+     * @return List of possible target squares for the piece
      */
-    private Move[] getMovesForPiece(Square position) {
-        throw new UnsupportedOperationException("getMovesForPiece not implemented");
+    public List<Square> getLegalTargetsForSquare(Square position) {
+        MoveChecker moveChecker = new MoveChecker(this);
+        return moveChecker.getLegalTargetsSquares(position);
+    }
+
+    /**
+     * Gets piece byte from board
+     */
+    private byte getPieceBySquare(Square square) {
+        return board[square.y()][square.x()];
+    }
+
+    /**
+     * Sets piece byte on board
+     */
+    private void setPieceBySquare(Square square, byte piece) {
+        board[square.y()][square.x()] = piece;
+    }
+
+
+    // Getters and setters
+    public boolean isBlackTurn() {
+        return blackTurn;
+    }
+
+    public byte getCastlingInformation() {
+        return castlingInformation;
+    }
+
+    public Square getPossibleEnPassantSquare() {
+        return possibleEnPassantSquare;
+    }
+
+    public int getPlayedHalfMovesSinceLastPawnMoveOrCapture() {
+        return playedHalfMovesSinceLastPawnMoveOrCapture;
+    }
+
+    public int getNumberOfNextMove() {
+        return numberOfNextMove;
     }
 }
