@@ -216,7 +216,27 @@ public class MoveChecker {
 
     private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
-        int[][] targets = {{0,1},{0,-1},{1,1},{1,-1},{1,0},{-1,1},{-1,-1},{-1,0}};
+        ArrayList<int[]> targets = new ArrayList<>();
+        targets.add(new int[]{0, 1});
+        targets.add(new int[]{0, -1});
+        targets.add(new int[]{1, 1});
+        targets.add(new int[]{1, -1});
+        targets.add(new int[]{1, 0});
+        targets.add(new int[]{-1, 1});
+        targets.add(new int[]{-1, -1});
+        targets.add(new int[]{-1, 0});
+
+        byte castlingInfo = field.getCastlingInformation();
+        byte kingSideFlag = isStartWhite ? CastlingUtil.WHITE_KING_SIDE : CastlingUtil.BLACK_KING_SIDE;
+        byte queenSideFlag = isStartWhite ? CastlingUtil.WHITE_QUEEN_SIDE : CastlingUtil.BLACK_QUEEN_SIDE;
+
+        if (CastlingUtil.hasFlag(castlingInfo, kingSideFlag))
+            targets.add(new int[]{2, 0});
+
+        if (CastlingUtil.hasFlag(castlingInfo, queenSideFlag))
+            targets.add(new int[]{-2, 0});
+
+
         for (int[] move : targets) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
@@ -357,4 +377,8 @@ public class MoveChecker {
         field.getBoard()[square.y()][square.x()] = piece;
     }
 
+    public boolean isCastlingMove(Move move) {
+        return PieceUtil.isKing(getPieceBySquare(move.targetSquare()))
+                && Math.abs(move.targetSquare().x() - move.startingSquare().x()) == 2;
+    }
 }

@@ -29,6 +29,8 @@ public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+    private final MoveChecker moveChecker = new MoveChecker(this);
+
     /**
      * Attempts to set the board state using FEN notation
      *
@@ -77,27 +79,98 @@ public class Field {
      * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
-        MoveChecker moveChecker = new MoveChecker(this);
         if (moveChecker.isMoveLegal(move)) {
-            // move piece to target square
-            setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
-            setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
-
-            //En passant
-            //Delete captured pawn if enPassant happened
-            if (move.targetSquare().equals(possibleEnPassantSquare)
-                    && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
-                setPieceBySquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
-            }
-
-
-            possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
-
-            //TODO: Add capture material calculation
-            blackTurn = !blackTurn;
+            forceMove(move);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Executes a move on the board. Does not check if the move is valid.
+     *
+     * @param move The move to execute. Undefined behaviour if the move is not valid
+     */
+    public void forceMove(Move move) {
+
+        // store captured piece for material calculation and castling calculation later
+        byte capturedPiece = getPieceBySquare(move.targetSquare());
+
+        // move piece to target square
+        setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
+        setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
+
+        //En passant
+        //Delete captured pawn if enPassant happened
+        if (move.targetSquare().equals(possibleEnPassantSquare)
+                && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
+            setPieceBySquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
+        }
+        possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
+
+        // Castling
+        if (moveChecker.isCastlingMove(move)) {
+            // Determine castling direction and rook starting position
+            int kingMoveDistance = move.targetSquare().x() - move.startingSquare().x();
+            int rookStartX = (kingMoveDistance > 0) ? 7 : 0;  // Kingside: h-file, Queenside: a-file
+            int rookTargetX = move.startingSquare().x() + (kingMoveDistance / 2);
+            int yRank = move.startingSquare().y();
+
+            // Move the rook
+            Square rookStart = new Square(rookStartX, yRank);
+            Square rookTarget = new Square(rookTargetX, yRank);
+            setPieceBySquare(rookTarget, getPieceBySquare(rookStart));
+            setPieceBySquare(rookStart, PieceUtil.EMPTY);
+
+            castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
+        }
+
+        removeCastlingRightsIfNeeded(move, capturedPiece);
+
+        //TODO: Add capture material calculation
+        blackTurn = !blackTurn;
+    }
+
+    /**
+     * Updates the castling rights based on the move just played.
+     * This method examines the move and determines if any castling rights
+     * should be revoked
+     *
+     * @param move          The move that was just played
+     * @param capturedPiece The piece (if any) that was captured by this move.
+     */
+    private void removeCastlingRightsIfNeeded(Move move, byte capturedPiece) {
+        Square start = move.startingSquare();
+        Square target = move.targetSquare();
+        byte movingPiece = getPieceBySquare(target);
+
+        int homeRank = blackTurn ? 0 : 7;
+        int opponentHomeRank = blackTurn ? 7 : 0;
+
+        // If king moves, remove all castling rights for that side
+        if (PieceUtil.isKing(movingPiece)) {
+            castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
+            return;
+        }
+
+        // If rook moves from its starting position, remove that sides castling right
+        if (PieceUtil.isRook(movingPiece) && start.y() == homeRank)
+            if (start.x() == 0)
+                castlingInformation = CastlingUtil.remove(castlingInformation,
+                        blackTurn ? CastlingUtil.BLACK_QUEEN_SIDE : CastlingUtil.WHITE_QUEEN_SIDE);
+            else if (start.x() == 7)
+                castlingInformation = CastlingUtil.remove(castlingInformation,
+                        blackTurn ? CastlingUtil.BLACK_KING_SIDE : CastlingUtil.WHITE_KING_SIDE);
+
+
+        // If rook is captured, remove that sides castling right
+        if (PieceUtil.isRook(capturedPiece) && target.y() == opponentHomeRank)
+            if (target.x() == 0)
+                castlingInformation = CastlingUtil.remove(castlingInformation,
+                        blackTurn ? CastlingUtil.WHITE_QUEEN_SIDE : CastlingUtil.BLACK_QUEEN_SIDE);
+            else if (target.x() == 7)
+                castlingInformation = CastlingUtil.remove(castlingInformation,
+                        blackTurn ? CastlingUtil.WHITE_KING_SIDE : CastlingUtil.BLACK_KING_SIDE);
     }
 
     /**
