@@ -321,6 +321,27 @@ public class MoveChecker {
         return new ArrayList<>();
     }
 
+    /**
+     * Determines the en passant target square produced by a pawn's double move, if applicable.
+     *
+     * @param move the Move object representing the pawn's movement
+     * @return the Square that can be targeted for an en passant capture, or null if the move does not
+     *         produce an en passant square (e.g., not a pawn, or not a double move)
+     */
+    public Square getEnPassantSquareProducedByPawnDoubleMove(Move move){
+        byte piece = getPieceBySquare(move.targetSquare());
+        if (PieceUtil.isPawn(piece)) {
+            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.targetSquare()));
+            if (Math.abs(move.targetSquare().y() - move.startingSquare().y()) == 2) {
+                return new Square(move.targetSquare().x(), move.targetSquare().y() + (isStartWhite ? 1 : -1));
+            }
+        }
+        return null;
+    }
+
+
+
+
 
     /**
      * Gets piece byte from board

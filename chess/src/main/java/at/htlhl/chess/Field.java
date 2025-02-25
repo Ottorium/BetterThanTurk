@@ -81,6 +81,16 @@ public class Field {
             setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
             setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
 
+            //En passant
+            //Delete captured pawn if enPassant happened
+            if (move.targetSquare().equals(possibleEnPassantSquare)
+                    && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
+                setPieceBySquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
+            }
+
+
+            possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
+
             //TODO: Add capture material calculation
             blackTurn = !blackTurn;
             return true;
