@@ -237,6 +237,8 @@ public class MoveChecker {
         return squares;
     }
 
+    /** Looks for all possible moves for this king
+     */
 
     private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
