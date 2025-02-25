@@ -237,6 +237,7 @@ public class MoveChecker {
         return squares;
     }
 
+
     private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
         int[][] targets = {{0,1},{0,-1},{1,1},{1,-1},{1,0},{-1,1},{-1,-1},{-1,0}};
@@ -301,7 +302,7 @@ public class MoveChecker {
 
 
         // check if player color is ok
-        if (isStartWhite ^ field.isBlackTurn()) { // if colors are not equal
+        if (isStartWhite == field.isBlackTurn()) { // if colors are equal
             return false;
         }
 
