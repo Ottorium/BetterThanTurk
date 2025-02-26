@@ -387,6 +387,9 @@ public class MoveChecker {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
                 if (!isOnBoard(x, y)) {
+                    break;
+                }
+                if (PieceUtil.isEmpty(field.getBoard()[y][x])) {
                     continue;
                 }
                 if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
@@ -406,6 +409,9 @@ public class MoveChecker {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
                 if (!isOnBoard(x, y)) {
+                    break;
+                }
+                if (PieceUtil.isEmpty(field.getBoard()[y][x])) {
                     continue;
                 }
                 if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
