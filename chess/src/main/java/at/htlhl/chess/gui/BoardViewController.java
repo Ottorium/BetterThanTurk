@@ -3,6 +3,9 @@ package at.htlhl.chess.gui;
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.image.Image;
@@ -18,7 +21,7 @@ import java.util.ResourceBundle;
 public class BoardViewController implements Initializable {
 
     private static final int BOARD_SIZE = 8;
-    private static final int SQUARE_SIZE = 60;
+    private static final int INITIAL_SQUARE_SIZE = 60;
     private static final Color LIGHT_SQUARE_COLOR = Color.rgb(242, 226, 190);
     private static final Color DARK_SQUARE_COLOR = Color.rgb(176, 136, 104);
 
@@ -26,6 +29,8 @@ public class BoardViewController implements Initializable {
     private GridPane chessBoard;
 
     private final Field field = new Field();
+
+    private DoubleBinding squareSizeBinding;
 
     /**
      * Initializes the chess board view when the controller is loaded.
@@ -39,12 +44,41 @@ public class BoardViewController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         createEmptyChessBoard();
         field.resetBoard();
+        Platform.runLater(this::setUpScalability);
         drawPieces();
+        setUpInteractions();
+    }
+
+    private void setUpScalability() {
+        squareSizeBinding = (DoubleBinding) Bindings.min(
+                chessBoard.getScene().widthProperty().divide(BOARD_SIZE),
+                chessBoard.getScene().heightProperty().divide(BOARD_SIZE)
+        );
+
+        chessBoard.setMinSize(BOARD_SIZE * INITIAL_SQUARE_SIZE, BOARD_SIZE * INITIAL_SQUARE_SIZE);
+        chessBoard.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                StackPane squarePane = getSquarePane(chessBoard, col, row);
+                Rectangle square = (Rectangle) squarePane.getChildren().getFirst();
+
+                // Bind rectangle dimensions to the calculated size
+                square.widthProperty().bind(squareSizeBinding);
+                square.heightProperty().bind(squareSizeBinding);
+            }
+        }
+    }
+
+    private void setUpInteractions() {
+        double currentSquareSize = (squareSizeBinding != null && squareSizeBinding.isValid())
+                ? squareSizeBinding.get()
+                : INITIAL_SQUARE_SIZE;
 
         ChessBoardInteractionHandler interactionHandler = new ChessBoardInteractionHandler(
                 chessBoard,
                 field,
-                SQUARE_SIZE,
+                currentSquareSize,
                 unused -> drawPieces() // Update callback
         );
         interactionHandler.setupInteractions();
@@ -59,10 +93,10 @@ public class BoardViewController implements Initializable {
             for (int col = 0; col < BOARD_SIZE; col++) {
                 StackPane squarePane = new StackPane();
 
-                Rectangle square = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
+                Rectangle square = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
                 square.setFill((row + col) % 2 == 0 ? LIGHT_SQUARE_COLOR : DARK_SQUARE_COLOR);
 
-                squarePane.getChildren().add(square);
+                squarePane.getChildren().addFirst(square);
                 squarePane.setUserData(new Square(col, row));
 
                 chessBoard.add(squarePane, col, row);
@@ -82,16 +116,19 @@ public class BoardViewController implements Initializable {
 
                 if (square == null) continue;
 
-                // Remove existing piece if present
-                if (square.getChildren().size() > 1)
+                // Remove everything except for the color
+                while (square.getChildren().size() > 1)
                     square.getChildren().remove(1);
 
                 if (!PieceUtil.isEmpty(piece)) {
                     Image img = PieceImageUtil.getImage(piece);
                     ImageView imageView = new ImageView(img);
-                    imageView.setFitWidth(SQUARE_SIZE);
-                    imageView.setFitHeight(SQUARE_SIZE);
-                    square.getChildren().add(imageView);
+
+                    // Bind image size to square size
+                    imageView.fitWidthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
+                    imageView.fitHeightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
+
+                    square.getChildren().add(1, imageView);
                 }
             }
         }
