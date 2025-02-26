@@ -203,20 +203,21 @@ public class MoveChecker {
         // Move forward
         if (isPawnTargetSquarePossible(position.x(), position.y() - step)) {
             squares.add(new Square(position.x(), position.y() - step));
-            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step*2))) {
-                squares.add(new Square(position.x(), position.y() - (step*2)));
+            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step * 2))) {
+                squares.add(new Square(position.x(), position.y() - (step * 2)));
             }
         }
 
         return squares;
     }
 
-    /** Looks for all possible moves for this king
+    /**
+     * Looks for all possible moves for this king
      */
 
     private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
-        int[][] targets = {{0,1},{0,-1},{1,1},{1,-1},{1,0},{-1,1},{-1,-1},{-1,0}};
+        int[][] targets = {{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
         for (int[] move : targets) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
@@ -326,9 +327,9 @@ public class MoveChecker {
      *
      * @param move the Move object representing the pawn's movement
      * @return the Square that can be targeted for an en passant capture, or null if the move does not
-     *         produce an en passant square (e.g., not a pawn, or not a double move)
+     * produce an en passant square (e.g., not a pawn, or not a double move)
      */
-    public Square getEnPassantSquareProducedByPawnDoubleMove(Move move){
+    public Square getEnPassantSquareProducedByPawnDoubleMove(Move move) {
         byte piece = getPieceBySquare(move.targetSquare());
         if (PieceUtil.isPawn(piece)) {
             boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.targetSquare()));
@@ -339,9 +340,69 @@ public class MoveChecker {
         return null;
     }
 
+    private boolean isKingChecked(Square position) {
+        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
+
+        // Look for knight
+        int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
+        for (int[] move : knightMoves) {
+            int x = position.x() + move[0];
+            int y = position.y() + move[1];
+            if (isOnBoard(x, y) &&
+                    PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite &&
+                    PieceUtil.isKnight(field.getBoard()[y][x])) {
+                return true;
+            }
+        }
+
+        // Look for bishop or queen
+        int[][] directions = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+
+        for (int[] dir : directions) {
+            for (int i = 1; i < 8; i++) {
+                int x = position.x() + dir[0] * i;
+                int y = position.y() + dir[1] * i;
+                if (isOnBoard(x, y) &&
+                        PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite &&
+                        PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
+                    return true;
+                }
+            }
+        }
+
+        directions = new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
+        // Look for rook or queen
+        for (int[] dir : directions) {
+            for (int i = 1; i < 8; i++) {
+                int x = position.x() + dir[0] * i;
+                int y = position.y() + dir[1] * i;
+                if (isOnBoard(x, y) &&
+                        PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite &&
+                        PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
+                    return true;
+                }
+            }
+        }
 
 
-
+        // Look for pawns
+        if (isStartWhite) {
+            directions = new int[][]{{-1, 1}, {-1,-1}};
+        } else {
+            directions = new int[][]{{1,1},{1,-1}};
+        }
+        for (int[] dir : directions) {
+            int x = position.x() + dir[1];
+            int y = position.y() + dir[0];
+            if (isOnBoard(x, y)) {
+                if (PieceUtil.isPawn(field.getBoard()[y][x])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     /**
      * Gets piece byte from board
