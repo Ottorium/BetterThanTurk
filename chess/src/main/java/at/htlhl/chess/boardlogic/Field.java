@@ -109,6 +109,14 @@ public class Field {
         possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
 
         // Castling
+        moveRookIfCastlingMove(move);
+        removeCastlingRightsIfNeeded(move, capturedPiece);
+
+        //TODO: Add capture material calculation
+        blackTurn = !blackTurn;
+    }
+
+    private void moveRookIfCastlingMove(Move move) {
         if (moveChecker.isCastlingMove(move)) {
             // Determine castling direction and rook starting position
             int kingMoveDistance = move.targetSquare().x() - move.startingSquare().x();
@@ -124,11 +132,6 @@ public class Field {
 
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
         }
-
-        removeCastlingRightsIfNeeded(move, capturedPiece);
-
-        //TODO: Add capture material calculation
-        blackTurn = !blackTurn;
     }
 
     /**
