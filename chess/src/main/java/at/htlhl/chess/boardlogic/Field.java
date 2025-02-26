@@ -206,7 +206,7 @@ public class Field {
     /**
      * Gets piece byte from board
      */
-    private byte getPieceBySquare(Square square) {
+    public byte getPieceBySquare(Square square) {
         return board[square.y()][square.x()];
     }
 

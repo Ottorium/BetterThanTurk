@@ -230,11 +230,20 @@ public class MoveChecker {
         byte kingSideFlag = isStartWhite ? CastlingUtil.WHITE_KING_SIDE : CastlingUtil.BLACK_KING_SIDE;
         byte queenSideFlag = isStartWhite ? CastlingUtil.WHITE_QUEEN_SIDE : CastlingUtil.BLACK_QUEEN_SIDE;
 
-        if (CastlingUtil.hasFlag(castlingInfo, kingSideFlag))
+        // Check kingside castling - spaces between king (x) and rook (x+3) must be empty
+        if (CastlingUtil.hasFlag(castlingInfo, kingSideFlag) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() + 1, position.y()))) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() + 2, position.y())))) {
             targets.add(new int[]{2, 0});
+        }
 
-        if (CastlingUtil.hasFlag(castlingInfo, queenSideFlag))
+        // Check queenside castling - spaces between king (x) and rook (x-4) must be empty
+        if (CastlingUtil.hasFlag(castlingInfo, queenSideFlag) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 1, position.y()))) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 2, position.y()))) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 3, position.y())))) {
             targets.add(new int[]{-2, 0});
+        }
 
 
         for (int[] move : targets) {
