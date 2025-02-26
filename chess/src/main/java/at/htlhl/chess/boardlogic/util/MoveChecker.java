@@ -340,7 +340,9 @@ public class MoveChecker {
         if (!targets.isEmpty()) {
             List<Square> legalTargets = new ArrayList<>();
             for (Square target : targets) {
-                if (isMoveLegal(new Move(position, target))) {
+
+                // We must not use an empty piece here, as a promotion to an empty piece would be illegal
+                if (isMoveLegal(new Move(position, target, PieceUtil.QUEEN_MASK))) {
                     legalTargets.add(target);
                 }
             }

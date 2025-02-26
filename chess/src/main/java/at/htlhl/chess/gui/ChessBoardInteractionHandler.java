@@ -3,6 +3,7 @@ package at.htlhl.chess.gui;
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.boardlogic.util.PieceUtil;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.ImageView;
@@ -98,7 +99,7 @@ public class ChessBoardInteractionHandler {
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
-            field.move(new Move(selectedSquare, clickedSquare));
+            field.move(new Move(selectedSquare, clickedSquare, getPromotionPiece(selectedSquare, clickedSquare)));
             clearSelection();
             updateBoard();
         } else {
@@ -107,6 +108,19 @@ public class ChessBoardInteractionHandler {
                 selectSquare(clickedSquare);
             }
         }
+    }
+
+    private byte getPromotionPiece(Square startSquare, Square targetSquare) {
+        if (PieceUtil.isPawn(field.getPieceBySquare(startSquare)) == false)
+            return PieceUtil.EMPTY;
+
+        if (targetSquare.y() != 0 && targetSquare.y() != 7)
+            return PieceUtil.EMPTY;
+
+
+        return field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN;
+
+        //throw new RuntimeException("Could not get Piece to promote to");
     }
 
     /**
@@ -271,7 +285,7 @@ public class ChessBoardInteractionHandler {
             Square targetSquare = (Square) square.getUserData();
 
             if (!sourceSquare.equals(targetSquare)) {
-                Move move = new Move(sourceSquare, targetSquare);
+                Move move = new Move(sourceSquare, targetSquare, getPromotionPiece(sourceSquare, targetSquare));
                 success = field.move(move);
                 if (success) updateBoard();
             }
