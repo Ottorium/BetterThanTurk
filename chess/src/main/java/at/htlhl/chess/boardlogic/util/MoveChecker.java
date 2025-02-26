@@ -340,7 +340,12 @@ public class MoveChecker {
         return null;
     }
 
-    private boolean isKingChecked(Square position) {
+    /**
+     * Search from king in all directions if this king is checked
+     * @param position King position
+     * @return true if king is checked, false otherwise
+     */
+    private boolean isKingChecked(Square position) { //TODO fix xray
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
 
         // Look for knight
@@ -348,9 +353,13 @@ public class MoveChecker {
         for (int[] move : knightMoves) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
-            if (isOnBoard(x, y) &&
-                    PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite &&
-                    PieceUtil.isKnight(field.getBoard()[y][x])) {
+            if (!isOnBoard(x, y)){
+                continue;
+            }
+            if (PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite){
+                continue;
+            }
+            if (PieceUtil.isKnight(field.getBoard()[y][x])) {
                 return true;
             }
         }
@@ -362,9 +371,13 @@ public class MoveChecker {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (isOnBoard(x, y) &&
-                        PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite &&
-                        PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
+                if (!isOnBoard(x, y)){
+                    continue;
+                }
+                if(PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite){
+                    break;
+                }
+                if((PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x]))) {
                     return true;
                 }
             }
@@ -377,30 +390,31 @@ public class MoveChecker {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (isOnBoard(x, y) &&
-                        PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite &&
-                        PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
+                if (!isOnBoard(x, y)){
+                    continue;
+                }
+                if(        PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite){
+                    break;
+                }
+                if (PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
                     return true;
                 }
             }
         }
 
-
-        // Look for pawns
-        if (isStartWhite) {
-            directions = new int[][]{{-1, 1}, {-1,-1}};
-        } else {
-            directions = new int[][]{{1,1},{1,-1}};
-        }
+        // Look for king
+        directions = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
         for (int[] dir : directions) {
-            int x = position.x() + dir[1];
-            int y = position.y() + dir[0];
-            if (isOnBoard(x, y)) {
-                if (PieceUtil.isPawn(field.getBoard()[y][x])) {
-                    return true;
-                }
+            int x = position.x() + dir[0];
+            int y = position.y() + dir[1];
+            if (!isOnBoard(x, y)){
+                continue;
+            }
+            if (PieceUtil.isKing(field.getBoard()[y][x])) {
+                return true;
             }
         }
+
         return false;
     }
 
