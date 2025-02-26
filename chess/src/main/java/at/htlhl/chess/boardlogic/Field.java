@@ -112,6 +112,10 @@ public class Field {
         moveRookIfCastlingMove(move);
         removeCastlingRightsIfNeeded(move, capturedPiece);
 
+        // Promotions
+        if (PieceUtil.isEmpty(move.promotionPiece()) == false)
+            setPieceOnSquare(move.targetSquare(), move.promotionPiece());
+
         //TODO: Add capture material calculation
         blackTurn = !blackTurn;
     }
