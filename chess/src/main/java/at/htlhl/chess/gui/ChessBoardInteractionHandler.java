@@ -10,6 +10,7 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -52,6 +53,8 @@ public class ChessBoardInteractionHandler {
     /** List of squares highlighted as legal move targets, or null if no highlights are active. */
     private List<Square> highlightedSquares = null;
 
+    private boolean autoQueen = true;
+
     /**
      * Constructs a new interaction handler for the chess board.
      *
@@ -88,7 +91,10 @@ public class ChessBoardInteractionHandler {
     private void setupClickHandlers() {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
-                square.setOnMouseClicked(event -> handleSquareClick(square));
+                square.setOnMouseClicked(event -> {
+                    autoQueen = event.getButton() == MouseButton.PRIMARY;
+                    handleSquareClick(square);
+                });
             }
         }
     }
@@ -129,6 +135,9 @@ public class ChessBoardInteractionHandler {
         if (targetSquare.y() != (field.isBlackTurn() ? 7 : 0))
             return PieceUtil.EMPTY;
 
+        if (autoQueen)
+            return field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN;
+
 
         // Create a custom dialog for promotion selection
         Stage dialog = new Stage();
@@ -139,15 +148,11 @@ public class ChessBoardInteractionHandler {
         HBox hbox = new HBox(0); // Spacing between images
         hbox.setStyle("-fx-background-color: #ffffff; -fx-padding: 0; -fx-alignment: center;");
 
+        ImageView queenView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_QUEEN_IMAGE : PieceImageUtil.WHITE_QUEEN_IMAGE);
+        ImageView rookView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_ROOK_IMAGE : PieceImageUtil.WHITE_ROOK_IMAGE);
+        ImageView bishopView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_BISHOP_IMAGE : PieceImageUtil.WHITE_BISHOP_IMAGE);
+        ImageView knightView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_KNIGHT_IMAGE : PieceImageUtil.WHITE_KNIGHT_IMAGE);
 
-        boolean isBlack = field.isBlackTurn();
-
-        ImageView queenView = new ImageView(isBlack ? PieceImageUtil.BLACK_QUEEN_IMAGE : PieceImageUtil.WHITE_QUEEN_IMAGE);
-        ImageView rookView = new ImageView(isBlack ? PieceImageUtil.BLACK_ROOK_IMAGE : PieceImageUtil.WHITE_ROOK_IMAGE);
-        ImageView bishopView = new ImageView(isBlack ? PieceImageUtil.BLACK_BISHOP_IMAGE : PieceImageUtil.WHITE_BISHOP_IMAGE);
-        ImageView knightView = new ImageView(isBlack ? PieceImageUtil.BLACK_KNIGHT_IMAGE : PieceImageUtil.WHITE_KNIGHT_IMAGE);
-
-        // Set size for images
         double imageSize = squareSize;
         for (ImageView view : List.of(queenView, rookView, bishopView, knightView)) {
             view.setFitWidth(imageSize);
@@ -155,23 +160,22 @@ public class ChessBoardInteractionHandler {
             view.setPreserveRatio(true);
         }
 
-        // Variable to store the chosen piece
-        final byte[] chosenPiece = {isBlack ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN}; // Default to Queen
+        final byte[] chosenPiece = {field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN};
 
         queenView.setOnMouseClicked(event -> {
-            chosenPiece[0] = isBlack ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN;
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN;
             dialog.close();
         });
         rookView.setOnMouseClicked(event -> {
-            chosenPiece[0] = isBlack ? PieceUtil.BLACK_ROOK : PieceUtil.WHITE_ROOK;
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_ROOK : PieceUtil.WHITE_ROOK;
             dialog.close();
         });
         bishopView.setOnMouseClicked(event -> {
-            chosenPiece[0] = isBlack ? PieceUtil.BLACK_BISHOP : PieceUtil.WHITE_BISHOP;
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_BISHOP : PieceUtil.WHITE_BISHOP;
             dialog.close();
         });
         knightView.setOnMouseClicked(event -> {
-            chosenPiece[0] = isBlack ? PieceUtil.BLACK_KNIGHT : PieceUtil.WHITE_KNIGHT;
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_KNIGHT : PieceUtil.WHITE_KNIGHT;
             dialog.close();
         });
 
@@ -273,6 +277,8 @@ public class ChessBoardInteractionHandler {
     private void setupDragHandlers(StackPane square) {
         square.setOnDragDetected(event -> {
             if (!hasPiece(square)) return;
+
+            autoQueen = event.getButton() == MouseButton.PRIMARY;
 
             selectSquare((Square) square.getUserData());
 
