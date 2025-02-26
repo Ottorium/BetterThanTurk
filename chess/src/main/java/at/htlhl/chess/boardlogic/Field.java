@@ -97,14 +97,14 @@ public class Field {
         byte capturedPiece = getPieceBySquare(move.targetSquare());
 
         // move piece to target square
-        setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
-        setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
+        setPieceOnSquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
+        setPieceOnSquare(move.startingSquare(), PieceUtil.EMPTY);
 
         //En passant
         //Delete captured pawn if enPassant happened
         if (move.targetSquare().equals(possibleEnPassantSquare)
                 && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
-            setPieceBySquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
+            setPieceOnSquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
         }
         possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
 
@@ -127,8 +127,8 @@ public class Field {
             // Move the rook
             Square rookStart = new Square(rookStartX, yRank);
             Square rookTarget = new Square(rookTargetX, yRank);
-            setPieceBySquare(rookTarget, getPieceBySquare(rookStart));
-            setPieceBySquare(rookStart, PieceUtil.EMPTY);
+            setPieceOnSquare(rookTarget, getPieceBySquare(rookStart));
+            setPieceOnSquare(rookStart, PieceUtil.EMPTY);
 
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
         }
@@ -216,7 +216,7 @@ public class Field {
     /**
      * Sets piece byte on board
      */
-    private void setPieceBySquare(Square square, byte piece) {
+    private void setPieceOnSquare(Square square, byte piece) {
         board[square.y()][square.x()] = piece;
     }
 
