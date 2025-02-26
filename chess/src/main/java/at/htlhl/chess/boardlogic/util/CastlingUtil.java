@@ -47,6 +47,13 @@ public final class CastlingUtil {
         return (byte) (currentFlags & ~flagToRemove);
     }
 
+    /**
+     * Removes a castling right from the current flags using bitwise AND and NOT operations.
+     *
+     * @param castlingInformation The current castling rights flags
+     * @param player The player to remove the castling right for
+     * @return A new byte with the castling right disabled for the specified player
+     */
     public static byte removeCastlingRights(byte castlingInformation, Player player) {
         byte flagsToRemove = player == Player.BLACK ?
                 CastlingUtil.add(CastlingUtil.BLACK_KING_SIDE, CastlingUtil.BLACK_QUEEN_SIDE) :
