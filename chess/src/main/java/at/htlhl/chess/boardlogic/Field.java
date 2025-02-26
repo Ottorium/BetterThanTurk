@@ -29,6 +29,8 @@ public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+    private Player kingInCheck = null;
+
     /**
      * Attempts to set the board state using FEN notation
      *
@@ -78,7 +80,7 @@ public class Field {
      */
     public boolean move(Move move) {
         MoveChecker moveChecker = new MoveChecker(this);
-        if (moveChecker.isMoveLegal(move)) {
+        if (moveChecker.isMoveLegal(move, true)) {
             // move piece to target square
             setPieceBySquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
             setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
@@ -164,5 +166,13 @@ public class Field {
 
     public int getNumberOfNextMove() {
         return numberOfNextMove;
+    }
+
+    public Player getKingInCheck() {
+        return kingInCheck;
+    }
+
+    public void setKingInCheck(Player kingInCheck) {
+        this.kingInCheck = kingInCheck;
     }
 }

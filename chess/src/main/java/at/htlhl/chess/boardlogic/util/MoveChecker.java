@@ -2,6 +2,7 @@ package at.htlhl.chess.boardlogic.util;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
+import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 
 import java.util.ArrayList;
@@ -269,7 +270,7 @@ public class MoveChecker {
      * @param move The move to check.
      * @return {@code true} if the move is legal, {@code false} otherwise.
      */
-    public boolean isMoveLegal(Move move) {
+    public boolean isMoveLegal(Move move, boolean willBeMoved) {
 
         if (move == null) {
             return false;
@@ -292,8 +293,21 @@ public class MoveChecker {
         // look if target square is possible
         for (Square target : possibleTargets) {
             if (target.equals(move.targetSquare())) {
-                //TODO  Check check
-                return true;
+
+                // Look for check
+                List<Player> appearedChecks = lookForChecksInMove(move);
+                if (isCheckLegal(appearedChecks)) {
+
+                    //set current checked player
+                    if (willBeMoved) { // TODO, change willBeMoved to something else, it is probably not the best solution
+                        if (appearedChecks.size() == 1) {
+                            field.setKingInCheck(appearedChecks.getFirst());
+                        } else {
+                            field.setKingInCheck(null);
+                        }
+                    }
+                    return true;
+                }
             }
         }
 
@@ -312,7 +326,7 @@ public class MoveChecker {
         if (!targets.isEmpty()) {
             List<Square> legalTargets = new ArrayList<>();
             for (Square target : targets) {
-                if (isMoveLegal(new Move(position, target))) {
+                if (isMoveLegal(new Move(position, target), false)) {
                     legalTargets.add(target);
                 }
             }
@@ -342,10 +356,11 @@ public class MoveChecker {
 
     /**
      * Search from king in all directions if this king is checked
+     *
      * @param position King position
      * @return true if king is checked, false otherwise
      */
-    private boolean isKingChecked(Square position) { //TODO fix xray
+    private boolean isKingChecked(Square position) {
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
 
         // Look for knight
@@ -353,10 +368,10 @@ public class MoveChecker {
         for (int[] move : knightMoves) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
-            if (!isOnBoard(x, y)){
+            if (!isOnBoard(x, y)) {
                 continue;
             }
-            if (PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite){
+            if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
                 continue;
             }
             if (PieceUtil.isKnight(field.getBoard()[y][x])) {
@@ -371,13 +386,13 @@ public class MoveChecker {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (!isOnBoard(x, y)){
+                if (!isOnBoard(x, y)) {
                     continue;
                 }
-                if(PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite){
+                if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
                     break;
                 }
-                if((PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x]))) {
+                if ((PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x]))) {
                     return true;
                 }
             }
@@ -390,10 +405,10 @@ public class MoveChecker {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (!isOnBoard(x, y)){
+                if (!isOnBoard(x, y)) {
                     continue;
                 }
-                if(        PieceUtil.isBlack(field.getBoard()[y][x]) == isStartWhite){
+                if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
                     break;
                 }
                 if (PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
@@ -407,7 +422,7 @@ public class MoveChecker {
         for (int[] dir : directions) {
             int x = position.x() + dir[0];
             int y = position.y() + dir[1];
-            if (!isOnBoard(x, y)){
+            if (!isOnBoard(x, y)) {
                 continue;
             }
             if (PieceUtil.isKing(field.getBoard()[y][x])) {
@@ -417,6 +432,99 @@ public class MoveChecker {
 
         return false;
     }
+
+    private List<Player> lookForChecksInMove(Move move) {
+
+        //save pieces to revert move
+        byte savedTargetPiece = getPieceBySquare(move.targetSquare());
+        byte savedStartingPiece = getPieceBySquare(move.startingSquare());
+
+        // make move, because it must be legal
+        setPieceBySquare(move.targetSquare(), savedStartingPiece);
+        setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
+
+
+        List<Player> checkedPlayers = new ArrayList<>();
+
+        // look for checks
+        Square[] kings = findKings();
+        for (Square king : kings) {
+            boolean isWhite = PieceUtil.isWhite(getPieceBySquare(king));
+            if (isKingChecked(king)) {
+                if (isWhite) {
+                    checkedPlayers.add(Player.WHITE);
+                } else {
+                    checkedPlayers.add(Player.BLACK);
+                }
+            }
+        }
+
+
+        // fix the board
+        setPieceBySquare(move.targetSquare(), savedTargetPiece);
+        setPieceBySquare(move.startingSquare(), savedStartingPiece);
+
+        return checkedPlayers;
+    }
+
+    ;
+
+    /**
+     * Finds both kings on board fast
+     *
+     * @return Square array of king's positions
+     */
+    private Square[] findKings() {
+        Square[] kings = new Square[2];
+        boolean second = false;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (PieceUtil.isKing(field.getBoard()[i][j])) {
+                    if (second) {
+                        kings[1] = new Square(j, i);
+                    } else {
+                        kings[0] = new Square(j, i);
+                        second = true;
+                    }
+                }
+            }
+        }
+        return kings;
+    }
+
+    ;
+
+    /**
+     * Looks if the check is legal in such way
+     * For example, if only one check is on board, or if the check appeared after your move
+     *
+     * @return true if the check is legal
+     */
+    private boolean isCheckLegal(List<Player> possibleChecks) {
+        if (possibleChecks.size() > 1) {
+            return false;
+        }
+        if (possibleChecks.isEmpty()) {
+            return true;
+        }
+
+
+        //if your color check appeared after your move
+        if (field.getKingInCheck() == null) {
+            if (field.isBlackTurn()) {
+                return !possibleChecks.getFirst().equals(Player.BLACK);
+            } else {
+                return !possibleChecks.getFirst().equals(Player.WHITE);
+            }
+        }
+
+        //if your check did not disappear
+        if (field.getKingInCheck().equals(possibleChecks.getFirst())) {
+            return false;
+        }
+        return true;
+    }
+
 
     /**
      * Gets piece byte from board
