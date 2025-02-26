@@ -49,6 +49,11 @@ public class BoardViewController implements Initializable {
         setUpInteractions();
     }
 
+    /**
+     * Configures scalability for the chess board, ensuring it resizes dynamically with the window.
+     * Binds the size of each square to the minimum of the scene's width or height divided by the board size,
+     * maintaining a square aspect ratio and updating the board's layout accordingly.
+     */
     private void setUpScalability() {
         squareSizeBinding = (DoubleBinding) Bindings.min(
                 chessBoard.getScene().widthProperty().divide(BOARD_SIZE),
@@ -70,6 +75,11 @@ public class BoardViewController implements Initializable {
         }
     }
 
+    /**
+     * Initializes user interaction handling for the chess board.
+     * Sets up a {@link ChessBoardInteractionHandler} with the current square size to manage clicks,
+     * drag-and-drop, and other interactions, updating the board display as needed.
+     */
     private void setUpInteractions() {
         double currentSquareSize = (squareSizeBinding != null && squareSizeBinding.isValid())
                 ? squareSizeBinding.get()
