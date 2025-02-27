@@ -13,15 +13,16 @@ public final class PieceUtil {
     public static final byte PAWN_MASK = 0x20;
 
     public static final byte BLACK = (byte) 0x40;
+    public static final byte WHITE = (byte) 0x80;
 
     public static final byte EMPTY = (byte) 0;
 
-    public static final byte WHITE_PAWN = PAWN_MASK;
-    public static final byte WHITE_KNIGHT = KNIGHT_MASK;
-    public static final byte WHITE_BISHOP = BISHOP_MASK;
-    public static final byte WHITE_ROOK = ROOK_MASK;
-    public static final byte WHITE_QUEEN = QUEEN_MASK;
-    public static final byte WHITE_KING = KING_MASK;
+    public static final byte WHITE_PAWN = (byte) (PAWN_MASK | WHITE);
+    public static final byte WHITE_KNIGHT = (byte) (KNIGHT_MASK | WHITE);
+    public static final byte WHITE_BISHOP = (byte) (BISHOP_MASK | WHITE);
+    public static final byte WHITE_ROOK = (byte) (ROOK_MASK | WHITE);
+    public static final byte WHITE_QUEEN = (byte) (QUEEN_MASK | WHITE);
+    public static final byte WHITE_KING = (byte) (KING_MASK | WHITE);
     public static final byte BLACK_PAWN = (byte) (PAWN_MASK | BLACK);
     public static final byte BLACK_KNIGHT = (byte) (KNIGHT_MASK | BLACK);
     public static final byte BLACK_BISHOP = (byte) (BISHOP_MASK | BLACK);

@@ -30,6 +30,8 @@ public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+    private GameState gameState;
+
     private final MoveChecker moveChecker = new MoveChecker(this);
 
     private int pieceEvaluation = 0;
