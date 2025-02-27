@@ -2,6 +2,7 @@ package at.htlhl.chess.boardlogic;
 
 import at.htlhl.chess.boardlogic.util.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,6 +33,11 @@ public class Field {
     private GameState gameState;
 
     private final MoveChecker moveChecker = new MoveChecker(this);
+
+    private int pieceEvaluation = 0;
+    private final List<Byte> capturedWhitePieces = new ArrayList<>();
+    private final List<Byte> capturedBlackPieces = new ArrayList<>();
+
 
     /**
      * Attempts to set the board state using FEN notation
@@ -106,7 +112,9 @@ public class Field {
         //Delete captured pawn if enPassant happened
         if (move.targetSquare().equals(possibleEnPassantSquare)
                 && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
-            setPieceOnSquare(new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1)), PieceUtil.EMPTY);
+            Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
+            capturedPiece = getPieceBySquare(capturedEnPassantPawn);
+            setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
         }
         possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
 
@@ -118,8 +126,24 @@ public class Field {
         if (PieceUtil.isEmpty(move.promotionPiece()) == false)
             setPieceOnSquare(move.targetSquare(), move.promotionPiece());
 
-        //TODO: Add capture material calculation
+        calculateMaterial(capturedPiece);
         blackTurn = !blackTurn;
+    }
+
+    /**
+     * Adds the Captured piece to the class variables keeping track of the current captured pieces
+     *
+     * @param capturedPiece the piece to add (eg. the piece that got captured in the last move)
+     */
+    private void calculateMaterial(byte capturedPiece) {
+        if (PieceUtil.isEmpty(capturedPiece)) return;
+
+        if (PieceUtil.isWhite(capturedPiece))
+            capturedWhitePieces.add(capturedPiece);
+        else
+            capturedBlackPieces.add(capturedPiece);
+
+        pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece);
     }
 
     private void moveRookIfCastlingMove(Move move) {
