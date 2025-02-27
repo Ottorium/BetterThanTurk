@@ -17,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -42,7 +43,7 @@ public class ChessBoardInteractionHandler {
     private final Field field;
 
     /** The size of each square on the board in pixels. */
-    private final int squareSize;
+    private final double squareSize;
 
     /** Callback function to update the board UI after a move is made. */
     private final Consumer<Void> onBoardUpdate;
@@ -63,7 +64,7 @@ public class ChessBoardInteractionHandler {
      * @param squareSize    The size of each square in pixels.
      * @param onBoardUpdate Callback to refresh the board UI after a move.
      */
-    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, int squareSize, Consumer<Void> onBoardUpdate) {
+    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, Consumer<Void> onBoardUpdate) {
         this.chessBoard = chessBoard;
         this.field = field;
         this.squareSize = squareSize;
@@ -224,8 +225,10 @@ public class ChessBoardInteractionHandler {
      */
     private void highlightSquare(Square square) {
         StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
+        Rectangle squareRect = (Rectangle) squarePane.getChildren().getFirst();
 
-        Circle highlight = new Circle(squareSize / 6.0);
+        Circle highlight = new Circle();
+        highlight.radiusProperty().bind(squareRect.widthProperty().divide(6.0));
         highlight.setFill(HIGHLIGHT_COLOR);
         highlight.setMouseTransparent(true);
 
@@ -290,7 +293,7 @@ public class ChessBoardInteractionHandler {
             content.putString(sourceSquare.x() + "," + sourceSquare.y());
             db.setContent(content);
 
-            setupDragView(db, piece);
+            setupDragView(db, piece, square);
 
             event.consume();
         });
@@ -302,16 +305,20 @@ public class ChessBoardInteractionHandler {
      * @param db    The {@link Dragboard} managing the drag operation.
      * @param piece The {@link ImageView} of the piece being dragged.
      */
-    private void setupDragView(Dragboard db, ImageView piece) {
-        double dragSize = squareSize * DRAG_SCALE;
+    private void setupDragView(Dragboard db, ImageView piece, StackPane square) {
+        Rectangle squareRect = (Rectangle) square.getChildren().getFirst();
+
         ImageView dragView = new ImageView(piece.getImage());
-        dragView.setFitWidth(dragSize);
-        dragView.setFitHeight(dragSize);
+        dragView.fitWidthProperty().bind(squareRect.widthProperty().multiply(DRAG_SCALE));
+        dragView.fitHeightProperty().bind(squareRect.heightProperty().multiply(DRAG_SCALE));
 
         SnapshotParameters params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
 
-        db.setDragView(dragView.snapshot(params, null), dragSize / 2, dragSize / 2);
+        // Use current value for the snapshot since bindings don't work directly with snapshot
+        double dragWidth = squareRect.getWidth() * DRAG_SCALE;
+
+        db.setDragView(dragView.snapshot(params, null), dragWidth / 2, dragWidth / 2);
     }
 
     /**
