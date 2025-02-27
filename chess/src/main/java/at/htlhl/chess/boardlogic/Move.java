@@ -5,6 +5,11 @@ import java.util.Objects;
 public record Move(Square startingSquare, Square targetSquare, byte promotionPiece) {
 
     @Override
+    public String toString() {
+        return startingSquare.toString() + "-" + targetSquare.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Move move = (Move) o;
