@@ -3,16 +3,24 @@ package at.htlhl.chess.gui;
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.boardlogic.util.PieceUtil;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,7 +43,7 @@ public class ChessBoardInteractionHandler {
     private final Field field;
 
     /** The size of each square on the board in pixels. */
-    private final int squareSize;
+    private final double squareSize;
 
     /** Callback function to update the board UI after a move is made. */
     private final Consumer<Void> onBoardUpdate;
@@ -46,6 +54,8 @@ public class ChessBoardInteractionHandler {
     /** List of squares highlighted as legal move targets, or null if no highlights are active. */
     private List<Square> highlightedSquares = null;
 
+    private boolean autoQueen = true;
+
     /**
      * Constructs a new interaction handler for the chess board.
      *
@@ -54,7 +64,7 @@ public class ChessBoardInteractionHandler {
      * @param squareSize    The size of each square in pixels.
      * @param onBoardUpdate Callback to refresh the board UI after a move.
      */
-    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, int squareSize, Consumer<Void> onBoardUpdate) {
+    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, Consumer<Void> onBoardUpdate) {
         this.chessBoard = chessBoard;
         this.field = field;
         this.squareSize = squareSize;
@@ -82,7 +92,10 @@ public class ChessBoardInteractionHandler {
     private void setupClickHandlers() {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
-                square.setOnMouseClicked(event -> handleSquareClick(square));
+                square.setOnMouseClicked(event -> {
+                    autoQueen = event.getButton() == MouseButton.PRIMARY;
+                    handleSquareClick(square);
+                });
             }
         }
     }
@@ -98,7 +111,7 @@ public class ChessBoardInteractionHandler {
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
-            field.move(new Move(selectedSquare, clickedSquare));
+            field.move(new Move(selectedSquare, clickedSquare, getPromotionPiece(selectedSquare, clickedSquare)));
             clearSelection();
             updateBoard();
         } else {
@@ -107,6 +120,73 @@ public class ChessBoardInteractionHandler {
                 selectSquare(clickedSquare);
             }
         }
+    }
+
+    /**
+     * Determines if a pawn is being promoted and prompts the user to choose a piece via an image-based dialog.
+     *
+     * @param startSquare  The starting {@link Square} of the move.
+     * @param targetSquare The target {@link Square} of the move.
+     * @return The byte value of the chosen promotion piece, or PieceUtil.EMPTY if the move is not a promotion.
+     */
+    private byte getPromotionPiece(Square startSquare, Square targetSquare) {
+        if (PieceUtil.isPawn(field.getPieceBySquare(startSquare)) == false)
+            return PieceUtil.EMPTY;
+
+        if (targetSquare.y() != (field.isBlackTurn() ? 7 : 0))
+            return PieceUtil.EMPTY;
+
+        if (autoQueen)
+            return field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN;
+
+
+        // Create a custom dialog for promotion selection
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initStyle(StageStyle.UNDECORATED);
+        dialog.setTitle("Pawn Promotion");
+
+        HBox hbox = new HBox(0); // Spacing between images
+        hbox.setStyle("-fx-background-color: #ffffff; -fx-padding: 0; -fx-alignment: center;");
+
+        ImageView queenView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_QUEEN_IMAGE : PieceImageUtil.WHITE_QUEEN_IMAGE);
+        ImageView rookView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_ROOK_IMAGE : PieceImageUtil.WHITE_ROOK_IMAGE);
+        ImageView bishopView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_BISHOP_IMAGE : PieceImageUtil.WHITE_BISHOP_IMAGE);
+        ImageView knightView = new ImageView(field.isBlackTurn() ? PieceImageUtil.BLACK_KNIGHT_IMAGE : PieceImageUtil.WHITE_KNIGHT_IMAGE);
+
+        double imageSize = squareSize;
+        for (ImageView view : List.of(queenView, rookView, bishopView, knightView)) {
+            view.setFitWidth(imageSize);
+            view.setFitHeight(imageSize);
+            view.setPreserveRatio(true);
+        }
+
+        final byte[] chosenPiece = {field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN};
+
+        queenView.setOnMouseClicked(event -> {
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_QUEEN : PieceUtil.WHITE_QUEEN;
+            dialog.close();
+        });
+        rookView.setOnMouseClicked(event -> {
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_ROOK : PieceUtil.WHITE_ROOK;
+            dialog.close();
+        });
+        bishopView.setOnMouseClicked(event -> {
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_BISHOP : PieceUtil.WHITE_BISHOP;
+            dialog.close();
+        });
+        knightView.setOnMouseClicked(event -> {
+            chosenPiece[0] = field.isBlackTurn() ? PieceUtil.BLACK_KNIGHT : PieceUtil.WHITE_KNIGHT;
+            dialog.close();
+        });
+
+        hbox.getChildren().addAll(queenView, rookView, bishopView, knightView);
+
+        Scene scene = new Scene(hbox);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+
+        return chosenPiece[0];
     }
 
     /**
@@ -145,8 +225,10 @@ public class ChessBoardInteractionHandler {
      */
     private void highlightSquare(Square square) {
         StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
+        Rectangle squareRect = (Rectangle) squarePane.getChildren().getFirst();
 
-        Circle highlight = new Circle(squareSize / 6.0);
+        Circle highlight = new Circle();
+        highlight.radiusProperty().bind(squareRect.widthProperty().divide(6.0));
         highlight.setFill(HIGHLIGHT_COLOR);
         highlight.setMouseTransparent(true);
 
@@ -199,6 +281,8 @@ public class ChessBoardInteractionHandler {
         square.setOnDragDetected(event -> {
             if (!hasPiece(square)) return;
 
+            autoQueen = event.getButton() == MouseButton.PRIMARY;
+
             selectSquare((Square) square.getUserData());
 
             ImageView piece = (ImageView) square.getChildren().get(1);
@@ -209,7 +293,7 @@ public class ChessBoardInteractionHandler {
             content.putString(sourceSquare.x() + "," + sourceSquare.y());
             db.setContent(content);
 
-            setupDragView(db, piece);
+            setupDragView(db, piece, square);
 
             event.consume();
         });
@@ -221,16 +305,20 @@ public class ChessBoardInteractionHandler {
      * @param db    The {@link Dragboard} managing the drag operation.
      * @param piece The {@link ImageView} of the piece being dragged.
      */
-    private void setupDragView(Dragboard db, ImageView piece) {
-        double dragSize = squareSize * DRAG_SCALE;
+    private void setupDragView(Dragboard db, ImageView piece, StackPane square) {
+        Rectangle squareRect = (Rectangle) square.getChildren().getFirst();
+
         ImageView dragView = new ImageView(piece.getImage());
-        dragView.setFitWidth(dragSize);
-        dragView.setFitHeight(dragSize);
+        dragView.fitWidthProperty().bind(squareRect.widthProperty().multiply(DRAG_SCALE));
+        dragView.fitHeightProperty().bind(squareRect.heightProperty().multiply(DRAG_SCALE));
 
         SnapshotParameters params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
 
-        db.setDragView(dragView.snapshot(params, null), dragSize / 2, dragSize / 2);
+        // Use current value for the snapshot since bindings don't work directly with snapshot
+        double dragWidth = squareRect.getWidth() * DRAG_SCALE;
+
+        db.setDragView(dragView.snapshot(params, null), dragWidth / 2, dragWidth / 2);
     }
 
     /**
@@ -271,7 +359,7 @@ public class ChessBoardInteractionHandler {
             Square targetSquare = (Square) square.getUserData();
 
             if (!sourceSquare.equals(targetSquare)) {
-                Move move = new Move(sourceSquare, targetSquare);
+                Move move = new Move(sourceSquare, targetSquare, getPromotionPiece(sourceSquare, targetSquare));
                 success = field.move(move);
                 if (success) updateBoard();
             }

@@ -13,21 +13,29 @@ public final class PieceUtil {
     public static final byte PAWN_MASK = 0x20;
 
     public static final byte BLACK = (byte) 0x40;
+    public static final byte WHITE = (byte) 0x80;
 
     public static final byte EMPTY = (byte) 0;
 
-    public static final byte WHITE_PAWN = PAWN_MASK;
-    public static final byte WHITE_KNIGHT = KNIGHT_MASK;
-    public static final byte WHITE_BISHOP = BISHOP_MASK;
-    public static final byte WHITE_ROOK = ROOK_MASK;
-    public static final byte WHITE_QUEEN = QUEEN_MASK;
-    public static final byte WHITE_KING = KING_MASK;
+    public static final byte WHITE_PAWN = (byte) (PAWN_MASK | WHITE);
+    public static final byte WHITE_KNIGHT = (byte) (KNIGHT_MASK | WHITE);
+    public static final byte WHITE_BISHOP = (byte) (BISHOP_MASK | WHITE);
+    public static final byte WHITE_ROOK = (byte) (ROOK_MASK | WHITE);
+    public static final byte WHITE_QUEEN = (byte) (QUEEN_MASK | WHITE);
+    public static final byte WHITE_KING = (byte) (KING_MASK | WHITE);
     public static final byte BLACK_PAWN = (byte) (PAWN_MASK | BLACK);
     public static final byte BLACK_KNIGHT = (byte) (KNIGHT_MASK | BLACK);
     public static final byte BLACK_BISHOP = (byte) (BISHOP_MASK | BLACK);
     public static final byte BLACK_ROOK = (byte) (ROOK_MASK | BLACK);
     public static final byte BLACK_QUEEN = (byte) (QUEEN_MASK | BLACK);
     public static final byte BLACK_KING = (byte) (KING_MASK | BLACK);
+
+    public static final int RELATIVE_KING_VALUE = Integer.MAX_VALUE - 100_000; // not the max value to avoid overflows
+    public static final int RELATIVE_QUEEN_VALUE = 950;
+    public static final int RELATIVE_BISHOP_VALUE = 333;
+    public static final int RELATIVE_KNIGHT_VALUE = 305;
+    public static final int RELATIVE_ROOK_VALUE = 563;
+    public static final int RELATIVE_PAWN_VALUE = 100;
 
 
     public static boolean isBlack(byte binaryInformation) {
@@ -66,7 +74,19 @@ public final class PieceUtil {
         return (binaryInformation & KING_MASK) != 0;
     }
 
+    public static int getRelativeValue(byte piece) {
+        if (isEmpty(piece)) return 0;
+        int value;
+        if (isKing(piece)) value = RELATIVE_KING_VALUE;
+        else if (isQueen(piece)) value = RELATIVE_QUEEN_VALUE;
+        else if (isRook(piece)) value = RELATIVE_ROOK_VALUE;
+        else if (isBishop(piece)) value = RELATIVE_BISHOP_VALUE;
+        else if (isKnight(piece)) value = RELATIVE_KNIGHT_VALUE;
+        else if (isPawn(piece)) value = RELATIVE_PAWN_VALUE;
+        else throw new UnsupportedOperationException("Invalid Piece");
 
+        return isWhite(piece) ? value : -value;
+    }
 
     public static String toString(byte piece) {
         String name = PieceUtil.isBlack(piece) ? "black_" : "white_";

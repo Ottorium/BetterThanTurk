@@ -218,7 +218,36 @@ public class MoveChecker {
 
     private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
-        int[][] targets = {{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
+        ArrayList<int[]> targets = new ArrayList<>();
+        targets.add(new int[]{0, 1});
+        targets.add(new int[]{0, -1});
+        targets.add(new int[]{1, 1});
+        targets.add(new int[]{1, -1});
+        targets.add(new int[]{1, 0});
+        targets.add(new int[]{-1, 1});
+        targets.add(new int[]{-1, -1});
+        targets.add(new int[]{-1, 0});
+
+        byte castlingInfo = field.getCastlingInformation();
+        byte kingSideFlag = isStartWhite ? CastlingUtil.WHITE_KING_SIDE : CastlingUtil.BLACK_KING_SIDE;
+        byte queenSideFlag = isStartWhite ? CastlingUtil.WHITE_QUEEN_SIDE : CastlingUtil.BLACK_QUEEN_SIDE;
+
+        // Check kingside castling - spaces between king (x) and rook (x+3) must be empty
+        if (CastlingUtil.hasFlag(castlingInfo, kingSideFlag) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() + 1, position.y()))) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() + 2, position.y())))) {
+            targets.add(new int[]{2, 0});
+        }
+
+        // Check queenside castling - spaces between king (x) and rook (x-4) must be empty
+        if (CastlingUtil.hasFlag(castlingInfo, queenSideFlag) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 1, position.y()))) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 2, position.y()))) &&
+                PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 3, position.y())))) {
+            targets.add(new int[]{-2, 0});
+        }
+
+
         for (int[] move : targets) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
@@ -265,7 +294,7 @@ public class MoveChecker {
     }
 
     /**
-     * Checks if a given move is legal.
+     * Checks if a given move is legal. This Method is inefficient.
      *
      * @param move The move to check.
      * @return {@code true} if the move is legal, {@code false} otherwise.
@@ -326,7 +355,9 @@ public class MoveChecker {
         if (!targets.isEmpty()) {
             List<Square> legalTargets = new ArrayList<>();
             for (Square target : targets) {
-                if (isMoveLegal(new Move(position, target), false)) {
+
+                // We must not use an empty piece here, as a promotion to an empty piece would be illegal
+                if (isMoveLegal(new Move(position, target, PieceUtil.QUEEN_MASK), false)) {
                     legalTargets.add(target);
                 }
             }
@@ -546,4 +577,8 @@ public class MoveChecker {
         field.getBoard()[square.y()][square.x()] = piece;
     }
 
+    public boolean isCastlingMove(Move move) {
+        return PieceUtil.isKing(getPieceBySquare(move.targetSquare()))
+                && Math.abs(move.targetSquare().x() - move.startingSquare().x()) == 2;
+    }
 }

@@ -29,4 +29,11 @@ public record Square(int x, int y) {
     public int hashCode() {
         return Objects.hash(x, y);
     }
+
+    @Override
+    public String toString() {
+        char file = (char) (x + 97);
+        int rank = 8 - y;
+        return String.valueOf(file) + rank;
+    }
 }

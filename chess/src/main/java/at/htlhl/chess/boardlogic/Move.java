@@ -2,7 +2,12 @@ package at.htlhl.chess.boardlogic;
 
 import java.util.Objects;
 
-public record Move(Square startingSquare, Square targetSquare) {
+public record Move(Square startingSquare, Square targetSquare, byte promotionPiece) {
+
+    @Override
+    public String toString() {
+        return startingSquare.toString() + "-" + targetSquare.toString();
+    }
 
     @Override
     public boolean equals(Object o) {

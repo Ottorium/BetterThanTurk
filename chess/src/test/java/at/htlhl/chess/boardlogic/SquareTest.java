@@ -31,4 +31,29 @@ public class SquareTest {
     void testParseStringInvalidCharacter() {
         assertThrows(NumberFormatException.class, () -> Square.parseString("ea"));
     }
+
+    @Test
+    void testToStringMiddlePosition() {
+        Square square = new Square(4, 3);  // e5 position
+        assertEquals("e5", square.toString());
+    }
+
+    @Test
+    void testToStringBottomLeft() {
+        Square square = new Square(0, 7);  // a1 position
+        assertEquals("a1", square.toString());
+    }
+
+    @Test
+    void testToStringTopRight() {
+        Square square = new Square(7, 0);  // h8 position
+        assertEquals("h8", square.toString());
+    }
+
+    @Test
+    void testToStringParseStringRoundTrip() {
+        String position = "c4";
+        Square square = Square.parseString(position);
+        assertEquals(position, square.toString());
+    }
 }
