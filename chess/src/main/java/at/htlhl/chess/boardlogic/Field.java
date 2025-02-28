@@ -89,7 +89,7 @@ public class Field {
      * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
-        if (moveChecker.isMoveLegal(move)) {
+        if (moveChecker.isMoveLegal(move,true)) {
             forceMove(move);
             return true;
         }
