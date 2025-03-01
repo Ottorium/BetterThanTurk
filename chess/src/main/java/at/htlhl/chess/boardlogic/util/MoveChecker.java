@@ -305,7 +305,7 @@ public class MoveChecker {
             return false;
         }
 
-        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.startingSquare()));
+        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()));
 
 
         // check if player color is ok
@@ -314,14 +314,14 @@ public class MoveChecker {
         }
 
         //Get possible targets
-        List<Square> possibleTargets = getTargetSquares(move.startingSquare(), isStartWhite);
+        List<Square> possibleTargets = getTargetSquares(move.getStartingSquare(), isStartWhite);
         if (possibleTargets.isEmpty()) {
             return false;
         }
 
         // look if target square is possible
         for (Square target : possibleTargets) {
-            if (target.equals(move.targetSquare())) {
+            if (target.equals(move.getTargetSquare())) {
 
                 // Look for check
                 List<Player> appearedChecks = lookForChecksInMove(move);
@@ -375,11 +375,11 @@ public class MoveChecker {
      * produce an en passant square (e.g., not a pawn, or not a double move)
      */
     public Square getEnPassantSquareProducedByPawnDoubleMove(Move move) {
-        byte piece = getPieceBySquare(move.targetSquare());
+        byte piece = getPieceBySquare(move.getTargetSquare());
         if (PieceUtil.isPawn(piece)) {
-            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.targetSquare()));
-            if (Math.abs(move.targetSquare().y() - move.startingSquare().y()) == 2) {
-                return new Square(move.targetSquare().x(), move.targetSquare().y() + (isStartWhite ? 1 : -1));
+            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getTargetSquare()));
+            if (Math.abs(move.getTargetSquare().y() - move.getStartingSquare().y()) == 2) {
+                return new Square(move.getTargetSquare().x(), move.getTargetSquare().y() + (isStartWhite ? 1 : -1));
             }
         }
         return null;
@@ -473,12 +473,12 @@ public class MoveChecker {
     private List<Player> lookForChecksInMove(Move move) {
 
         //save pieces to revert move
-        byte savedTargetPiece = getPieceBySquare(move.targetSquare());
-        byte savedStartingPiece = getPieceBySquare(move.startingSquare());
+        byte savedTargetPiece = getPieceBySquare(move.getTargetSquare());
+        byte savedStartingPiece = getPieceBySquare(move.getStartingSquare());
 
         // make move, because it must be legal
-        setPieceBySquare(move.targetSquare(), savedStartingPiece);
-        setPieceBySquare(move.startingSquare(), PieceUtil.EMPTY);
+        setPieceBySquare(move.getTargetSquare(), savedStartingPiece);
+        setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
 
 
         List<Player> checkedPlayers = new ArrayList<>();
@@ -498,8 +498,8 @@ public class MoveChecker {
 
 
         // fix the board
-        setPieceBySquare(move.targetSquare(), savedTargetPiece);
-        setPieceBySquare(move.startingSquare(), savedStartingPiece);
+        setPieceBySquare(move.getTargetSquare(), savedTargetPiece);
+        setPieceBySquare(move.getStartingSquare(), savedStartingPiece);
 
         return checkedPlayers;
     }
@@ -578,7 +578,7 @@ public class MoveChecker {
     }
 
     public boolean isCastlingMove(Move move) {
-        return PieceUtil.isKing(getPieceBySquare(move.targetSquare()))
-                && Math.abs(move.targetSquare().x() - move.startingSquare().x()) == 2;
+        return PieceUtil.isKing(getPieceBySquare(move.getTargetSquare()))
+                && Math.abs(move.getTargetSquare().x() - move.getStartingSquare().x()) == 2;
     }
 }

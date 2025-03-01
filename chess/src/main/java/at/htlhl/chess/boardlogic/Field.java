@@ -104,16 +104,16 @@ public class Field {
     public void forceMove(Move move) {
 
         // store captured piece for material calculation and castling calculation later
-        byte capturedPiece = getPieceBySquare(move.targetSquare());
+        byte capturedPiece = getPieceBySquare(move.getTargetSquare());
 
         // move piece to target square
-        setPieceOnSquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
-        setPieceOnSquare(move.startingSquare(), PieceUtil.EMPTY);
+        setPieceOnSquare(move.getTargetSquare(), getPieceBySquare(move.getStartingSquare()));
+        setPieceOnSquare(move.getStartingSquare(), PieceUtil.EMPTY);
 
         //En passant
         //Delete captured pawn if enPassant happened
-        if (move.targetSquare().equals(possibleEnPassantSquare)
-                && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
+        if (move.getTargetSquare().equals(possibleEnPassantSquare)
+                && PieceUtil.isPawn(getPieceBySquare(move.getTargetSquare()))) {
             Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
             capturedPiece = getPieceBySquare(capturedEnPassantPawn);
             setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
@@ -125,8 +125,8 @@ public class Field {
         removeCastlingRightsIfNeeded(move, capturedPiece);
 
         // Promotions
-        if (PieceUtil.isEmpty(move.promotionPiece()) == false)
-            setPieceOnSquare(move.targetSquare(), move.promotionPiece());
+        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false)
+            setPieceOnSquare(move.getTargetSquare(), move.getPromotionPiece());
 
         calculateMaterial(capturedPiece);
         blackTurn = !blackTurn;
@@ -151,10 +151,10 @@ public class Field {
     private void moveRookIfCastlingMove(Move move) {
         if (moveChecker.isCastlingMove(move)) {
             // Determine castling direction and rook starting position
-            int kingMoveDistance = move.targetSquare().x() - move.startingSquare().x();
+            int kingMoveDistance = move.getTargetSquare().x() - move.getStartingSquare().x();
             int rookStartX = (kingMoveDistance > 0) ? 7 : 0;  // Kingside: h-file, Queenside: a-file
-            int rookTargetX = move.startingSquare().x() + (kingMoveDistance / 2);
-            int yRank = move.startingSquare().y();
+            int rookTargetX = move.getStartingSquare().x() + (kingMoveDistance / 2);
+            int yRank = move.getStartingSquare().y();
 
             // Move the rook
             Square rookStart = new Square(rookStartX, yRank);
@@ -175,8 +175,8 @@ public class Field {
      * @param capturedPiece The piece (if any) that was captured by this move.
      */
     private void removeCastlingRightsIfNeeded(Move move, byte capturedPiece) {
-        Square start = move.startingSquare();
-        Square target = move.targetSquare();
+        Square start = move.getStartingSquare();
+        Square target = move.getTargetSquare();
         byte movingPiece = getPieceBySquare(target);
 
         int homeRank = blackTurn ? 0 : 7;
