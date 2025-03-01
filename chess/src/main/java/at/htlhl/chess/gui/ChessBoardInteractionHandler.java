@@ -111,7 +111,9 @@ public class ChessBoardInteractionHandler {
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
-            field.move(new Move(selectedSquare, clickedSquare, getPromotionPiece(selectedSquare, clickedSquare)));
+            Move move = new Move(selectedSquare, clickedSquare);
+            move.setPromotionPiece(getPromotionPiece(selectedSquare, clickedSquare));
+            field.move(move);
             clearSelection();
             updateBoard();
         } else {
@@ -359,7 +361,8 @@ public class ChessBoardInteractionHandler {
             Square targetSquare = (Square) square.getUserData();
 
             if (!sourceSquare.equals(targetSquare)) {
-                Move move = new Move(sourceSquare, targetSquare, getPromotionPiece(sourceSquare, targetSquare));
+                Move move = new Move(sourceSquare, targetSquare);
+                move.setPromotionPiece(getPromotionPiece(sourceSquare,targetSquare));
                 success = field.move(move);
                 if (success) updateBoard();
             }

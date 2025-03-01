@@ -89,7 +89,9 @@ public class Field {
      * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
-        if (moveChecker.isMoveLegal(move,true)) {
+        moveChecker.validateMove(move);
+
+        if (move.isLegal()) {
             forceMove(move);
             return true;
         }
@@ -97,7 +99,7 @@ public class Field {
     }
 
     /**
-     * Executes a move on the board. Does not check if the move is valid.
+     * Executes a move on the board. Does not check if the move is valid. Requires the move to be validated earlier
      *
      * @param move The move to execute. Undefined behaviour if the move is not valid
      */
@@ -112,13 +114,12 @@ public class Field {
 
         //En passant
         //Delete captured pawn if enPassant happened
-        if (move.getTargetSquare().equals(possibleEnPassantSquare)
-                && PieceUtil.isPawn(getPieceBySquare(move.getTargetSquare()))) {
+        if (move.isEnPassantMove()) {
             Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
             capturedPiece = getPieceBySquare(capturedEnPassantPawn);
             setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
         }
-        possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
+        possibleEnPassantSquare = move.getPossibleEnPassantSquare();
 
         // Castling
         moveRookIfCastlingMove(move);
@@ -149,7 +150,7 @@ public class Field {
     }
 
     private void moveRookIfCastlingMove(Move move) {
-        if (moveChecker.isCastlingMove(move)) {
+        if (move.isCastlingMove()) {
             // Determine castling direction and rook starting position
             int kingMoveDistance = move.getTargetSquare().x() - move.getStartingSquare().x();
             int rookStartX = (kingMoveDistance > 0) ? 7 : 0;  // Kingside: h-file, Queenside: a-file

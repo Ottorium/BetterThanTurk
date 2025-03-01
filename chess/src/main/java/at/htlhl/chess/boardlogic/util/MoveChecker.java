@@ -294,15 +294,16 @@ public class MoveChecker {
     }
 
     /**
-     * Checks if a given move is legal. This Method is inefficient.
+     * Checks information about the move and edits it's information
+     * isMoveValid, isThatEnPassant, what check will appear
      *
      * @param move The move to check.
      * @return {@code true} if the move is legal, {@code false} otherwise.
      */
-    public boolean isMoveLegal(Move move, boolean willBeMoved) {
+    public void validateMove(Move move) {
 
         if (move == null) {
-            return false;
+            throw new NullPointerException("Move cannot be null");
         }
 
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()));
@@ -310,37 +311,61 @@ public class MoveChecker {
 
         // check if player color is ok
         if (isStartWhite == field.isBlackTurn()) { // if colors are equal
-            return false;
+            move.setLegal(false);
+            return;
         }
 
         //Get possible targets
         List<Square> possibleTargets = getTargetSquares(move.getStartingSquare(), isStartWhite);
         if (possibleTargets.isEmpty()) {
-            return false;
+            move.setLegal(false);
         }
+
+        // look for move type
+        gatherMoveInfo(move);
 
         // look if target square is possible
         for (Square target : possibleTargets) {
             if (target.equals(move.getTargetSquare())) {
 
+
+                //TODO add better checking for moves like en passant or castling
+
                 // Look for check
                 List<Player> appearedChecks = lookForChecksInMove(move);
                 if (isCheckLegal(appearedChecks)) {
+                    move.setLegal(true);
 
-                    //set current checked player
-                    if (willBeMoved) { // TODO, change willBeMoved to something else, it is probably not the best solution
-                        if (appearedChecks.size() == 1) {
-                            field.setKingInCheck(appearedChecks.getFirst());
-                        } else {
-                            field.setKingInCheck(null);
-                        }
+                    // redundant length check call, but that's the easiest way
+                    if (appearedChecks.size() == 1) {
+                        move.setAppearedCheck(appearedChecks.getFirst());
                     }
-                    return true;
+                    return;
                 }
             }
         }
 
-        return false;
+
+
+        move.setLegal(false);
+    }
+
+    private void gatherMoveInfo(Move move){
+        // Castling
+        if(isCastlingMove(move)){
+            move.setCastlingMove(true);
+        } else {
+
+            //En passant move is move when pawn does capture
+            if(move.getTargetSquare().equals(field.getPossibleEnPassantSquare())
+                    && PieceUtil.isPawn(getPieceBySquare(move.getStartingSquare()))){
+                move.setEnPassantMove(true);
+            } else {
+
+                // EnPassant possible square
+                move.setPossibleEnPassantSquare(getEnPassantSquareProducedByPawnDoubleMove(move));
+            }
+        }
     }
 
     /**
@@ -355,9 +380,9 @@ public class MoveChecker {
         if (!targets.isEmpty()) {
             List<Square> legalTargets = new ArrayList<>();
             for (Square target : targets) {
-
-                // We must not use an empty piece here, as a promotion to an empty piece would be illegal
-                if (isMoveLegal(new Move(position, target, PieceUtil.QUEEN_MASK), false)) {
+                Move move = new Move(position, target);
+                validateMove(move);
+                if (move.isLegal()) {
                     legalTargets.add(target);
                 }
             }
@@ -374,10 +399,10 @@ public class MoveChecker {
      * @return the Square that can be targeted for an en passant capture, or null if the move does not
      * produce an en passant square (e.g., not a pawn, or not a double move)
      */
-    public Square getEnPassantSquareProducedByPawnDoubleMove(Move move) {
-        byte piece = getPieceBySquare(move.getTargetSquare());
+    private Square getEnPassantSquareProducedByPawnDoubleMove(Move move) {
+        byte piece = getPieceBySquare(move.getStartingSquare());
         if (PieceUtil.isPawn(piece)) {
-            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getTargetSquare()));
+            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()));
             if (Math.abs(move.getTargetSquare().y() - move.getStartingSquare().y()) == 2) {
                 return new Square(move.getTargetSquare().x(), move.getTargetSquare().y() + (isStartWhite ? 1 : -1));
             }
@@ -577,8 +602,8 @@ public class MoveChecker {
         field.getBoard()[square.y()][square.x()] = piece;
     }
 
-    public boolean isCastlingMove(Move move) {
-        return PieceUtil.isKing(getPieceBySquare(move.getTargetSquare()))
+    private boolean isCastlingMove(Move move) {
+        return PieceUtil.isKing(getPieceBySquare(move.getStartingSquare()))
                 && Math.abs(move.getTargetSquare().x() - move.getStartingSquare().x()) == 2;
     }
 }
