@@ -544,6 +544,22 @@ public class MoveChecker {
             }
         }
 
+        // Look for pawns
+        if (isStartWhite) {
+            directions = new int[][]{{-1, 1}, {-1,-1}};
+        } else {
+            directions = new int[][]{{1,1},{1,-1}};
+        }
+        for (int[] dir : directions) {
+            int x = position.x() + dir[1];
+            int y = position.y() + dir[0];
+            if (isOnBoard(x, y)) {
+                if (PieceUtil.isWhite(field.getBoard()[y][x]) ^ isStartWhite && PieceUtil.isPawn(field.getBoard()[y][x])) {
+                    return true;
+                }
+            }
+        }
+
         // Look for king
         directions = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
         for (int[] dir : directions) {
