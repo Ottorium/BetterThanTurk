@@ -329,8 +329,17 @@ public class MoveChecker {
             if (target.equals(move.getTargetSquare())) {
 
 
-                //TODO add better checking for moves like en passant or castling
-
+                //Looks for checks between castling
+                if (move.isCastlingMove()){
+                    if(field.getKingInCheck() != null){
+                        move.setLegal(false);
+                        return;
+                    }
+                    if (!isThereNoChecksOnCastlingPath(move)){
+                        move.setLegal(false);
+                        return;
+                    }
+                }
                 // Look for check
                 List<Player> appearedChecks = lookForChecksInMove(move);
                 if (isCheckLegal(appearedChecks)) {
@@ -350,6 +359,58 @@ public class MoveChecker {
         move.setLegal(false);
     }
 
+    /**
+     * Looks for all checks on castling path
+     * @param move
+     * @return
+     */
+    private boolean isThereNoChecksOnCastlingPath(Move move) {
+        // get direction
+        // Determine castling direction and rook starting position
+        int kingMoveDistance = move.getTargetSquare().x() - move.getStartingSquare().x();
+        int yRank = move.getStartingSquare().y();
+        Square currentKingPosition = move.getStartingSquare();
+        byte king = getPieceBySquare(currentKingPosition);
+
+        boolean noChecks = true;
+
+        if (kingMoveDistance > 0){
+            // try one square
+            Square kingSquare = new Square(move.getStartingSquare().x()+1, yRank);
+            setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+            setPieceBySquare(kingSquare, king);
+            if (isKingChecked(kingSquare)) {
+                noChecks = false;
+            }
+            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+            setPieceBySquare(move.getStartingSquare(), king);
+        } else {
+            // try first square
+            Square kingSquare = new Square(move.getStartingSquare().x()-1, yRank);
+            setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+            setPieceBySquare(kingSquare, king);
+            if (isKingChecked(kingSquare)) {
+                noChecks = false;
+            }
+            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+
+            // try second square
+            kingSquare = new Square(move.getStartingSquare().x()-2, yRank);
+            setPieceBySquare(kingSquare, king);
+            if (isKingChecked(kingSquare)) {
+                noChecks = false;
+            }
+            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+            setPieceBySquare(move.getStartingSquare(), king);
+        }
+
+        return noChecks;
+    }
+
+    /**
+     * Adds Catling and enPassant information to move
+     * @param move
+     */
     private void gatherMoveInfo(Move move){
         // Castling
         if(isCastlingMove(move)){

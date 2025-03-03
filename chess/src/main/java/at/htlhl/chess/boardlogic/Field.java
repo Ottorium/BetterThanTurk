@@ -129,6 +129,7 @@ public class Field {
         if (PieceUtil.isEmpty(move.getPromotionPiece()) == false)
             setPieceOnSquare(move.getTargetSquare(), move.getPromotionPiece());
 
+        setKingInCheck(move.getAppearedCheck());
         calculateMaterial(capturedPiece);
         blackTurn = !blackTurn;
     }
