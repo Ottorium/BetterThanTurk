@@ -514,6 +514,8 @@ public class MoveChecker {
                 }
                 if ((PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x]))) {
                     return true;
+                } else { // no xRay
+                    break;
                 }
             }
         }
@@ -534,8 +536,10 @@ public class MoveChecker {
                 if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
                     break;
                 }
-                if (PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
+                if (PieceUtil.isRook(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
                     return true;
+                } else { // no xRay
+                    break;
                 }
             }
         }
