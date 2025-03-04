@@ -2,6 +2,7 @@ package at.htlhl.chess.boardlogic.util;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
+import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 
 import java.util.ArrayList;
@@ -203,15 +204,16 @@ public class MoveChecker {
         // Move forward
         if (isPawnTargetSquarePossible(position.x(), position.y() - step)) {
             squares.add(new Square(position.x(), position.y() - step));
-            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step*2))) {
-                squares.add(new Square(position.x(), position.y() - (step*2)));
+            if (isPawnFirstMove(position, isStartWhite) && isPawnTargetSquarePossible(position.x(), position.y() - (step * 2))) {
+                squares.add(new Square(position.x(), position.y() - (step * 2)));
             }
         }
 
         return squares;
     }
 
-    /** Looks for all possible moves for this king
+    /**
+     * Looks for all possible moves for this king
      */
 
     private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
@@ -292,40 +294,139 @@ public class MoveChecker {
     }
 
     /**
-     * Checks if a given move is legal. This Method is inefficient.
+     * Checks information about the move and edits it's information
+     * isMoveValid, isThatEnPassant, what check will appear
      *
      * @param move The move to check.
      * @return {@code true} if the move is legal, {@code false} otherwise.
      */
-    public boolean isMoveLegal(Move move) {
+    public void validateMove(Move move) {
 
         if (move == null) {
-            return false;
+            throw new NullPointerException("Move cannot be null");
         }
 
-        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.startingSquare()));
+        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()));
 
 
         // check if player color is ok
         if (isStartWhite == field.isBlackTurn()) { // if colors are equal
-            return false;
+            move.setLegal(false);
+            return;
         }
 
         //Get possible targets
-        List<Square> possibleTargets = getTargetSquares(move.startingSquare(), isStartWhite);
+        List<Square> possibleTargets = getTargetSquares(move.getStartingSquare(), isStartWhite);
         if (possibleTargets.isEmpty()) {
-            return false;
+            move.setLegal(false);
         }
+
+        // look for move type
+        gatherMoveInfo(move);
 
         // look if target square is possible
         for (Square target : possibleTargets) {
-            if (target.equals(move.targetSquare())) {
-                //TODO  Check check
-                return true;
+            if (target.equals(move.getTargetSquare())) {
+
+
+                //Looks for checks between castling
+                if (move.isCastlingMove()){
+                    if(field.getKingInCheck() != null){
+                        move.setLegal(false);
+                        return;
+                    }
+                    if (!isThereNoChecksOnCastlingPath(move)){
+                        move.setLegal(false);
+                        return;
+                    }
+                }
+                // Look for check
+                List<Player> appearedChecks = lookForChecksInMove(move);
+                if (isCheckLegal(appearedChecks)) {
+                    move.setLegal(true);
+
+                    // redundant length check call, but that's the easiest way
+                    if (appearedChecks.size() == 1) {
+                        move.setAppearedCheck(appearedChecks.getFirst());
+                    }
+                    return;
+                }
             }
         }
 
-        return false;
+
+
+        move.setLegal(false);
+    }
+
+    /**
+     * Looks for all checks on castling path
+     * @param move
+     * @return
+     */
+    private boolean isThereNoChecksOnCastlingPath(Move move) {
+        // get direction
+        // Determine castling direction and rook starting position
+        int kingMoveDistance = move.getTargetSquare().x() - move.getStartingSquare().x();
+        int yRank = move.getStartingSquare().y();
+        Square currentKingPosition = move.getStartingSquare();
+        byte king = getPieceBySquare(currentKingPosition);
+
+        boolean noChecks = true;
+
+        if (kingMoveDistance > 0){
+            // try one square
+            Square kingSquare = new Square(move.getStartingSquare().x()+1, yRank);
+            setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+            setPieceBySquare(kingSquare, king);
+            if (isKingChecked(kingSquare)) {
+                noChecks = false;
+            }
+            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+            setPieceBySquare(move.getStartingSquare(), king);
+        } else {
+            // try first square
+            Square kingSquare = new Square(move.getStartingSquare().x()-1, yRank);
+            setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+            setPieceBySquare(kingSquare, king);
+            if (isKingChecked(kingSquare)) {
+                noChecks = false;
+            }
+            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+
+            // try second square
+            kingSquare = new Square(move.getStartingSquare().x()-2, yRank);
+            setPieceBySquare(kingSquare, king);
+            if (isKingChecked(kingSquare)) {
+                noChecks = false;
+            }
+            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+            setPieceBySquare(move.getStartingSquare(), king);
+        }
+
+        return noChecks;
+    }
+
+    /**
+     * Adds Catling and enPassant information to move
+     * @param move
+     */
+    private void gatherMoveInfo(Move move){
+        // Castling
+        if(isCastlingMove(move)){
+            move.setCastlingMove(true);
+        } else {
+
+            //En passant move is move when pawn does capture
+            if(move.getTargetSquare().equals(field.getPossibleEnPassantSquare())
+                    && PieceUtil.isPawn(getPieceBySquare(move.getStartingSquare()))){
+                move.setEnPassantMove(true);
+            } else {
+
+                // EnPassant possible square
+                move.setPossibleEnPassantSquare(getEnPassantSquareProducedByPawnDoubleMove(move));
+            }
+        }
     }
 
     /**
@@ -340,9 +441,9 @@ public class MoveChecker {
         if (!targets.isEmpty()) {
             List<Square> legalTargets = new ArrayList<>();
             for (Square target : targets) {
-
-                // We must not use an empty piece here, as a promotion to an empty piece would be illegal
-                if (isMoveLegal(new Move(position, target, PieceUtil.QUEEN_MASK))) {
+                Move move = new Move(position, target);
+                validateMove(move);
+                if (move.isLegal()) {
                     legalTargets.add(target);
                 }
             }
@@ -357,21 +458,215 @@ public class MoveChecker {
      *
      * @param move the Move object representing the pawn's movement
      * @return the Square that can be targeted for an en passant capture, or null if the move does not
-     *         produce an en passant square (e.g., not a pawn, or not a double move)
+     * produce an en passant square (e.g., not a pawn, or not a double move)
      */
-    public Square getEnPassantSquareProducedByPawnDoubleMove(Move move){
-        byte piece = getPieceBySquare(move.targetSquare());
+    private Square getEnPassantSquareProducedByPawnDoubleMove(Move move) {
+        byte piece = getPieceBySquare(move.getStartingSquare());
         if (PieceUtil.isPawn(piece)) {
-            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.targetSquare()));
-            if (Math.abs(move.targetSquare().y() - move.startingSquare().y()) == 2) {
-                return new Square(move.targetSquare().x(), move.targetSquare().y() + (isStartWhite ? 1 : -1));
+            boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()));
+            if (Math.abs(move.getTargetSquare().y() - move.getStartingSquare().y()) == 2) {
+                return new Square(move.getTargetSquare().x(), move.getTargetSquare().y() + (isStartWhite ? 1 : -1));
             }
         }
         return null;
     }
 
+    /**
+     * Search from king in all directions if this king is checked
+     *
+     * @param position King position
+     * @return true if king is checked, false otherwise
+     */
+    private boolean isKingChecked(Square position) {
+        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
+
+        // Look for knight
+        int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
+        for (int[] move : knightMoves) {
+            int x = position.x() + move[0];
+            int y = position.y() + move[1];
+            if (!isOnBoard(x, y)) {
+                continue;
+            }
+            if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
+                continue;
+            }
+            if (PieceUtil.isKnight(field.getBoard()[y][x])) {
+                return true;
+            }
+        }
+
+        // Look for bishop or queen
+        int[][] directions = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+
+        for (int[] dir : directions) {
+            for (int i = 1; i < 8; i++) {
+                int x = position.x() + dir[0] * i;
+                int y = position.y() + dir[1] * i;
+                if (!isOnBoard(x, y)) {
+                    break;
+                }
+                if (PieceUtil.isEmpty(field.getBoard()[y][x])) {
+                    continue;
+                }
+                if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
+                    break;
+                }
+                if ((PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x]))) {
+                    return true;
+                } else { // no xRay
+                    break;
+                }
+            }
+        }
+
+        directions = new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
+        // Look for rook or queen
+        for (int[] dir : directions) {
+            for (int i = 1; i < 8; i++) {
+                int x = position.x() + dir[0] * i;
+                int y = position.y() + dir[1] * i;
+                if (!isOnBoard(x, y)) {
+                    break;
+                }
+                if (PieceUtil.isEmpty(field.getBoard()[y][x])) {
+                    continue;
+                }
+                if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
+                    break;
+                }
+                if (PieceUtil.isRook(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
+                    return true;
+                } else { // no xRay
+                    break;
+                }
+            }
+        }
+
+        // Look for pawns
+        if (isStartWhite) {
+            directions = new int[][]{{-1, 1}, {-1,-1}};
+        } else {
+            directions = new int[][]{{1,1},{1,-1}};
+        }
+        for (int[] dir : directions) {
+            int x = position.x() + dir[1];
+            int y = position.y() + dir[0];
+            if (isOnBoard(x, y)) {
+                if (PieceUtil.isWhite(field.getBoard()[y][x]) ^ isStartWhite && PieceUtil.isPawn(field.getBoard()[y][x])) {
+                    return true;
+                }
+            }
+        }
+
+        // Look for king
+        directions = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
+        for (int[] dir : directions) {
+            int x = position.x() + dir[0];
+            int y = position.y() + dir[1];
+            if (!isOnBoard(x, y)) {
+                continue;
+            }
+            if (PieceUtil.isKing(field.getBoard()[y][x])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<Player> lookForChecksInMove(Move move) {
+
+        //save pieces to revert move
+        byte savedTargetPiece = getPieceBySquare(move.getTargetSquare());
+        byte savedStartingPiece = getPieceBySquare(move.getStartingSquare());
+
+        // make move, because it must be legal
+        setPieceBySquare(move.getTargetSquare(), savedStartingPiece);
+        setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
 
 
+        List<Player> checkedPlayers = new ArrayList<>();
+
+        // look for checks
+        Square[] kings = findKings();
+        for (Square king : kings) {
+            boolean isWhite = PieceUtil.isWhite(getPieceBySquare(king));
+            if (isKingChecked(king)) {
+                if (isWhite) {
+                    checkedPlayers.add(Player.WHITE);
+                } else {
+                    checkedPlayers.add(Player.BLACK);
+                }
+            }
+        }
+
+
+        // fix the board
+        setPieceBySquare(move.getTargetSquare(), savedTargetPiece);
+        setPieceBySquare(move.getStartingSquare(), savedStartingPiece);
+
+        return checkedPlayers;
+    }
+
+    ;
+
+    /**
+     * Finds both kings on board fast
+     *
+     * @return Square array of king's positions
+     */
+    private Square[] findKings() {
+        Square[] kings = new Square[2];
+        boolean second = false;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (PieceUtil.isKing(field.getBoard()[i][j])) {
+                    if (second) {
+                        kings[1] = new Square(j, i);
+                    } else {
+                        kings[0] = new Square(j, i);
+                        second = true;
+                    }
+                }
+            }
+        }
+        return kings;
+    }
+
+    ;
+
+    /**
+     * Looks if the check is legal in such way
+     * For example, if only one check is on board, or if the check appeared after your move
+     *
+     * @return true if the check is legal
+     */
+    private boolean isCheckLegal(List<Player> possibleChecks) {
+        if (possibleChecks.size() > 1) {
+            return false;
+        }
+        if (possibleChecks.isEmpty()) {
+            return true;
+        }
+
+
+        //if your color check appeared after your move
+        if (field.getKingInCheck() == null) {
+            if (field.isBlackTurn()) {
+                return !possibleChecks.getFirst().equals(Player.BLACK);
+            } else {
+                return !possibleChecks.getFirst().equals(Player.WHITE);
+            }
+        }
+
+        //if your check did not disappear
+        if (field.getKingInCheck().equals(possibleChecks.getFirst())) {
+            return false;
+        }
+        return true;
+    }
 
 
     /**
@@ -388,8 +683,8 @@ public class MoveChecker {
         field.getBoard()[square.y()][square.x()] = piece;
     }
 
-    public boolean isCastlingMove(Move move) {
-        return PieceUtil.isKing(getPieceBySquare(move.targetSquare()))
-                && Math.abs(move.targetSquare().x() - move.startingSquare().x()) == 2;
+    private boolean isCastlingMove(Move move) {
+        return PieceUtil.isKing(getPieceBySquare(move.getStartingSquare()))
+                && Math.abs(move.getTargetSquare().x() - move.getStartingSquare().x()) == 2;
     }
 }

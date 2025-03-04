@@ -39,6 +39,8 @@ public class Field {
     private final List<Byte> capturedBlackPieces = new ArrayList<>();
 
 
+    private Player kingInCheck = null;
+
     /**
      * Attempts to set the board state using FEN notation
      *
@@ -87,7 +89,9 @@ public class Field {
      * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
-        if (moveChecker.isMoveLegal(move)) {
+        moveChecker.validateMove(move);
+
+        if (move.isLegal()) {
             forceMove(move);
             return true;
         }
@@ -95,37 +99,37 @@ public class Field {
     }
 
     /**
-     * Executes a move on the board. Does not check if the move is valid.
+     * Executes a move on the board. Does not check if the move is valid. Requires the move to be validated earlier
      *
      * @param move The move to execute. Undefined behaviour if the move is not valid
      */
     public void forceMove(Move move) {
 
         // store captured piece for material calculation and castling calculation later
-        byte capturedPiece = getPieceBySquare(move.targetSquare());
+        byte capturedPiece = getPieceBySquare(move.getTargetSquare());
 
         // move piece to target square
-        setPieceOnSquare(move.targetSquare(), getPieceBySquare(move.startingSquare()));
-        setPieceOnSquare(move.startingSquare(), PieceUtil.EMPTY);
+        setPieceOnSquare(move.getTargetSquare(), getPieceBySquare(move.getStartingSquare()));
+        setPieceOnSquare(move.getStartingSquare(), PieceUtil.EMPTY);
 
         //En passant
         //Delete captured pawn if enPassant happened
-        if (move.targetSquare().equals(possibleEnPassantSquare)
-                && PieceUtil.isPawn(getPieceBySquare(move.targetSquare()))) {
+        if (move.isEnPassantMove()) {
             Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
             capturedPiece = getPieceBySquare(capturedEnPassantPawn);
             setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
         }
-        possibleEnPassantSquare = moveChecker.getEnPassantSquareProducedByPawnDoubleMove(move);
+        possibleEnPassantSquare = move.getPossibleEnPassantSquare();
 
         // Castling
         moveRookIfCastlingMove(move);
         removeCastlingRightsIfNeeded(move, capturedPiece);
 
         // Promotions
-        if (PieceUtil.isEmpty(move.promotionPiece()) == false)
-            setPieceOnSquare(move.targetSquare(), move.promotionPiece());
+        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false)
+            setPieceOnSquare(move.getTargetSquare(), move.getPromotionPiece());
 
+        setKingInCheck(move.getAppearedCheck());
         calculateMaterial(capturedPiece);
         blackTurn = !blackTurn;
     }
@@ -147,12 +151,12 @@ public class Field {
     }
 
     private void moveRookIfCastlingMove(Move move) {
-        if (moveChecker.isCastlingMove(move)) {
+        if (move.isCastlingMove()) {
             // Determine castling direction and rook starting position
-            int kingMoveDistance = move.targetSquare().x() - move.startingSquare().x();
+            int kingMoveDistance = move.getTargetSquare().x() - move.getStartingSquare().x();
             int rookStartX = (kingMoveDistance > 0) ? 7 : 0;  // Kingside: h-file, Queenside: a-file
-            int rookTargetX = move.startingSquare().x() + (kingMoveDistance / 2);
-            int yRank = move.startingSquare().y();
+            int rookTargetX = move.getStartingSquare().x() + (kingMoveDistance / 2);
+            int yRank = move.getStartingSquare().y();
 
             // Move the rook
             Square rookStart = new Square(rookStartX, yRank);
@@ -173,8 +177,8 @@ public class Field {
      * @param capturedPiece The piece (if any) that was captured by this move.
      */
     private void removeCastlingRightsIfNeeded(Move move, byte capturedPiece) {
-        Square start = move.startingSquare();
-        Square target = move.targetSquare();
+        Square start = move.getStartingSquare();
+        Square target = move.getTargetSquare();
         byte movingPiece = getPieceBySquare(target);
 
         int homeRank = blackTurn ? 0 : 7;
@@ -270,5 +274,13 @@ public class Field {
 
     public int getNumberOfNextMove() {
         return numberOfNextMove;
+    }
+
+    public Player getKingInCheck() {
+        return kingInCheck;
+    }
+
+    public void setKingInCheck(Player kingInCheck) {
+        this.kingInCheck = kingInCheck;
     }
 }
