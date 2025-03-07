@@ -151,21 +151,7 @@ public class BoardViewController implements Initializable {
                 // Add highlight for king in check
                 if (kingCheckHighlight != null
                         && col == kingCheckHighlight.x() && row == kingCheckHighlight.y()) {
-                    Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
-
-                    // Create a radial gradient: center is bright red, edges fade to transparent
-                    RadialGradient gradient = new RadialGradient(
-                            0,           // focus angle
-                            0.1,         // focus distance
-                            0.5,         // center X
-                            0.5,         // center Y
-                            0.7,         // radius of the highlight
-                            true,        // proportional (coordinates are relative to the shape's bounds)
-                            CycleMethod.NO_CYCLE,
-                            new Stop(0.0, KING_CHECK_COLOR), // Center: bright red
-                            new Stop(1.0, Color.TRANSPARENT) // Edges: fully transparent
-                    );
-                    checkHighlight.setFill(gradient);
+                    Rectangle checkHighlight = getCheckHighlight();
 
                     checkHighlight.widthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
                     checkHighlight.heightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
@@ -187,6 +173,25 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
+    }
+
+    private static Rectangle getCheckHighlight() {
+        Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
+
+        // Create a radial gradient: center is bright red, edges fade to transparent
+        RadialGradient gradient = new RadialGradient(
+                0,           // focus angle
+                0.1,         // focus distance
+                0.5,         // center X
+                0.5,         // center Y
+                0.7,         // radius of the highlight
+                true,        // proportional (coordinates are relative to the shape's bounds)
+                CycleMethod.NO_CYCLE,
+                new Stop(0.0, KING_CHECK_COLOR), // Center: bright red
+                new Stop(1.0, Color.TRANSPARENT) // Edges: fully transparent
+        );
+        checkHighlight.setFill(gradient);
+        return checkHighlight;
     }
 
     /**
