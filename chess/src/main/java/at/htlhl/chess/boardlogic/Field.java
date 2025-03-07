@@ -159,6 +159,12 @@ public class Field {
      * Sets the game state to represent the current board
      * */
     private void setGameState() {
+
+        if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50) {
+            gameState = GameState.DRAW;
+            return;
+        }
+
         List<Move> legalMoves = moveChecker.getAllLegalMoves();
 
         if (legalMoves.isEmpty() == false) {
