@@ -14,6 +14,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 
 import java.net.URL;
@@ -25,7 +28,8 @@ public class BoardViewController implements Initializable {
     private static final int INITIAL_SQUARE_SIZE = 60;
     private static final Color LIGHT_SQUARE_COLOR = Color.rgb(242, 226, 190);
     private static final Color DARK_SQUARE_COLOR = Color.rgb(176, 136, 104);
-    private static final Color LAST_MOVE_HIGHLIGHT_COLOR = Color.rgb(255, 255, 0, 0.4); // Yellow with 40% opacity
+    private static final Color LAST_MOVE_HIGHLIGHT_COLOR = Color.rgb(255, 255, 0, 0.4);
+    private static final Color KING_CHECK_COLOR = Color.rgb(255, 0, 0);
     private final Field field = new Field();
     @FXML
     private GridPane chessBoard;
@@ -44,7 +48,7 @@ public class BoardViewController implements Initializable {
         createEmptyChessBoard();
         field.resetBoard();
         Platform.runLater(this::setUpScalability);
-        drawPieces(null);
+        drawPieces(null, null);
         setUpInteractions();
     }
 
@@ -115,9 +119,13 @@ public class BoardViewController implements Initializable {
 
     /**
      * Draws chess pieces on the board based on the current state of the {@link Field}.
-     * Removes any existing pieces and adds new ones where applicable.
+     * Removes any existing pieces and adds new ones where applicable. Highlights the last move
+     * with a yellow background and the king in check with a red radial gradient background.
+     *
+     * @param moveToHighlight     The move to highlight with a yellow background (source and target squares).
+     * @param kingCheckHighlight  The square containing the king in check, to highlight with a red radial gradient.
      */
-    private void drawPieces(Move moveToHighlight) {
+    private void drawPieces(Move moveToHighlight, Square kingCheckHighlight) {
         for (int row = 0; row < field.getBoard().length; row++) {
             for (int col = 0; col < field.getBoard()[row].length; col++) {
                 StackPane square = getSquarePane(chessBoard, col, row);
@@ -138,6 +146,32 @@ public class BoardViewController implements Initializable {
                     highlight.widthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
                     highlight.heightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
                     square.getChildren().add(1, highlight); // Add highlight just above the base square
+                }
+
+                // Add highlight for king in check
+                if (kingCheckHighlight != null
+                        && col == kingCheckHighlight.x() && row == kingCheckHighlight.y()) {
+                    Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
+
+                    // Create a radial gradient: center is bright red, edges fade to transparent
+                    RadialGradient gradient = new RadialGradient(
+                            0,           // focus angle
+                            0.1,         // focus distance
+                            0.5,         // center X
+                            0.5,         // center Y
+                            0.7,         // radius of the highlight
+                            true,        // proportional (coordinates are relative to the shape's bounds)
+                            CycleMethod.NO_CYCLE,
+                            new Stop(0.0, KING_CHECK_COLOR), // Center: bright red
+                            new Stop(1.0, Color.TRANSPARENT) // Edges: fully transparent
+                    );
+                    checkHighlight.setFill(gradient);
+
+                    checkHighlight.widthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
+                    checkHighlight.heightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
+                    // Add the check highlight just above the last move highlight (or base square if no last move highlight)
+                    // This could happen if the last move highlight isn't actually used as a last move highlight
+                    square.getChildren().add(square.getChildren().size() > 1 ? 2 : 1, checkHighlight);
                 }
 
                 // Add piece if present

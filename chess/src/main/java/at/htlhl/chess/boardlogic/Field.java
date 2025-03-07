@@ -312,13 +312,20 @@ public class Field {
     }
 
     /**
-     * Checks if a player is in check on a simulated board
+     * Gets the position of the King in Check
      *
-     * @param simBoard Simulated board state to check
-     * @return The player in check, or null if no one is in check
-     */
-    private Player getCheckOnBoard(byte[][] simBoard) {
-        throw new UnsupportedOperationException("getCheckOnBoard not implemented");
+     * @return Position of the king in check, null if the current player is not in check
+     * */
+    public Square getSquareOfCheck() {
+        if (kingInCheck != (blackTurn ? Player.BLACK : Player.WHITE))
+            return null;
+
+        for (int row = 0; row < board.length; row++)
+            for (int col = 0; col < board[row].length; col++)
+                if (board[row][col] == (blackTurn ? PieceUtil.BLACK_KING : PieceUtil.WHITE_KING))
+                    return new Square(col, row);
+
+        return null;
     }
 
     /**
