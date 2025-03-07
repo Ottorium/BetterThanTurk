@@ -33,7 +33,7 @@ public class Field {
 
     private final List<byte[]> seenPositions = new ArrayList<>();
 
-    private GameState gameState;
+    private GameState gameState = GameState.NOT_DECIDED;
 
     private final MoveChecker moveChecker = new MoveChecker(this);
 
@@ -92,6 +92,10 @@ public class Field {
      * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
+
+        if (getGameState() != GameState.NOT_DECIDED)
+            return false;
+
         moveChecker.validateMove(move);
 
         if (move.isLegal()) {
@@ -358,5 +362,9 @@ public class Field {
 
     public void setKingInCheck(Player kingInCheck) {
         this.kingInCheck = kingInCheck;
+    }
+
+    public GameState getGameState() {
+        return gameState;
     }
 }

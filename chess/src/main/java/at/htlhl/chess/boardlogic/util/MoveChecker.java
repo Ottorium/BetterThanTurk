@@ -1,9 +1,6 @@
 package at.htlhl.chess.boardlogic.util;
 
-import at.htlhl.chess.boardlogic.Field;
-import at.htlhl.chess.boardlogic.Move;
-import at.htlhl.chess.boardlogic.Player;
-import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.boardlogic.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -436,6 +433,10 @@ public class MoveChecker {
      * @return A list of squares to which the piece can legally move.
      */
     public List<Square> getLegalTargetsSquares(Square position) {
+
+        if (field.getGameState() != GameState.NOT_DECIDED)
+            return new ArrayList<>();
+
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
         List<Square> targets = getTargetSquares(position, isStartWhite);
         if (!targets.isEmpty()) {
@@ -695,6 +696,9 @@ public class MoveChecker {
      */
     public List<Move> getAllLegalMoves() {
         List<Move> legalMoves = new ArrayList<>();
+
+        if (field.getGameState() != GameState.NOT_DECIDED)
+            return legalMoves;
 
         // Iterate through all squares on the board
         // this is not very efficient, but to do it different, we would need to save the board piece centric, which... well, its work...
