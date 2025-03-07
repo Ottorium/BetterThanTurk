@@ -687,4 +687,33 @@ public class MoveChecker {
         return PieceUtil.isKing(getPieceBySquare(move.getStartingSquare()))
                 && Math.abs(move.getTargetSquare().x() - move.getStartingSquare().x()) == 2;
     }
+
+    /**
+     * Gets all legal moves for the current player's turn
+     *
+     * @return List of all legal moves possible in the current position
+     */
+    public List<Move> getAllLegalMoves() {
+        List<Move> legalMoves = new ArrayList<>();
+
+        // Iterate through all squares on the board
+        // this is not very efficient, but to do it different, we would need to save the board piece centric, which... well, its work...
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                Square start = new Square(x, y);
+                byte piece = getPieceBySquare(start);
+
+                if (PieceUtil.isEmpty(piece) || PieceUtil.isWhite(piece) == field.isBlackTurn())
+                    continue;
+
+                for (Square target : getLegalTargetsSquares(start)) {
+                    Move move = new Move(start, target);
+                    validateMove(move);  // This sets the move's legal status and other properties
+                    if (move.isLegal()) legalMoves.add(move);
+                }
+            }
+        }
+
+        return legalMoves;
+    }
 }
