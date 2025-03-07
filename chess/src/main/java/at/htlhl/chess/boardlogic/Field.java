@@ -131,8 +131,28 @@ public class Field {
 
         setKingInCheck(move.getAppearedCheck());
         calculateMaterial(capturedPiece);
+        updatePlayedHalfMovesSinceLastPawnMoveOrCapture(move);
+        if (blackTurn) numberOfNextMove++;
         blackTurn = !blackTurn;
         setGameState();
+    }
+
+    /**
+     * Updates the number of half-moves since the last pawn move or capture.
+     * This counter is incremented after each move unless a pawn is moved or a piece is captured,
+     * in which case it is reset to 0.
+     *
+     * @param move The move that was just executed
+     */
+    private void updatePlayedHalfMovesSinceLastPawnMoveOrCapture(Move move) {
+        byte movingPiece = getPieceBySquare(move.getTargetSquare());
+        byte capturedPiece = board[move.getTargetSquare().y()][move.getTargetSquare().x()];
+
+        if (PieceUtil.isPawn(movingPiece) ||PieceUtil.isEmpty(capturedPiece) == false) {
+            playedHalfMovesSinceLastPawnMoveOrCapture = 0;
+        } else {
+            playedHalfMovesSinceLastPawnMoveOrCapture++;
+        }
     }
 
     /**
