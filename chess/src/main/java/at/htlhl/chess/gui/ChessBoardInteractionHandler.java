@@ -287,7 +287,7 @@ public class ChessBoardInteractionHandler {
 
             selectSquare((Square) square.getUserData());
 
-            ImageView piece = (ImageView) square.getChildren().get(1);
+            ImageView piece = (ImageView) square.getChildren().getLast();
             Square sourceSquare = (Square) square.getUserData();
             Dragboard db = piece.startDragAndDrop(TransferMode.MOVE);
 
