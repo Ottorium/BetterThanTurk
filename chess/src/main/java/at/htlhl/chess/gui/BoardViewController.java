@@ -1,6 +1,7 @@
 package at.htlhl.chess.gui;
 
 import at.htlhl.chess.boardlogic.Field;
+import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import javafx.application.Platform;
@@ -24,12 +25,10 @@ public class BoardViewController implements Initializable {
     private static final int INITIAL_SQUARE_SIZE = 60;
     private static final Color LIGHT_SQUARE_COLOR = Color.rgb(242, 226, 190);
     private static final Color DARK_SQUARE_COLOR = Color.rgb(176, 136, 104);
-
+    private static final Color LAST_MOVE_HIGHLIGHT_COLOR = Color.rgb(255, 255, 0, 0.4); // Yellow with 40% opacity
+    private final Field field = new Field();
     @FXML
     private GridPane chessBoard;
-
-    private final Field field = new Field();
-
     private DoubleBinding squareSizeBinding;
 
     /**
@@ -45,7 +44,7 @@ public class BoardViewController implements Initializable {
         createEmptyChessBoard();
         field.resetBoard();
         Platform.runLater(this::setUpScalability);
-        drawPieces();
+        drawPieces(null);
         setUpInteractions();
     }
 
@@ -89,7 +88,7 @@ public class BoardViewController implements Initializable {
                 chessBoard,
                 field,
                 currentSquareSize,
-                unused -> drawPieces() // Update callback
+                this::drawPieces // Update callback
         );
         interactionHandler.setupInteractions();
     }
@@ -118,7 +117,7 @@ public class BoardViewController implements Initializable {
      * Draws chess pieces on the board based on the current state of the {@link Field}.
      * Removes any existing pieces and adds new ones where applicable.
      */
-    private void drawPieces() {
+    private void drawPieces(Move moveToHighlight) {
         for (int row = 0; row < field.getBoard().length; row++) {
             for (int col = 0; col < field.getBoard()[row].length; col++) {
                 StackPane square = getSquarePane(chessBoard, col, row);
@@ -130,6 +129,18 @@ public class BoardViewController implements Initializable {
                 while (square.getChildren().size() > 1)
                     square.getChildren().remove(1);
 
+                // Add highlight for last move
+                if (moveToHighlight != null
+                        && ((col == moveToHighlight.getStartingSquare().x() && row == moveToHighlight.getStartingSquare().y())
+                        || (col == moveToHighlight.getTargetSquare().x() && row == moveToHighlight.getTargetSquare().y()))) {
+                    Rectangle highlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
+                    highlight.setFill(LAST_MOVE_HIGHLIGHT_COLOR);
+                    highlight.widthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
+                    highlight.heightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
+                    square.getChildren().add(1, highlight); // Add highlight just above the base square
+                }
+
+                // Add piece if present
                 if (!PieceUtil.isEmpty(piece)) {
                     Image img = PieceImageUtil.getImage(piece);
                     ImageView imageView = new ImageView(img);
@@ -138,7 +149,7 @@ public class BoardViewController implements Initializable {
                     imageView.fitWidthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
                     imageView.fitHeightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
 
-                    square.getChildren().add(1, imageView);
+                    square.getChildren().add(imageView);
                 }
             }
         }

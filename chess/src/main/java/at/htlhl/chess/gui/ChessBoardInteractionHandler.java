@@ -46,7 +46,7 @@ public class ChessBoardInteractionHandler {
     private final double squareSize;
 
     /** Callback function to update the board UI after a move is made. */
-    private final Consumer<Void> onBoardUpdate;
+    private final Consumer<Move> onBoardUpdate;
 
     /** The currently selected square, or null if no square is selected. */
     private Square selectedSquare = null;
@@ -64,7 +64,7 @@ public class ChessBoardInteractionHandler {
      * @param squareSize    The size of each square in pixels.
      * @param onBoardUpdate Callback to refresh the board UI after a move.
      */
-    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, Consumer<Void> onBoardUpdate) {
+    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, Consumer<Move> onBoardUpdate) {
         this.chessBoard = chessBoard;
         this.field = field;
         this.squareSize = squareSize;
@@ -74,8 +74,8 @@ public class ChessBoardInteractionHandler {
     /**
      * Triggers the board update callback to refresh the UI.
      */
-    private void updateBoard() {
-        onBoardUpdate.accept(null);
+    private void updateBoard(Move move) {
+        onBoardUpdate.accept(move);
     }
 
     /**
@@ -113,9 +113,9 @@ public class ChessBoardInteractionHandler {
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
             Move move = new Move(selectedSquare, clickedSquare);
             move.setPromotionPiece(getPromotionPiece(selectedSquare, clickedSquare));
-            field.move(move);
+            boolean success = field.move(move);
             clearSelection();
-            updateBoard();
+            if (success) updateBoard(move);
         } else {
             clearSelection();
             if (hasPiece(square)) {
@@ -364,7 +364,7 @@ public class ChessBoardInteractionHandler {
                 Move move = new Move(sourceSquare, targetSquare);
                 move.setPromotionPiece(getPromotionPiece(sourceSquare,targetSquare));
                 success = field.move(move);
-                if (success) updateBoard();
+                if (success) updateBoard(move);
             }
         }
 
