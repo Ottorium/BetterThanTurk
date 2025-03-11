@@ -23,7 +23,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * Handles user interactions with the chess board, including clicking and drag-and-drop functionality.
@@ -46,7 +46,7 @@ public class ChessBoardInteractionHandler {
     private final double squareSize;
 
     /** Callback function to update the board UI after a move is made. */
-    private final Consumer<Move> onBoardUpdate;
+    private final BiConsumer<Move, Square> onBoardUpdate;
 
     /** The currently selected square, or null if no square is selected. */
     private Square selectedSquare = null;
@@ -64,7 +64,7 @@ public class ChessBoardInteractionHandler {
      * @param squareSize    The size of each square in pixels.
      * @param onBoardUpdate Callback to refresh the board UI after a move.
      */
-    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, Consumer<Move> onBoardUpdate) {
+    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, BiConsumer<Move, Square> onBoardUpdate) {
         this.chessBoard = chessBoard;
         this.field = field;
         this.squareSize = squareSize;
@@ -74,8 +74,8 @@ public class ChessBoardInteractionHandler {
     /**
      * Triggers the board update callback to refresh the UI.
      */
-    private void updateBoard(Move move) {
-        onBoardUpdate.accept(move);
+    private void updateBoard(Move move, Square kingCheckHighlight) {
+        onBoardUpdate.accept(move, kingCheckHighlight);
     }
 
     /**
@@ -115,7 +115,7 @@ public class ChessBoardInteractionHandler {
             move.setPromotionPiece(getPromotionPiece(selectedSquare, clickedSquare));
             boolean success = field.move(move);
             clearSelection();
-            if (success) updateBoard(move);
+            if (success) updateBoard(move, field.getSquareOfCheck());
         } else {
             clearSelection();
             if (hasPiece(square)) {
@@ -287,7 +287,7 @@ public class ChessBoardInteractionHandler {
 
             selectSquare((Square) square.getUserData());
 
-            ImageView piece = (ImageView) square.getChildren().get(1);
+            ImageView piece = (ImageView) square.getChildren().getLast();
             Square sourceSquare = (Square) square.getUserData();
             Dragboard db = piece.startDragAndDrop(TransferMode.MOVE);
 
@@ -364,7 +364,7 @@ public class ChessBoardInteractionHandler {
                 Move move = new Move(sourceSquare, targetSquare);
                 move.setPromotionPiece(getPromotionPiece(sourceSquare,targetSquare));
                 success = field.move(move);
-                if (success) updateBoard(move);
+                if (success) updateBoard(move, field.getSquareOfCheck());
             }
         }
 
