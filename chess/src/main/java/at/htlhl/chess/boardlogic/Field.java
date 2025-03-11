@@ -193,7 +193,7 @@ public class Field {
         for (byte piece : flatBoard) {
             if (piece == PieceUtil.EMPTY) continue;
 
-            if (numberOfPieces++ >= 4
+            if (++numberOfPieces >= 4
                     || PieceUtil.isPawn(piece)
                     || PieceUtil.isRook(piece)
                     || PieceUtil.isQueen(piece)) {
