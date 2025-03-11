@@ -332,7 +332,7 @@ public class MoveChecker {
                         move.setLegal(false);
                         return;
                     }
-                    if (!isThereNoChecksOnCastlingPath(move)){
+                    if (isThereNoChecksOnCastlingPath(move) == false){
                         move.setLegal(false);
                         return;
                     }
@@ -359,7 +359,7 @@ public class MoveChecker {
     /**
      * Looks for all checks on castling path
      * @param move
-     * @return
+     * @return true, if there is no check, false, if there is a check
      */
     private boolean isThereNoChecksOnCastlingPath(Move move) {
         // get direction
@@ -402,6 +402,33 @@ public class MoveChecker {
         }
 
         return noChecks;
+    }
+
+    /**
+     * Looks for checks produced by EnPassant move
+     * @param move to look at
+     * @return appeared Check. It must be legal
+     */
+
+    private List<Player> lookForChecksInEnPassant(Move move) {
+        Square possibleEnPassantSquare = field.getPossibleEnPassantSquare();
+        Square deletedPawn = field.isBlackTurn() ? new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()+1) : new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()-1);
+        byte startingPawn = getPieceBySquare(move.getStartingSquare());
+        byte opponentPawn = getPieceBySquare(deletedPawn);
+        // simulating move
+        setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+        setPieceBySquare(move.getTargetSquare(), startingPawn);
+        setPieceBySquare(deletedPawn, PieceUtil.EMPTY);
+
+        // check if checks are legal
+        List<Player> appearedChecks = lookForChecksOnBoard();
+
+        // move everything back
+        setPieceBySquare(move.getStartingSquare(), startingPawn);
+        setPieceBySquare(move.getTargetSquare(), PieceUtil.EMPTY);
+        setPieceBySquare(deletedPawn, opponentPawn);
+
+        return appearedChecks;
     }
 
     /**
@@ -577,7 +604,18 @@ public class MoveChecker {
         return false;
     }
 
+    /**
+     * Simulates move and looks if checks appeared. Edge cases like castling are not handled here now
+     * @param move that will be simulated
+     * @return List<Player> of appeared checks
+     */
+
     private List<Player> lookForChecksInMove(Move move) {
+
+        // If move is en passant, there is another method
+        if (move.isEnPassantMove()){
+            return lookForChecksInEnPassant(move);
+        }
 
         //save pieces to revert move
         byte savedTargetPiece = getPieceBySquare(move.getTargetSquare());
@@ -587,9 +625,22 @@ public class MoveChecker {
         setPieceBySquare(move.getTargetSquare(), savedStartingPiece);
         setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
 
+        List<Player> checkedPlayers = lookForChecksOnBoard();
 
+        // fix the board
+        setPieceBySquare(move.getTargetSquare(), savedTargetPiece);
+        setPieceBySquare(move.getStartingSquare(), savedStartingPiece);
+
+        return checkedPlayers;
+    }
+
+    /**
+     * Looks for current checks On Board
+     * @return List<Player> that are checked
+     */
+
+    private List<Player> lookForChecksOnBoard() {
         List<Player> checkedPlayers = new ArrayList<>();
-
         // look for checks
         Square[] kings = findKings();
         for (Square king : kings) {
@@ -602,12 +653,6 @@ public class MoveChecker {
                 }
             }
         }
-
-
-        // fix the board
-        setPieceBySquare(move.getTargetSquare(), savedTargetPiece);
-        setPieceBySquare(move.getStartingSquare(), savedStartingPiece);
-
         return checkedPlayers;
     }
 
