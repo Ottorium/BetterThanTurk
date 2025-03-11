@@ -66,6 +66,8 @@ public class Field {
         }
         moveChecker = new MoveChecker(this);
         seenPositions.clear();
+        Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
+        kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
         gameState = computeGameState();
         return true;
     }
