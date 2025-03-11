@@ -4,6 +4,7 @@ import at.htlhl.chess.boardlogic.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Utility class to check possible moves for different chess pieces.
@@ -412,7 +413,7 @@ public class MoveChecker {
 
     private List<Player> lookForChecksInEnPassant(Move move) {
         Square possibleEnPassantSquare = field.getPossibleEnPassantSquare();
-        Square deletedPawn = field.isBlackTurn() ? new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()+1) : new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()-1);
+        Square deletedPawn = field.isBlackTurn() ? new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()-1) : new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()+1);
         byte startingPawn = getPieceBySquare(move.getStartingSquare());
         byte opponentPawn = getPieceBySquare(deletedPawn);
         // simulating move
@@ -460,25 +461,7 @@ public class MoveChecker {
      * @return A list of squares to which the piece can legally move.
      */
     public List<Square> getLegalTargetsSquares(Square position) {
-
-        if (field.getGameState() != GameState.NOT_DECIDED)
-            return new ArrayList<>();
-
-        boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
-        List<Square> targets = getTargetSquares(position, isStartWhite);
-        if (!targets.isEmpty()) {
-            List<Square> legalTargets = new ArrayList<>();
-            for (Square target : targets) {
-                Move move = new Move(position, target);
-                validateMove(move);
-                if (move.isLegal()) {
-                    legalTargets.add(target);
-                }
-            }
-            return legalTargets;
-        }
-
-        return new ArrayList<>();
+        return getAllLegalMoves().stream().filter(move -> move.getStartingSquare().equals(position)).map(Move::getTargetSquare).collect(Collectors.toList());
     }
 
     /**
@@ -754,8 +737,8 @@ public class MoveChecker {
 
                 if (PieceUtil.isEmpty(piece) || PieceUtil.isWhite(piece) == field.isBlackTurn())
                     continue;
-
-                for (Square target : getLegalTargetsSquares(start)) {
+                List<Square> possibleTargets = getTargetSquares(start, PieceUtil.isWhite(piece));
+                for (Square target : possibleTargets) {
                     Move move = new Move(start, target);
                     validateMove(move);  // This sets the move's legal status and other properties
                     if (move.isLegal()) legalMoves.add(move);
