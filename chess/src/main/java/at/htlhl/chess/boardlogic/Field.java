@@ -132,6 +132,22 @@ public class Field {
         setKingInCheck(move.getAppearedCheck());
         calculateMaterial(capturedPiece);
         blackTurn = !blackTurn;
+        setGameState();
+    }
+
+    /**
+     * Sets the game state to represent the current board
+     * */
+    private void setGameState() {
+        List<Move> legalMoves = moveChecker.getAllLegalMoves();
+        if (legalMoves.isEmpty() == false) {
+
+            // TODO: add check for checkmate here (pretty easy, just if the king is in check)
+
+            gameState = GameState.NOT_DECIDED;
+            return;
+        }
+        gameState = GameState.DRAW;
     }
 
     /**
