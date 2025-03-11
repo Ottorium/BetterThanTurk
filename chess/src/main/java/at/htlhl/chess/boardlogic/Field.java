@@ -3,6 +3,7 @@ package at.htlhl.chess.boardlogic;
 import at.htlhl.chess.boardlogic.util.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,7 +31,9 @@ public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    private GameState gameState;
+    private final List<byte[]> seenPositions = new ArrayList<>();
+
+    private GameState gameState = GameState.NOT_DECIDED;
 
     private final MoveChecker moveChecker = new MoveChecker(this);
 
@@ -89,6 +92,10 @@ public class Field {
      * @return true if the move is valid and got moved, false otherwise.
      */
     public boolean move(Move move) {
+
+        if (getGameState() != GameState.NOT_DECIDED)
+            return false;
+
         moveChecker.validateMove(move);
 
         if (move.isLegal()) {
@@ -134,7 +141,8 @@ public class Field {
         updatePlayedHalfMovesSinceLastPawnMoveOrCapture(move);
         if (blackTurn) numberOfNextMove++;
         blackTurn = !blackTurn;
-        setGameState();
+        gameState = computeGameState();
+        System.out.println("Game state: " + gameState);
     }
 
     /**
@@ -156,26 +164,38 @@ public class Field {
     }
 
     /**
-     * Sets the game state to represent the current board
-     * */
-    private void setGameState() {
+     * Computes a gameState the represents the current board
+     *
+     * @return the current gameState computed from the position of the board
+     */
+    private GameState computeGameState() {
 
         if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50) {
-            gameState = GameState.DRAW;
-            return;
+            return GameState.DRAW;
+        }
+
+        var flatBoard = getFlattenedBoard();
+
+        seenPositions.add(flatBoard);
+
+        long occurrences = seenPositions.stream()
+                .filter(pos -> Arrays.equals(pos, flatBoard))
+                .count();
+
+        if (occurrences >= 3) {
+            return GameState.DRAW; // Threefold repetition
         }
 
         List<Move> legalMoves = moveChecker.getAllLegalMoves();
 
         if (legalMoves.isEmpty() == false) {
-            gameState = GameState.NOT_DECIDED;
-            return;
+            return GameState.NOT_DECIDED;
         }
 
         if (kingInCheck == (blackTurn ? Player.BLACK : Player.WHITE)) {
-            gameState = isBlackTurn() ? GameState.WHITE_WIN : GameState.BLACK_WIN;
+            return isBlackTurn() ? GameState.WHITE_WIN : GameState.BLACK_WIN;
         } else {
-            gameState = GameState.DRAW; // no moves -> draw
+            return GameState.DRAW; // Stalemate
         }
     }
 
@@ -265,6 +285,21 @@ public class Field {
     }
 
     /**
+     * Gets the current board state as a 1d Array
+     *
+     * @return an array flattened to 1D representing the board
+     */
+    public byte[] getFlattenedBoard() {
+        byte[] flatArray = new byte[64];
+        int index = 0;
+        for (byte[] row : board)
+            for (byte b : row)
+                flatArray[index++] = b;
+
+        return flatArray;
+    }
+
+    /**
      * Checks if a player is in check on a simulated board
      *
      * @param simBoard Simulated board state to check
@@ -327,5 +362,9 @@ public class Field {
 
     public void setKingInCheck(Player kingInCheck) {
         this.kingInCheck = kingInCheck;
+    }
+
+    public GameState getGameState() {
+        return gameState;
     }
 }
