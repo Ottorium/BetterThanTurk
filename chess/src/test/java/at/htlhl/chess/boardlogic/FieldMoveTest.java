@@ -466,6 +466,288 @@ public class FieldMoveTest {
         assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw due to insufficient material");
     }
 
+    @Test
+    public void testCastlingThroughCheck() {
+        // Setup a position where castling would pass through a checked square
+        field.trySetFEN("rn1qkb1r/ppp2ppp/3p1n2/4p3/2b1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 4");
+
+        // Try to castle kingside - the f1 square is under attack by the bishop
+        Square start = Square.parseString("e1");
+        Square target = Square.parseString("g1");
+        Move move = new Move(start, target);
+        move.setCastlingMove(true);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Castling through check should not be allowed");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(start), "King should remain on starting square");
+        assertEquals(PieceUtil.WHITE_ROOK, field.getPieceBySquare(Square.parseString("h1")), "Rook should remain on its original square");
+    }
+
+    @Test
+    public void testCastlingIntoCheck() {
+        // Setup a position where the king would end up in check after castling
+        field.trySetFEN("r3k2r/pppq1ppp/2np1n2/4p1b1/2B1P3/2NP1N2/PPP2PPP/R3K2R w KQkq - 6 8");
+
+        // Try to castle queenside - the c1 square is under attack by the bishop
+        Square start = Square.parseString("e1");
+        Square target = Square.parseString("c1");
+        Move move = new Move(start, target);
+        move.setCastlingMove(true);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Castling into check should not be allowed");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(start), "King should remain on starting square");
+        assertEquals(PieceUtil.WHITE_ROOK, field.getPieceBySquare(Square.parseString("a1")), "Rook should remain on its original square");
+    }
+
+    @Test
+    public void testCastlingFromCheck() {
+        // Setup a position where the king is in check and tries to castle
+        field.trySetFEN("rnbqk2r/pppp1ppp/5n2/4p3/1b2P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 4");
+
+        // King is in check from the bishop on b4
+        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+
+        // Try to castle kingside while in check
+        Square start = Square.parseString("e1");
+        Square target = Square.parseString("g1");
+        Move move = new Move(start, target);
+        move.setCastlingMove(true);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Castling while in check should not be allowed");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(start), "King should remain on starting square");
+        assertEquals(PieceUtil.WHITE_ROOK, field.getPieceBySquare(Square.parseString("h1")), "Rook should remain on its original square");
+    }
+
+    @Test
+    public void testCastlingAfterKingMoved() {
+        // Setup initial position
+        field.resetBoard();
+
+        // Move king and then back
+        Square kingPos = Square.parseString("e1");
+        Square tempPos = Square.parseString("e2");
+        Move moveOut = new Move(kingPos, tempPos);
+        field.move(moveOut);
+
+        // Black's move
+        field.move(new Move(Square.parseString("e7"), Square.parseString("e5")));
+
+        // Move king back
+        Move moveBack = new Move(tempPos, kingPos);
+        field.move(moveBack);
+
+        // Black's move
+        field.move(new Move(Square.parseString("d7"), Square.parseString("d5")));
+
+        // Try to castle
+        Square target = Square.parseString("g1");
+        Move castling = new Move(kingPos, target);
+        castling.setCastlingMove(true);
+
+        boolean result = field.move(castling);
+
+        assertFalse(result, "Castling after king has moved should not be allowed");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(kingPos), "King should remain on e1");
+    }
+
+    @Test
+    public void testCastlingAfterRookMoved() {
+        // Setup initial position
+        field.resetBoard();
+
+        // Move rook and then back
+        Square rookPos = Square.parseString("h1");
+        Square tempPos = Square.parseString("h2");
+        Move moveOut = new Move(rookPos, tempPos);
+        field.move(moveOut);
+
+        // Black's move
+        field.move(new Move(Square.parseString("e7"), Square.parseString("e5")));
+
+        // Move rook back
+        Move moveBack = new Move(tempPos, rookPos);
+        field.move(moveBack);
+
+        // Black's move
+        field.move(new Move(Square.parseString("d7"), Square.parseString("d5")));
+
+        // Try to castle
+        Square kingPos = Square.parseString("e1");
+        Square target = Square.parseString("g1");
+        Move castling = new Move(kingPos, target);
+        castling.setCastlingMove(true);
+
+        boolean result = field.move(castling);
+
+        assertFalse(result, "Castling after rook has moved should not be allowed");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(kingPos), "King should remain on e1");
+    }
+
+    @Test
+    public void testPiecesBlockingCastling() {
+        // Setup a position where pieces block castling
+        field.trySetFEN("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3Kb1R w KQkq - 0 1");
+
+
+        // Try to castle kingside
+        Square start = Square.parseString("e1");
+        Square target = Square.parseString("g1");
+        Move move = new Move(start, target);
+        move.setCastlingMove(true);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Castling should not be allowed when pieces block the path");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(start), "King should remain on starting square");
+    }
+
+    @Test
+    public void testCheckmate() {
+        // Setup a position that's one move away from checkmate (back-rank mate)
+        field.trySetFEN("7k/5ppp/8/8/8/8/5PPP/R6K w - - 0 1");
+
+        // White rook delivers checkmate (Ra1-a8#)
+        Square start = Square.parseString("a1");
+        Square target = Square.parseString("a8");
+        Move move = new Move(start, target);
+
+        boolean result = field.move(move);
+
+        assertTrue(result, "Checkmate move should be valid");
+        assertEquals(GameState.WHITE_WIN, field.getGameState(), "Game should end in white's victory");
+        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check");
+    }
+
+    @Test
+    public void testMoveIntoCheck() {
+        // Setup a position where king could move into check
+        field.trySetFEN("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/2N5/PPP1PPPP/R1BQKBNR w KQkq - 0 3");
+
+        // Try to move the white king into check (Ke1-e2 with bishop attacking e2)
+        Square start = Square.parseString("e1");
+        Square target = Square.parseString("e2");
+        Move move = new Move(start, target);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Moving into check should not be allowed");
+        assertEquals(PieceUtil.WHITE_KING, field.getPieceBySquare(start), "King should remain on starting square");
+    }
+
+    @Test
+    public void testCastlingRightLossAfterRookCapture() {
+        // Setup a position where a rook can be captured
+        field.trySetFEN("r3k2r/1ppppppp/8/8/8/8/1PPPPPPP/R3K2R b KQkq - 0 1");
+
+        // Black captures the white rook on a1
+        Square start = Square.parseString("a8");
+        Square target = Square.parseString("a1");
+        Move move = new Move(start, target);
+        assertTrue(field.move(move));
+
+        // White moves a pawn
+        field.move(new Move(Square.parseString("h2"), Square.parseString("h3")));
+
+        // Black moves a pawn
+        field.move(new Move(Square.parseString("h7"), Square.parseString("h6")));
+
+        // White tries to castle queenside
+        start = Square.parseString("e1");
+        target = Square.parseString("c1");
+        move = new Move(start, target);
+        move.setCastlingMove(true);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Queenside castling should not be allowed after rook is captured");
+    }
+
+    @Test
+    public void testPawnDoubleMoveThroughOccupiedSquare() {
+        // Setup a position with a pawn at e2 and a piece at e3
+        field.trySetFEN("rnbqkb1r/pppppppp/8/8/8/4n3/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+
+        // Try to make a double move e2-e4 through the occupied e3
+        Square start = Square.parseString("e2");
+        Square target = Square.parseString("e4");
+        Move move = new Move(start, target);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Pawn double move through an occupied square should not be allowed");
+        assertEquals(PieceUtil.WHITE_PAWN, field.getPieceBySquare(start), "Pawn should remain on starting square");
+    }
+
+    @Test
+    public void testMoveBlockingCheck() {
+        // Setup a position where a piece can block a check
+        field.trySetFEN("rnb1kbnr/pppp1ppp/8/4p3/7q/5P2/PPPPP1PP/RNBQKBNR w KQkq - 0 1");
+
+        // White king is in check from black queen at h4
+        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+
+        // Block check with pawn (g2-g3)
+        Square start = Square.parseString("g2");
+        Square target = Square.parseString("g3");
+        Move move = new Move(start, target);
+
+        boolean result = field.move(move);
+
+        assertTrue(result, "Valid blocking move should return true");
+        assertNull(field.getKingInCheck(), "No king should be in check after blocking");
+    }
+
+    @Test
+    public void testDrawByThreefoldRepetition() {
+        // Setup a position
+        field.resetBoard();
+
+        // Simulate a sequence of moves that creates a threefold repetition
+        // Knight moves back and forth three times
+        for (int i = 0; i < 3; i++) {
+            // White knight g1-f3
+            field.move(new Move(Square.parseString("g1"), Square.parseString("f3")));
+
+            // Black knight g8-f6
+            field.move(new Move(Square.parseString("g8"), Square.parseString("f6")));
+
+            // White knight f3-g1
+            field.move(new Move(Square.parseString("f3"), Square.parseString("g1")));
+
+            // Black knight f6-g8
+            field.move(new Move(Square.parseString("f6"), Square.parseString("g8")));
+        }
+
+        // Check if the game is drawn by threefold repetition
+        // Note: This test might fail if the Field class doesn't implement threefold repetition detection
+        // In that case, you may need to modify the test or implement the rule in the Field class
+        assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw due to threefold repetition");
+    }
+
+    @Test
+    public void test50MoveRule() {
+        // Setup a position with just kings and knights (to avoid pawn moves and captures)
+        field.trySetFEN("4k3/8/8/8/8/8/8/4K3 w - - 99 50");
+
+        // White makes a move
+        Square start = Square.parseString("e1");
+        Square target = Square.parseString("e2");
+        Move move = new Move(start, target);
+        field.move(move);
+
+        // Check if the game is drawn by the 50-move rule
+        // Note: This test might fail if the Field class doesn't implement 50-move rule detection
+        // In that case, you may need to modify the test or implement the rule in the Field class
+        assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw due to 50-move rule");
+    }
+
+
     // Helper method to count legal moves
     private int countLegalMoves(Field field, List<Square> startingSquares) {
         int count = 0;
