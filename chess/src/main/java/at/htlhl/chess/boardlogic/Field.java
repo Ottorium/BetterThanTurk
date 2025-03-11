@@ -35,7 +35,7 @@ public class Field {
 
     private GameState gameState = GameState.NOT_DECIDED;
 
-    private final MoveChecker moveChecker = new MoveChecker(this);
+    private MoveChecker moveChecker = new MoveChecker(this);
 
     private int pieceEvaluation = 0;
     private final List<Byte> capturedWhitePieces = new ArrayList<>();
@@ -64,6 +64,9 @@ public class Field {
         } catch (InvalidFENException e) {
             return false;
         }
+        moveChecker = new MoveChecker(this);
+        seenPositions.clear();
+        gameState = computeGameState();
         return true;
     }
 
