@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0" version="26.0.16">
+  <diagram name="Page-1" id="03018318-947c-dd8e-b7a3-06fadd420f32">
+    <mxGraphModel dx="1218" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="677b7b8949515195-1" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeColor=#000000;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;fontColor=#000000;align=center;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="20" y="160" width="1060" height="670" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-8" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="30" y="230" width="200" height="590" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-15" value="Material, probably more information" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;verticalAlign=top;spacing=10;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="250" y="790" width="580" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-16" value="" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.graphics.simpleIcon;strokeColor=#999999;rounded=0;labelBackgroundColor=none;fontFamily=Verdana;fontSize=14;fontColor=#000000;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="250" y="260" width="580" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-25" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="840" y="230" width="230" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-26" value="" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;comic=1;" parent="1" vertex="1">
+          <mxGeometry x="840" y="640" width="230" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-27" value="Engine move suggestions" style="text;html=1;points=[];align=left;verticalAlign=top;spacingTop=-4;fontSize=14;fontFamily=Verdana" parent="1" vertex="1">
+          <mxGeometry x="40" y="280" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-42" value="PasteFEN" style="text;html=1;points=[];align=left;verticalAlign=top;spacingTop=-4;fontSize=14;fontFamily=Verdana" parent="1" vertex="1">
+          <mxGeometry x="860" y="653" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="677b7b8949515195-44" value="Move history" style="text;html=1;points=[];align=left;verticalAlign=top;spacingTop=-4;fontSize=14;fontFamily=Verdana" parent="1" vertex="1">
+          <mxGeometry x="860" y="250" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="k01cv6G2QurmFQcyic7w-1" value="Material, probably more information" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;align=center;verticalAlign=top;spacing=10;comic=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="220" width="580" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="k01cv6G2QurmFQcyic7w-2" value="Turn engine on/off" style="text;html=1;points=[];align=left;verticalAlign=top;spacingTop=-4;fontSize=14;fontFamily=Verdana" vertex="1" parent="1">
+          <mxGeometry x="40" y="250" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="k01cv6G2QurmFQcyic7w-4" value="Toolbox, with start new game, choose game mod and so on" style="whiteSpace=wrap;html=1;rounded=0;shadow=0;labelBackgroundColor=none;strokeColor=#000000;strokeWidth=1;fillColor=none;fontFamily=Verdana;fontSize=12;fontColor=#000000;align=center;comic=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="170" width="1040" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
