@@ -622,7 +622,7 @@ public class MoveChecker {
      * @return List<Player> that are checked
      */
 
-    private List<Player> lookForChecksOnBoard() {
+    public List<Player> lookForChecksOnBoard() {
         List<Player> checkedPlayers = new ArrayList<>();
         // look for checks
         Square[] kings = findKings();
