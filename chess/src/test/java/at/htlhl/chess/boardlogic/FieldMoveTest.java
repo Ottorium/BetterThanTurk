@@ -635,6 +635,181 @@ public class FieldMoveTest {
         assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw due to 50-move rule");
     }
 
+    @Test
+    public void testEnPassantCaptureImmediatelyAfterDoublePawnMove() {
+        field.trySetFEN("rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3");
+
+        // First verify en passant is possible
+        String initialEnPassantSquare = field.getPossibleEnPassantSquare().toString();
+        assertEquals("f6", initialEnPassantSquare, "En passant target should be f6");
+
+        // Make a different move instead
+        field.move(new Move(Square.parseString("b1"), Square.parseString("c3")));
+        field.move(new Move(Square.parseString("b8"), Square.parseString("c6")));
+
+        // Now verify en passant is no longer possible
+        assertNull(field.getPossibleEnPassantSquare(), "En passant opportunity should be lost after another move");
+    }
+
+    @Test
+    public void testStalemateWithMultiplePieces() {
+        field.trySetFEN("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1");
+
+        assertEquals(GameState.DRAW, field.getGameState(), "Game should be stalemate despite having multiple pieces");
+        assertNull(field.getKingInCheck(), "King should not be in check during stalemate");
+    }
+
+    @Test
+    public void testDrawByInsufficientMaterialKnightVsKing() {
+        field.trySetFEN("8/8/4k3/8/8/4N3/8/4K3 w - - 0 1");
+
+        assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw with king vs king and knight");
+    }
+
+    @Test
+    public void testDrawByInsufficientMaterialBishopVsKing() {
+        field.trySetFEN("8/8/4k3/8/8/4B3/8/4K3 w - - 0 1");
+
+        assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw with king vs king and bishop");
+    }
+
+    @Test
+    public void testNotDrawWithSufficientMaterial() {
+        field.trySetFEN("8/8/4k3/8/8/4BB2/8/4K3 w - - 0 1");
+
+        assertNotEquals(GameState.DRAW, field.getGameState(), "Game should not be a draw with two bishops");
+    }
+
+    @Test
+    public void testNotDrawWithSufficientMaterial2() {
+        field.trySetFEN("8/8/4kn2/8/8/4B3/8/4K3 w - - 0 1");
+
+        assertNotEquals(GameState.DRAW, field.getGameState(), "Game should not be a draw with bishop and knight");
+    }
+
+    @Test
+    public void testMoveAfterGameEnded() {
+        field.trySetFEN("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1");
+
+        // Verify game is already over
+        assertEquals(GameState.DRAW, field.getGameState(), "Game should be a draw by stalemate");
+
+        // Try to make a move anyway
+        Square start = Square.parseString("h8");
+        Square target = Square.parseString("g8");
+        Move move = new Move(start, target);
+        boolean result = field.move(move);
+
+        assertFalse(result, "Moves should be rejected after game is over");
+    }
+
+    @Test
+    public void testResolvingDiscoveredCheckDoesNotPreventMate() {
+        field.trySetFEN("8/7k/8/8/8/8/6Q1/4K1R1 w - - 0 1");
+
+        // White queen delivers checkmate while the rook provides discovered check
+        Square start = Square.parseString("g2");
+        Square target = Square.parseString("h2");
+        Move move = new Move(start, target);
+        boolean result = field.move(move);
+
+        assertTrue(result, "Checkmate move should be valid even with discovered check");
+        assertEquals(GameState.WHITE_WIN, field.getGameState(), "Game should end in white's victory");
+    }
+
+    @Test
+    public void testFiftyMoveRuleResetOnPawnMove() {
+        field.trySetFEN("4k3/8/8/8/8/8/P7/4K3 w - - 49 50");
+
+        // Make a pawn move which should reset the 50-move counter
+        Square start = Square.parseString("a2");
+        Square target = Square.parseString("a3");
+        Move move = new Move(start, target);
+        field.move(move);
+
+        // Make another move to reach what would have been move 50
+        field.move(new Move(Square.parseString("e8"), Square.parseString("e7")));
+
+        assertNotEquals(GameState.DRAW, field.getGameState(), "Game should not be a draw because pawn move reset the counter");
+    }
+
+    @Test
+    public void testFiftyMoveRuleResetOnCapture() {
+        field.trySetFEN("4k3/8/8/7p/8/8/4P3/4K2R w - - 49 50");
+
+        // Make a capture which should reset the 50-move counter
+        Square start = Square.parseString("h1");
+        Square target = Square.parseString("h5");
+        Move move = new Move(start, target);
+        field.move(move);
+
+        // Make another move to reach what would have been move 50
+        field.move(new Move(Square.parseString("e8"), Square.parseString("e7")));
+
+        assertNotEquals(GameState.DRAW, field.getGameState(), "Game should not be a draw because capture reset the counter");
+    }
+
+    @Test
+    public void testMoveAfterCheckmate() {
+        field.trySetFEN("rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 0 1");
+
+        field.move(new Move(Square.parseString("d1"), Square.parseString("h5")));
+        field.move(new Move(Square.parseString("b8"), Square.parseString("c6")));
+        field.move(new Move(Square.parseString("h5"), Square.parseString("f7")));
+
+        assertEquals(GameState.WHITE_WIN, field.getGameState(), "Game should end in white's victory (Scholar's Mate)");
+
+        Square start = Square.parseString("e8");
+        Square target = Square.parseString("g8");
+        Move move = new Move(start, target);
+        move.setCastlingMove(true);
+        boolean result = field.move(move);
+
+        assertFalse(result, "Castling should not be possible after checkmate");
+    }
+
+    @Test
+    public void testAbsolutePinPreventsMoves() {
+        field.trySetFEN("8/8/8/3k4/8/3q4/3Q4/3K4 w - - 0 1");
+
+        // White queen is pinned to white king by black queen
+        Square start = Square.parseString("d2");
+        Square target = Square.parseString("e3"); // Any move that isn't along the d-file
+        Move move = new Move(start, target);
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Absolutely pinned piece should not be able to move away from the pin line");
+    }
+
+    @Test
+    public void testRelativePinAllowsMovesAlongPinLine() {
+        field.trySetFEN("8/8/8/3k4/8/3q4/3Q4/3K4 w - - 0 1");
+
+        // White queen can move along the pin line
+        Square start = Square.parseString("d2");
+        Square target = Square.parseString("d3"); // Move along the pin line
+        Move move = new Move(start, target);
+
+        boolean result = field.move(move);
+
+        assertTrue(result, "Pinned piece should be able to move along the pin line");
+        assertEquals(PieceUtil.WHITE_QUEEN, field.getPieceBySquare(target), "Queen should be moved to target square");
+    }
+
+    @Test
+    public void testPromotionPieceMustBeOfSameColor() {
+        field.trySetFEN("rnbqkb1r/ppppp1Pp/5n2/8/8/8/PPPPPPP1/RNBQKBNR w KQkq - 0 1");
+
+        Square start = Square.parseString("g7");
+        Square target = Square.parseString("h8");
+        Move move = new Move(start, target);
+        move.setPromotionPiece(PieceUtil.BLACK_QUEEN); // Wrong color
+
+        boolean result = field.move(move);
+
+        assertFalse(result, "Promotion must be to a piece of the same color as the pawn");
+    }
 
     // Helper method to count legal moves
     private int countLegalMoves(Field field, List<Square> startingSquares) {
