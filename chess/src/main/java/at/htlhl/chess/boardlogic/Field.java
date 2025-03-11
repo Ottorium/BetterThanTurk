@@ -169,28 +169,40 @@ public class Field {
      * @return the current gameState computed from the position of the board
      */
     private GameState computeGameState() {
-
         if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50) {
             return GameState.DRAW;
         }
 
+
         var flatBoard = getFlattenedBoard();
-
         seenPositions.add(flatBoard);
-
         long occurrences = seenPositions.stream()
                 .filter(pos -> Arrays.equals(pos, flatBoard))
                 .count();
-
-        if (occurrences >= 3) {
+        if (occurrences >= 3)
             return GameState.DRAW; // Threefold repetition
+
+
+        boolean insufficient = true;
+        int numberOfPieces = 0;
+        for (byte piece : flatBoard) {
+            if (piece == PieceUtil.EMPTY) continue;
+
+            if (numberOfPieces++ >= 4
+                    || PieceUtil.isPawn(piece)
+                    || PieceUtil.isRook(piece)
+                    || PieceUtil.isQueen(piece)) {
+                insufficient = false;
+                break;
+            }
+
         }
+        if (insufficient) return GameState.DRAW;
+
 
         List<Move> legalMoves = moveChecker.getAllLegalMoves();
-
-        if (legalMoves.isEmpty() == false) {
+        if (legalMoves.isEmpty() == false)
             return GameState.NOT_DECIDED;
-        }
 
         if (kingInCheck == (blackTurn ? Player.BLACK : Player.WHITE)) {
             return isBlackTurn() ? GameState.WHITE_WIN : GameState.BLACK_WIN;
