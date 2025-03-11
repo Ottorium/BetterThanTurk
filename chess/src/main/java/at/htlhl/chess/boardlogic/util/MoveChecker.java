@@ -313,10 +313,16 @@ public class MoveChecker {
             return;
         }
 
+        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false && PieceUtil.isBlack(move.getPromotionPiece()) != field.isBlackTurn()) {
+            move.setLegal(false);
+            return;
+        }
+
         //Get possible targets
         List<Square> possibleTargets = getTargetSquares(move.getStartingSquare(), isStartWhite);
         if (possibleTargets.isEmpty()) {
             move.setLegal(false);
+            return;
         }
 
         // look for move type
