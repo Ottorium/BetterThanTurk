@@ -140,14 +140,17 @@ public class Field {
      * */
     private void setGameState() {
         List<Move> legalMoves = moveChecker.getAllLegalMoves();
+
         if (legalMoves.isEmpty() == false) {
-
-            // TODO: add check for checkmate here (pretty easy, just if the king is in check)
-
             gameState = GameState.NOT_DECIDED;
             return;
         }
-        gameState = GameState.DRAW;
+
+        if (kingInCheck == (blackTurn ? Player.BLACK : Player.WHITE)) {
+            gameState = isBlackTurn() ? GameState.WHITE_WIN : GameState.BLACK_WIN;
+        } else {
+            gameState = GameState.DRAW; // no moves -> draw
+        }
     }
 
     /**
