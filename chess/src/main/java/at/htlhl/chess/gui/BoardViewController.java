@@ -10,8 +10,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -45,6 +47,42 @@ public class BoardViewController implements Initializable {
     private byte arrowPromotionPiece;
     private EngineConnector engineConnector;
 
+    private static Rectangle getCheckHighlight() {
+        Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
+
+        // Create a radial gradient: center is bright red, edges fade to transparent
+        RadialGradient gradient = new RadialGradient(
+                0,           // focus angle
+                0.1,         // focus distance
+                0.5,         // center X
+                0.5,         // center Y
+                0.7,         // radius of the highlight
+                true,        // proportional (coordinates are relative to the shape's bounds)
+                CycleMethod.NO_CYCLE,
+                new Stop(0.0, KING_CHECK_COLOR), // Center: bright red
+                new Stop(1.0, Color.TRANSPARENT) // Edges: fully transparent
+        );
+        checkHighlight.setFill(gradient);
+        return checkHighlight;
+    }
+
+    /**
+     * Retrieves the {@link StackPane} representing a specific square on the chess board.
+     *
+     * @param board The {@link GridPane} containing the chess board squares.
+     * @param col   The column index of the square (0-based).
+     * @param row   The row index of the square (0-based).
+     * @return The {@link StackPane} at the specified coordinates.
+     * @throws RuntimeException if no square is found at the specified coordinates.
+     */
+    public static StackPane getSquarePane(GridPane board, int col, int row) {
+        return (StackPane) board.getChildren().stream()
+                .filter(node -> GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(
+                        String.format("Could not find square at coordinates %d %d", col, row)));
+    }
+
     /**
      * Initializes the chess board view when the controller is loaded.
      * Creates an empty chess board, sets the initial position using FEN, draws the pieces,
@@ -75,13 +113,15 @@ public class BoardViewController implements Initializable {
      * Configures scalability for the chess board, ensuring it resizes dynamically with the window.
      */
     private void setUpScalability() {
+        Pane boardPane = (Pane) chessBoard.getParent();
         squareSizeBinding = (DoubleBinding) Bindings.min(
-                chessBoard.getScene().widthProperty().divide(BOARD_SIZE),
-                chessBoard.getScene().heightProperty().divide(BOARD_SIZE)
+                boardPane.widthProperty().divide(BOARD_SIZE),
+                boardPane.heightProperty().divide(BOARD_SIZE)
         );
 
         chessBoard.setMinSize(BOARD_SIZE * INITIAL_SQUARE_SIZE, BOARD_SIZE * INITIAL_SQUARE_SIZE);
         chessBoard.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
 
         for (int row = 0; row < BOARD_SIZE; row++) {
             for (int col = 0; col < BOARD_SIZE; col++) {
@@ -91,7 +131,7 @@ public class BoardViewController implements Initializable {
                 // Bind rectangle dimensions to the calculated size
                 square.widthProperty().bind(squareSizeBinding);
                 square.heightProperty().bind(squareSizeBinding);
-            }
+             }
         }
     }
 
@@ -221,8 +261,8 @@ public class BoardViewController implements Initializable {
      * Removes any existing pieces and adds new ones where applicable. Highlights the last move
      * with a yellow background and the king in check with a red radial gradient background.
      *
-     * @param moveToHighlight     The move to highlight with a yellow background (source and target squares).
-     * @param kingCheckHighlight  The square containing the king in check, to highlight with a red radial gradient.
+     * @param moveToHighlight    The move to highlight with a yellow background (source and target squares).
+     * @param kingCheckHighlight The square containing the king in check, to highlight with a red radial gradient.
      */
     private void drawPieces(Move moveToHighlight, Square kingCheckHighlight) {
         for (int row = 0; row < field.getBoard().length; row++) {
@@ -281,41 +321,5 @@ public class BoardViewController implements Initializable {
         imageView.fitHeightProperty().bind(((Rectangle) stackpane.getChildren().getFirst()).heightProperty());
 
         stackpane.getChildren().add(imageView);
-    }
-
-    private static Rectangle getCheckHighlight() {
-        Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
-
-        // Create a radial gradient: center is bright red, edges fade to transparent
-        RadialGradient gradient = new RadialGradient(
-                0,           // focus angle
-                0.1,         // focus distance
-                0.5,         // center X
-                0.5,         // center Y
-                0.7,         // radius of the highlight
-                true,        // proportional (coordinates are relative to the shape's bounds)
-                CycleMethod.NO_CYCLE,
-                new Stop(0.0, KING_CHECK_COLOR), // Center: bright red
-                new Stop(1.0, Color.TRANSPARENT) // Edges: fully transparent
-        );
-        checkHighlight.setFill(gradient);
-        return checkHighlight;
-    }
-
-    /**
-     * Retrieves the {@link StackPane} representing a specific square on the chess board.
-     *
-     * @param board The {@link GridPane} containing the chess board squares.
-     * @param col   The column index of the square (0-based).
-     * @param row   The row index of the square (0-based).
-     * @return The {@link StackPane} at the specified coordinates.
-     * @throws RuntimeException if no square is found at the specified coordinates.
-     */
-    public static StackPane getSquarePane(GridPane board, int col, int row) {
-        return (StackPane) board.getChildren().stream()
-                .filter(node -> GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(
-                        String.format("Could not find square at coordinates %d %d", col, row)));
     }
 }
