@@ -265,7 +265,8 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
-        engineConnector.calculateBestMove();
+        engineConnector.getEngine().setField(field);
+        engineConnector.drawBestMove();
     }
 
     private void drawPiece(byte piece, Square square, int opacity) {
