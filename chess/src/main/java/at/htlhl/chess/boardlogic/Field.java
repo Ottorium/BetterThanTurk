@@ -108,7 +108,7 @@ public class Field {
         moveChecker.validateMove(move);
 
         if (move.isLegal()) {
-            forceMove(move);
+            forceMove(move, true);
             return true;
         }
         return false;
@@ -119,7 +119,7 @@ public class Field {
      *
      * @param move The move to execute. Undefined behaviour if the move is not valid
      */
-    public void forceMove(Move move) {
+    public void forceMove(Move move, boolean verbose) {
 
         // store captured piece for material calculation and castling calculation later
         byte capturedPiece = getPieceBySquare(move.getTargetSquare());
@@ -151,7 +151,7 @@ public class Field {
         if (blackTurn) numberOfNextMove++;
         blackTurn = !blackTurn;
         gameState = computeGameState();
-        System.out.println("Game state: " + gameState);
+        if (verbose) System.out.println("Game state: " + gameState);
     }
 
     /**
@@ -400,6 +400,10 @@ public class Field {
         return moveChecker;
     }
 
+    public int getPieceEvaluation() {
+        return pieceEvaluation;
+    }
+
     /**
      * Creates a deep copy of the current Field instance
      *
@@ -438,5 +442,9 @@ public class Field {
         clone.moveChecker = new MoveChecker(clone);
 
         return clone;
+    }
+
+    public boolean isGameOver() {
+        return gameState != GameState.NOT_DECIDED;
     }
 }
