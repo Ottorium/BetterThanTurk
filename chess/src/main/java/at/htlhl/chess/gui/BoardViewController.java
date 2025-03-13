@@ -11,8 +11,12 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.CacheHint;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -26,6 +30,7 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 public class BoardViewController implements Initializable {
@@ -38,6 +43,9 @@ public class BoardViewController implements Initializable {
     private static final Color KING_CHECK_COLOR = Color.rgb(255, 0, 0);
     public static final Color ARROW_COLOR = Color.rgb(110, 110, 110);
     private final Field field = new Field();
+
+    @FXML
+    public TextArea FENTextArea;
     @FXML
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
@@ -104,9 +112,10 @@ public class BoardViewController implements Initializable {
         Platform.runLater(() -> {
             setUpScalability();
             engineConnector = new EngineConnector(field, this::drawArrow);
-            drawPieces(null, null);
+            updateUI(null, null);
         });
         setUpInteractions();
+        initFENTextArea();
     }
 
     /**
@@ -231,7 +240,7 @@ public class BoardViewController implements Initializable {
                 chessBoard,
                 field,
                 currentSquareSize,
-                this::drawPieces // Update callback
+                this::updateUI // Update callback
         );
         interactionHandler.setupInteractions();
     }
@@ -255,6 +264,17 @@ public class BoardViewController implements Initializable {
             }
         }
     }
+
+    /**
+     * calls all ui update methods, like drawPieces or updateFEN
+     * @param moveToHighlight for drawPieces
+     * @param kingCheckHighlight for drawPieces
+     */
+    private void updateUI(Move moveToHighlight, Square kingCheckHighlight){
+        drawPieces(moveToHighlight,kingCheckHighlight);
+        updateFENinFENTextArea();
+    }
+
 
     /**
      * Draws chess pieces on the board based on the current state of the {@link Field}.
@@ -321,5 +341,58 @@ public class BoardViewController implements Initializable {
         imageView.fitHeightProperty().bind(((Rectangle) stackpane.getChildren().getFirst()).heightProperty());
 
         stackpane.getChildren().add(imageView);
+    }
+
+
+    // not board UI
+
+    /**
+     * Initializes the FEN text area, enabling text wrapping and handling Enter key presses to update the board.
+     */
+    private void initFENTextArea() {
+        FENTextArea.setWrapText(true);
+        FENTextArea.setOnKeyPressed(keyEvent -> {
+            System.out.println("keyEvent: " + keyEvent.getCode());
+            // remove new Line
+
+            if (Objects.requireNonNull(keyEvent.getCode()) == KeyCode.ENTER) {
+                FENTextArea.setText(FENTextArea.getText().replace("\n", ""));
+                setBoardByFEN();
+            }
+        });
+    }
+
+    /**
+     * Updates the FEN text area with the current board's FEN string. Shows an error if FEN retrieval is unsupported.
+     */
+    private void updateFENinFENTextArea(){
+        try{
+            FENTextArea.setText(field.getFEN());
+        } catch (UnsupportedOperationException e){
+            System.err.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Sets the chess board based on the FEN string in the text area. Alerts if the FEN is invalid.
+     */
+    private void setBoardByFEN(){
+        if (!field.trySetFEN(FENTextArea.getText())){
+            alertProblem("Wrong FEN!", "Check if your input is correct");
+        }
+    }
+
+    /**
+     * Displays an error alert with the specified header and content text.
+     * @param headerText the header text for the alert
+     * @param contentText the content text for the alert
+     */
+    private void alertProblem(String headerText, String contentText){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(headerText);
+        alert.setContentText(contentText);
+        alert.getDialogPane().setGraphic(null);
+        alert.showAndWait();
     }
 }

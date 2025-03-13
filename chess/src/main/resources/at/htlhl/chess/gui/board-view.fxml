@@ -37,7 +37,7 @@
                 </VBox>
                  <VBox>
                <children>
-                  <TextArea text="THE FEN WILL BE HERE" />
+                  <TextArea fx:id="FENTextArea" text="THE FEN WILL BE HERE" />
                </children>
                  </VBox>
          </items>
