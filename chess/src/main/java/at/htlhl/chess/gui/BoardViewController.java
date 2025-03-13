@@ -62,7 +62,6 @@ public class BoardViewController implements Initializable {
         GridPane.setColumnSpan(arrowPane, 8);
         GridPane.setRowSpan(arrowPane, 8);
 
-        field.resetBoard();
         Platform.runLater(this::setUpScalability);
         drawPieces(null, null);
         setUpInteractions();

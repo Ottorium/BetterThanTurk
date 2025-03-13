@@ -44,6 +44,10 @@ public class Field {
 
     private Player kingInCheck = null;
 
+    public Field() {
+        this.resetBoard();
+    }
+
     /**
      * Attempts to set the board state using FEN notation
      *
