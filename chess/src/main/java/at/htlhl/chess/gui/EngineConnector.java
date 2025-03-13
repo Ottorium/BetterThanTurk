@@ -5,6 +5,7 @@ import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.engine.Engine;
 import javafx.application.Platform;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
@@ -12,6 +13,7 @@ public class EngineConnector {
 
     private final BiConsumer<Square, Square> drawArrowCallback;
     private Engine engine;
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public EngineConnector(Field field, BiConsumer<Square, Square> drawArrow) {
         this.drawArrowCallback = drawArrow;
@@ -19,7 +21,7 @@ public class EngineConnector {
     }
 
     public void drawBestMove() {
-        var executor = Executors.newSingleThreadExecutor();
+        drawArrowCallback.accept(null, null);
         executor.submit(() -> {
             var bestMove = engine.getBestMove();
             Platform.runLater(() -> {
@@ -30,6 +32,11 @@ public class EngineConnector {
                 }
             });
         });
+    }
+
+    public void stopCurrentExecutions() {
+        executor.shutdown();
+        executor = Executors.newSingleThreadExecutor();
     }
 
     public Engine getEngine() {

@@ -265,6 +265,7 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
+        engineConnector.stopCurrentExecutions();
         engineConnector.getEngine().setField(field);
         engineConnector.drawBestMove();
     }
