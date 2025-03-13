@@ -7,6 +7,8 @@ public class Engine {
 
     private Field field;
 
+    private Move currentBestMove = null;
+
 
     public Engine() {
         this(new Field());
@@ -26,45 +28,30 @@ public class Engine {
     }
 
     public Move getBestMove() {
-        if (field.isBlackTurn()) return null;
-        Move bestMove = null;
-        var bestScore = Integer.MIN_VALUE;
-        for (Move move : field.getMoveChecker().getAllLegalMoves()) {
-            var score = maxi(3);
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
+        var eval = getEvalOfBestMove(3);
+        return currentBestMove;
+    }
+
+    private int getEvalOfBestMove(int depth) {
+
+        if (depth == 0) return evaluateCurrentPosition();
+
+        var allMoves = field.getMoveChecker().getAllLegalMoves();
+        currentBestMove = null;
+        boolean blackTurn = field.isBlackTurn();
+        var bestScore = blackTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+
+        for (Move move : allMoves) {
+            var before = field.clone();
+            field.forceMove(move, false);
+            var eval = evaluateCurrentPosition();
+            field = before;
+            if (blackTurn ? eval < bestScore : eval > bestScore) {
+                bestScore = eval;
+                currentBestMove = move;
             }
         }
-        System.out.println(bestScore);
-        System.out.println(bestMove);
-        return bestMove;
-    }
-
-    int maxi(int depth) {
-        if (depth == 0) return evaluateCurrentPosition();
-        int max = Integer.MIN_VALUE;
-        for (var move : field.getMoveChecker().getAllLegalMoves()) {
-            Field before = field.clone();
-            field.forceMove(move, false);
-            var score = mini(depth - 1);
-            max = Math.max(score, max);
-            field = before;
-        }
-        return max;
-    }
-
-    int mini(int depth) {
-        if (depth == 0) return -evaluateCurrentPosition();
-        int min = Integer.MAX_VALUE;
-        for (var move : field.getMoveChecker().getAllLegalMoves()) {
-            Field before = field.clone();
-            field.forceMove(move, false);
-            var score = maxi(depth - 1);
-            min = Math.min(min, score);
-            field = before;
-        }
-        return min;
+        return bestScore;
     }
 
 
