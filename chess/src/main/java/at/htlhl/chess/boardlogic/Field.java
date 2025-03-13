@@ -412,9 +412,9 @@ public class Field {
     public Field clone() {
         Field clone = new Field();
 
-        clone.board = new byte[board.length][];
+        clone.board = new byte[board.length][board[0].length];
         for (int i = 0; i < board.length; i++) {
-            clone.board[i] = board[i].clone();
+            System.arraycopy(board[i], 0, clone.board[i], 0, board[i].length);
         }
 
         clone.blackTurn = this.blackTurn;
