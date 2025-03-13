@@ -3,7 +3,9 @@ package at.htlhl.chess.gui;
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.engine.Engine;
+import javafx.application.Platform;
 
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
 public class EngineConnector {
@@ -16,8 +18,21 @@ public class EngineConnector {
         engine = new Engine(field);
     }
 
-    public void calculateBestMove() {
-        var bestMove = engine.getBestMove();
-        drawArrowCallback.accept(bestMove.getStartingSquare(), bestMove.getTargetSquare());
+    public void drawBestMove() {
+        var executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            var bestMove = engine.getBestMove();
+            Platform.runLater(() -> {
+                if (bestMove == null) {
+                    drawArrowCallback.accept(null, null);
+                } else {
+                    drawArrowCallback.accept(bestMove.getStartingSquare(), bestMove.getTargetSquare());
+                }
+            });
+        });
+    }
+
+    public Engine getEngine() {
+        return engine;
     }
 }
