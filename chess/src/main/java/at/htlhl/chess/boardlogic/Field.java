@@ -395,4 +395,48 @@ public class Field {
     public GameState getGameState() {
         return gameState;
     }
+
+    public MoveChecker getMoveChecker() {
+        return moveChecker;
+    }
+
+    /**
+     * Creates a deep copy of the current Field instance
+     *
+     * @return A new Field instance with identical state to the current one
+     */
+    public Field clone() {
+        Field clone = new Field();
+
+        clone.board = new byte[board.length][];
+        for (int i = 0; i < board.length; i++) {
+            clone.board[i] = board[i].clone();
+        }
+
+        clone.blackTurn = this.blackTurn;
+        clone.castlingInformation = this.castlingInformation;
+        clone.playedHalfMovesSinceLastPawnMoveOrCapture = this.playedHalfMovesSinceLastPawnMoveOrCapture;
+        clone.numberOfNextMove = this.numberOfNextMove;clone.gameState = this.gameState;
+        clone.pieceEvaluation = this.pieceEvaluation;
+        clone.kingInCheck = this.kingInCheck;
+
+        clone.possibleEnPassantSquare = this.possibleEnPassantSquare != null
+                ? new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y())
+                : null;
+
+        clone.seenPositions.clear();
+        for (byte[] position : this.seenPositions) {
+            clone.seenPositions.add(position.clone());
+        }
+
+        clone.capturedWhitePieces.clear();
+        clone.capturedWhitePieces.addAll(this.capturedWhitePieces);
+
+        clone.capturedBlackPieces.clear();
+        clone.capturedBlackPieces.addAll(this.capturedBlackPieces);
+
+        clone.moveChecker = new MoveChecker(clone);
+
+        return clone;
+    }
 }
