@@ -28,27 +28,30 @@ public class Engine {
     }
 
     public Move getBestMove() {
-        var eval = getEvalOfBestMove(3);
+        currentBestMove = null;
+        maxDepth = 3;
+        var eval = getEvalOfBestMove(maxDepth);
         return currentBestMove;
     }
+    private int maxDepth;
 
     private int getEvalOfBestMove(int depth) {
 
         if (depth == 0) return evaluateCurrentPosition();
 
         var allMoves = field.getMoveChecker().getAllLegalMoves();
-        currentBestMove = null;
         boolean blackTurn = field.isBlackTurn();
         var bestScore = blackTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
 
+        var before = field.clone();
         for (Move move : allMoves) {
-            var before = field.clone();
             field.forceMove(move, false);
-            var eval = evaluateCurrentPosition();
-            field = before;
+            var eval = getEvalOfBestMove(depth - 1);
+            field = before.clone();
             if (blackTurn ? eval < bestScore : eval > bestScore) {
                 bestScore = eval;
-                currentBestMove = move;
+                if (depth == maxDepth)
+                    currentBestMove = move;
             }
         }
         return bestScore;
