@@ -313,10 +313,16 @@ public class MoveChecker {
             return;
         }
 
+        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false && PieceUtil.isBlack(move.getPromotionPiece()) != field.isBlackTurn()) {
+            move.setLegal(false);
+            return;
+        }
+
         //Get possible targets
         List<Square> possibleTargets = getTargetSquares(move.getStartingSquare(), isStartWhite);
         if (possibleTargets.isEmpty()) {
             move.setLegal(false);
+            return;
         }
 
         // look for move type
@@ -622,10 +628,10 @@ public class MoveChecker {
      * @return List<Player> that are checked
      */
 
-    private List<Player> lookForChecksOnBoard() {
+    public List<Player> lookForChecksOnBoard() {
         List<Player> checkedPlayers = new ArrayList<>();
         // look for checks
-        Square[] kings = findKings();
+        ArrayList<Square> kings = findKings();
         for (Square king : kings) {
             boolean isWhite = PieceUtil.isWhite(getPieceBySquare(king));
             if (isKingChecked(king)) {
@@ -642,25 +648,19 @@ public class MoveChecker {
     ;
 
     /**
-     * Finds both kings on board fast
+     * Finds both kings on board
      *
      * @return Square array of king's positions
      */
-    private Square[] findKings() {
-        Square[] kings = new Square[2];
-        boolean second = false;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+    private ArrayList<Square> findKings() {
+        var kings = new ArrayList<Square>();
+        for (int i = 0; i < 8; i++)
+            for (int j = 0; j < 8; j++)
                 if (PieceUtil.isKing(field.getBoard()[i][j])) {
-                    if (second) {
-                        kings[1] = new Square(j, i);
-                    } else {
-                        kings[0] = new Square(j, i);
-                        second = true;
-                    }
+                    kings.add(new Square(j, i));
+                    if (kings.size() >= 2)
+                        return kings;
                 }
-            }
-        }
         return kings;
     }
 

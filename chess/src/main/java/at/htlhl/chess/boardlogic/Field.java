@@ -35,7 +35,7 @@ public class Field {
 
     private GameState gameState = GameState.NOT_DECIDED;
 
-    private final MoveChecker moveChecker = new MoveChecker(this);
+    private MoveChecker moveChecker = new MoveChecker(this);
 
     private int pieceEvaluation = 0;
     private final List<Byte> capturedWhitePieces = new ArrayList<>();
@@ -64,6 +64,11 @@ public class Field {
         } catch (InvalidFENException e) {
             return false;
         }
+        moveChecker = new MoveChecker(this);
+        seenPositions.clear();
+        Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
+        kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
+        gameState = computeGameState();
         return true;
     }
 
@@ -188,7 +193,7 @@ public class Field {
         for (byte piece : flatBoard) {
             if (piece == PieceUtil.EMPTY) continue;
 
-            if (numberOfPieces++ >= 4
+            if (++numberOfPieces >= 4
                     || PieceUtil.isPawn(piece)
                     || PieceUtil.isRook(piece)
                     || PieceUtil.isQueen(piece)) {

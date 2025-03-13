@@ -17,7 +17,7 @@ public class Move {
     public Move(Square startingSquare, Square targetSquare) {
         this.startingSquare = startingSquare;
         this.targetSquare = targetSquare;
-        this.promotionPiece = PieceUtil.QUEEN_MASK;
+        this.promotionPiece = PieceUtil.EMPTY;
         this.isLegal = false;
         this.isCastlingMove = false;
         this.appearedCheck = null;
