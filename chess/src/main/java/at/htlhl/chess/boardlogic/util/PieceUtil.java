@@ -85,7 +85,7 @@ public final class PieceUtil {
         else if (isPawn(piece)) value = RELATIVE_PAWN_VALUE;
         else throw new UnsupportedOperationException("Invalid Piece");
 
-        return isWhite(piece) ? value : -value;
+        return isWhite(piece) ? -value : value;
     }
 
     public static String toString(byte piece) {
