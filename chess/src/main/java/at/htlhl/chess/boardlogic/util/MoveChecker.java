@@ -11,6 +11,12 @@ import java.util.stream.Collectors;
  */
 public class MoveChecker {
     private final Field field;
+    int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
+    int[][] bishopQueenDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+    int[][] kingDirections = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
+    int[][] rookOrQueenDirections = new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    int[][] whitePawnDirections = new int[][]{{-1, 1}, {-1, -1}};
+    int[][] blackPawnDirections = new int[][]{{1, 1}, {1, -1}};
 
     /**
      * Constructs a MoveChecker object.
@@ -334,12 +340,12 @@ public class MoveChecker {
 
 
                 //Looks for checks between castling
-                if (move.isCastlingMove()){
-                    if(field.getKingInCheck() != null){
+                if (move.isCastlingMove()) {
+                    if (field.getKingInCheck() != null) {
                         move.setLegal(false);
                         return;
                     }
-                    if (isThereNoChecksOnCastlingPath(move) == false){
+                    if (isThereNoChecksOnCastlingPath(move) == false) {
                         move.setLegal(false);
                         return;
                     }
@@ -359,12 +365,12 @@ public class MoveChecker {
         }
 
 
-
         move.setLegal(false);
     }
 
     /**
      * Looks for all checks on castling path
+     *
      * @param move
      * @return true, if there is no check, false, if there is a check
      */
@@ -378,9 +384,9 @@ public class MoveChecker {
 
         boolean noChecks = true;
 
-        if (kingMoveDistance > 0){
+        if (kingMoveDistance > 0) {
             // try one square
-            Square kingSquare = new Square(move.getStartingSquare().x()+1, yRank);
+            Square kingSquare = new Square(move.getStartingSquare().x() + 1, yRank);
             setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
             setPieceBySquare(kingSquare, king);
             if (isKingChecked(kingSquare)) {
@@ -390,7 +396,7 @@ public class MoveChecker {
             setPieceBySquare(move.getStartingSquare(), king);
         } else {
             // try first square
-            Square kingSquare = new Square(move.getStartingSquare().x()-1, yRank);
+            Square kingSquare = new Square(move.getStartingSquare().x() - 1, yRank);
             setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
             setPieceBySquare(kingSquare, king);
             if (isKingChecked(kingSquare)) {
@@ -399,7 +405,7 @@ public class MoveChecker {
             setPieceBySquare(kingSquare, PieceUtil.EMPTY);
 
             // try second square
-            kingSquare = new Square(move.getStartingSquare().x()-2, yRank);
+            kingSquare = new Square(move.getStartingSquare().x() - 2, yRank);
             setPieceBySquare(kingSquare, king);
             if (isKingChecked(kingSquare)) {
                 noChecks = false;
@@ -413,13 +419,14 @@ public class MoveChecker {
 
     /**
      * Looks for checks produced by EnPassant move
+     *
      * @param move to look at
      * @return appeared Check. It must be legal
      */
 
     private List<Player> lookForChecksInEnPassant(Move move) {
         Square possibleEnPassantSquare = field.getPossibleEnPassantSquare();
-        Square deletedPawn = field.isBlackTurn() ? new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()-1) : new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y()+1);
+        Square deletedPawn = field.isBlackTurn() ? new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() - 1) : new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + 1);
         byte startingPawn = getPieceBySquare(move.getStartingSquare());
         byte opponentPawn = getPieceBySquare(deletedPawn);
         // simulating move
@@ -440,17 +447,18 @@ public class MoveChecker {
 
     /**
      * Adds Catling and enPassant information to move
+     *
      * @param move
      */
-    private void gatherMoveInfo(Move move){
+    private void gatherMoveInfo(Move move) {
         // Castling
-        if(isCastlingMove(move)){
+        if (isCastlingMove(move)) {
             move.setCastlingMove(true);
         } else {
 
             //En passant move is move when pawn does capture
-            if(move.getTargetSquare().equals(field.getPossibleEnPassantSquare())
-                    && PieceUtil.isPawn(getPieceBySquare(move.getStartingSquare()))){
+            if (move.getTargetSquare().equals(field.getPossibleEnPassantSquare())
+                    && PieceUtil.isPawn(getPieceBySquare(move.getStartingSquare()))) {
                 move.setEnPassantMove(true);
             } else {
 
@@ -498,7 +506,6 @@ public class MoveChecker {
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
 
         // Look for knight
-        int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
         for (int[] move : knightMoves) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
@@ -514,9 +521,7 @@ public class MoveChecker {
         }
 
         // Look for bishop or queen
-        int[][] directions = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-
-        for (int[] dir : directions) {
+        for (int[] dir : bishopQueenDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
@@ -537,10 +542,8 @@ public class MoveChecker {
             }
         }
 
-        directions = new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-
         // Look for rook or queen
-        for (int[] dir : directions) {
+        for (int[] dir : rookOrQueenDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
@@ -561,13 +564,7 @@ public class MoveChecker {
             }
         }
 
-        // Look for pawns
-        if (isStartWhite) {
-            directions = new int[][]{{-1, 1}, {-1,-1}};
-        } else {
-            directions = new int[][]{{1,1},{1,-1}};
-        }
-        for (int[] dir : directions) {
+        for (int[] dir : isStartWhite ? whitePawnDirections : blackPawnDirections) {
             int x = position.x() + dir[1];
             int y = position.y() + dir[0];
             if (isOnBoard(x, y)) {
@@ -578,8 +575,7 @@ public class MoveChecker {
         }
 
         // Look for king
-        directions = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
-        for (int[] dir : directions) {
+        for (int[] dir : kingDirections) {
             int x = position.x() + dir[0];
             int y = position.y() + dir[1];
             if (!isOnBoard(x, y)) {
@@ -595,6 +591,7 @@ public class MoveChecker {
 
     /**
      * Simulates move and looks if checks appeared. Edge cases like castling are not handled here now
+     *
      * @param move that will be simulated
      * @return List<Player> of appeared checks
      */
@@ -602,7 +599,7 @@ public class MoveChecker {
     private List<Player> lookForChecksInMove(Move move) {
 
         // If move is en passant, there is another method
-        if (move.isEnPassantMove()){
+        if (move.isEnPassantMove()) {
             return lookForChecksInEnPassant(move);
         }
 
@@ -625,6 +622,7 @@ public class MoveChecker {
 
     /**
      * Looks for current checks On Board
+     *
      * @return List<Player> that are checked
      */
 
