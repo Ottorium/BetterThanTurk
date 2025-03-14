@@ -2,7 +2,7 @@ package at.htlhl.chess.gui;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Square;
-import at.htlhl.chess.boardlogic.engine.Engine;
+import at.htlhl.chess.engine.Engine;
 import javafx.application.Platform;
 
 import java.util.concurrent.ExecutorService;

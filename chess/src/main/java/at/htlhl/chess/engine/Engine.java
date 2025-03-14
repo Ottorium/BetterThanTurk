@@ -1,4 +1,4 @@
-package at.htlhl.chess.boardlogic.engine;
+package at.htlhl.chess.engine;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
