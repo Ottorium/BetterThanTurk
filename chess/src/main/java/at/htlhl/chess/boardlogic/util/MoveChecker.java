@@ -11,12 +11,10 @@ import java.util.stream.Collectors;
  */
 public class MoveChecker {
     private final Field field;
-    int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
-    int[][] bishopQueenDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-    int[][] kingDirections = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
-    int[][] rookOrQueenDirections = new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-    int[][] whitePawnDirections = new int[][]{{-1, 1}, {-1, -1}};
-    int[][] blackPawnDirections = new int[][]{{1, 1}, {1, -1}};
+    private static final int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
+    private static final int[][] kingDirections = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
+    private static final int[][] slidingDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
 
     /**
      * Constructs a MoveChecker object.
@@ -497,92 +495,73 @@ public class MoveChecker {
     }
 
     /**
-     * Search from king in all directions if this king is checked
+     * Search from king position to determine if it's in check
      *
      * @param position King position
      * @return true if king is checked, false otherwise
      */
     private boolean isKingChecked(Square position) {
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
+        byte[][] board = field.getBoard();
+        int kingX = position.x();
+        int kingY = position.y();
 
-        // Look for knight
         for (int[] move : knightMoves) {
-            int x = position.x() + move[0];
-            int y = position.y() + move[1];
-            if (!isOnBoard(x, y)) {
-                continue;
-            }
-            if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
-                continue;
-            }
-            if (PieceUtil.isKnight(field.getBoard()[y][x])) {
-                return true;
-            }
-        }
-
-        // Look for bishop or queen
-        for (int[] dir : bishopQueenDirections) {
-            for (int i = 1; i < 8; i++) {
-                int x = position.x() + dir[0] * i;
-                int y = position.y() + dir[1] * i;
-                if (!isOnBoard(x, y)) {
-                    break;
-                }
-                if (PieceUtil.isEmpty(field.getBoard()[y][x])) {
-                    continue;
-                }
-                if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
-                    break;
-                }
-                if ((PieceUtil.isBishop(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x]))) {
-                    return true;
-                } else { // no xRay
-                    break;
-                }
-            }
-        }
-
-        // Look for rook or queen
-        for (int[] dir : rookOrQueenDirections) {
-            for (int i = 1; i < 8; i++) {
-                int x = position.x() + dir[0] * i;
-                int y = position.y() + dir[1] * i;
-                if (!isOnBoard(x, y)) {
-                    break;
-                }
-                if (PieceUtil.isEmpty(field.getBoard()[y][x])) {
-                    continue;
-                }
-                if (PieceUtil.isWhite(field.getBoard()[y][x]) == isStartWhite) {
-                    break;
-                }
-                if (PieceUtil.isRook(field.getBoard()[y][x]) || PieceUtil.isQueen(field.getBoard()[y][x])) {
-                    return true;
-                } else { // no xRay
-                    break;
-                }
-            }
-        }
-
-        for (int[] dir : isStartWhite ? whitePawnDirections : blackPawnDirections) {
-            int x = position.x() + dir[1];
-            int y = position.y() + dir[0];
+            int x = kingX + move[0];
+            int y = kingY + move[1];
             if (isOnBoard(x, y)) {
-                if (PieceUtil.isWhite(field.getBoard()[y][x]) ^ isStartWhite && PieceUtil.isPawn(field.getBoard()[y][x])) {
+                byte piece = board[y][x];
+                if (PieceUtil.isKnight(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
                     return true;
                 }
             }
         }
 
-        // Look for king
-        for (int[] dir : kingDirections) {
-            int x = position.x() + dir[0];
-            int y = position.y() + dir[1];
-            if (!isOnBoard(x, y)) {
-                continue;
+
+        for (int[] dir : slidingDirections) {
+            for (int i = 1; i < 8; i++) {
+                int x = kingX + dir[0] * i;
+                int y = kingY + dir[1] * i;
+                if (!isOnBoard(x, y)) break;
+
+                byte piece = board[y][x];
+                if (PieceUtil.isEmpty(piece)) continue;
+
+                boolean isOpponent = PieceUtil.isWhite(piece) != isStartWhite;
+                if (!isOpponent) break;
+
+                if ((dir[0] != 0 && dir[1] != 0) &&  // Diagonal
+                        (PieceUtil.isBishop(piece) || PieceUtil.isQueen(piece))) {
+                    return true;
+                } else if ((dir[0] == 0 || dir[1] == 0) &&  // Straight
+                        (PieceUtil.isRook(piece) || PieceUtil.isQueen(piece))) {
+                    return true;
+                }
+                break; // Blocked by another piece
             }
-            if (PieceUtil.isKing(field.getBoard()[y][x])) {
-                return true;
+        }
+
+        int pawnDir = isStartWhite ? -1 : 1;  // White pawns attack up, black down
+        int[] pawnXOffsets = {-1, 1};
+        for (int xOffset : pawnXOffsets) {
+            int x = kingX + xOffset;
+            int y = kingY + pawnDir;
+            if (isOnBoard(x, y)) {
+                byte piece = board[y][x];
+                if (PieceUtil.isPawn(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
+                    return true;
+                }
+            }
+        }
+
+        for (int[] dir : kingDirections) {
+            int x = kingX + dir[0];
+            int y = kingY + dir[1];
+            if (isOnBoard(x, y)) {
+                byte piece = board[y][x];
+                if (PieceUtil.isKing(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
+                    return true;
+                }
             }
         }
 
@@ -652,9 +631,10 @@ public class MoveChecker {
      */
     private ArrayList<Square> findKings() {
         var kings = new ArrayList<Square>();
+        var board = field.getBoard();
         for (int i = 0; i < 8; i++)
             for (int j = 0; j < 8; j++)
-                if (PieceUtil.isKing(field.getBoard()[i][j])) {
+                if (PieceUtil.isKing(board[i][j])) {
                     kings.add(new Square(j, i));
                     if (kings.size() >= 2)
                         return kings;
