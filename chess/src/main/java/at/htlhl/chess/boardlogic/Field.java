@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.util.Objects.hash;
+
 /**
  * Represents a chess field/board and its state
  */
@@ -31,7 +33,7 @@ public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    private final List<byte[]> seenPositions = new ArrayList<>();
+    private final List<Integer> seenPositions = new ArrayList<>();
 
     private GameState gameState = GameState.NOT_DECIDED;
 
@@ -41,6 +43,8 @@ public class Field {
     private final List<Byte> capturedWhitePieces = new ArrayList<>();
     private final List<Byte> capturedBlackPieces = new ArrayList<>();
 
+    private Move lastMove;
+    private ArrayList<FieldChange> changesInLastMove = new ArrayList<>();
 
     private Player kingInCheck = null;
 
@@ -120,6 +124,10 @@ public class Field {
      * @param move The move to execute. Undefined behaviour if the move is not valid
      */
     public void forceMove(Move move, boolean verbose) {
+        var changesInLastMoveBefore = (ArrayList<FieldChange>) changesInLastMove.clone();
+        changesInLastMove.clear();
+        changesInLastMove.add(new FieldChange("changesInLastMove", undo -> changesInLastMove = changesInLastMoveBefore));
+
 
         // store captured piece for material calculation and castling calculation later
         byte capturedPiece = getPieceBySquare(move.getTargetSquare());
@@ -127,6 +135,11 @@ public class Field {
         // move piece to target square
         setPieceOnSquare(move.getTargetSquare(), getPieceBySquare(move.getStartingSquare()));
         setPieceOnSquare(move.getStartingSquare(), PieceUtil.EMPTY);
+        byte finalCapturedPiece = capturedPiece;
+        changesInLastMove.add(new FieldChange("board", undo -> {
+            setPieceOnSquare(move.getStartingSquare(), getPieceBySquare(move.getTargetSquare()));
+            setPieceOnSquare(move.getTargetSquare(), finalCapturedPiece);
+        }));
 
         //En passant
         //Delete captured pawn if enPassant happened
@@ -134,23 +147,51 @@ public class Field {
             Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
             capturedPiece = getPieceBySquare(capturedEnPassantPawn);
             setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
+            changesInLastMove.add(new FieldChange("board", undo -> setPieceOnSquare(capturedEnPassantPawn, finalCapturedPiece)));
         }
+        var before = possibleEnPassantSquare;
         possibleEnPassantSquare = move.getPossibleEnPassantSquare();
+        if (before != possibleEnPassantSquare)
+            changesInLastMove.add(new FieldChange("possibleEnPassantSquare", undo -> possibleEnPassantSquare = before));
 
         // Castling
         moveRookIfCastlingMove(move);
         removeCastlingRightsIfNeeded(move, capturedPiece);
 
         // Promotions
-        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false)
+        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false) {
             setPieceOnSquare(move.getTargetSquare(), move.getPromotionPiece());
+            changesInLastMove.add(new FieldChange("board",
+                    unused ->
+                            setPieceOnSquare(move.getStartingSquare(),
+                                    blackTurn ?
+                                            PieceUtil.BLACK_PAWN
+                                            : PieceUtil.WHITE_PAWN)));
+        }
+        var kingInCheckBefore = kingInCheck;
+        kingInCheck = move.getAppearedCheck();
+        if (kingInCheckBefore != kingInCheck)
+            changesInLastMove.add(new FieldChange("kingInCheck", undo -> kingInCheck = kingInCheckBefore));
 
-        setKingInCheck(move.getAppearedCheck());
         calculateMaterial(capturedPiece);
         updatePlayedHalfMovesSinceLastPawnMoveOrCapture(move);
-        if (blackTurn) numberOfNextMove++;
+
+        if (blackTurn) {
+            numberOfNextMove++;
+            changesInLastMove.add(new FieldChange("numberOfNextMove", undo -> numberOfNextMove--));
+        }
+
         blackTurn = !blackTurn;
+        changesInLastMove.add(new FieldChange("blackTurn", undo -> blackTurn = !blackTurn));
+
+        var gameStateBefore = gameState;
         gameState = computeGameState();
+        changesInLastMove.add(new FieldChange("gameState", undo -> gameState = gameStateBefore));
+
+        var lastMoveBefore = lastMove;
+        lastMove = move;
+        changesInLastMove.add(new FieldChange("lastMove", undo -> lastMove = lastMoveBefore));
+
         if (verbose) System.out.println("Game state: " + gameState);
     }
 
@@ -162,6 +203,7 @@ public class Field {
      * @param move The move that was just executed
      */
     private void updatePlayedHalfMovesSinceLastPawnMoveOrCapture(Move move) {
+        var before = playedHalfMovesSinceLastPawnMoveOrCapture;
         byte movingPiece = getPieceBySquare(move.getTargetSquare());
         byte capturedPiece = board[move.getTargetSquare().y()][move.getTargetSquare().x()];
 
@@ -170,6 +212,7 @@ public class Field {
         } else {
             playedHalfMovesSinceLastPawnMoveOrCapture++;
         }
+        changesInLastMove.add(new FieldChange("playedHalfMovesSinceLastPawnMoveOrCapture", undo -> playedHalfMovesSinceLastPawnMoveOrCapture = before));
     }
 
     /**
@@ -183,13 +226,16 @@ public class Field {
         }
 
 
-        var flatBoard = getFlattenedBoard();
-        seenPositions.add(flatBoard);
-        long occurrences = seenPositions.stream()
-                .filter(pos -> Arrays.equals(pos, flatBoard))
-                .count();
-        if (occurrences >= 3)
-            return GameState.DRAW; // Threefold repetition
+        byte[] flatBoard = getFlattenedBoard();
+        var current = Arrays.hashCode(flatBoard);
+        seenPositions.add(current);
+        int seen = 0;
+        for (int i = seenPositions.size() - 2; i >= 0; i--) {
+            if (seenPositions.get(i) == current)
+                seen++;
+            if (seen == 2)
+                return GameState.DRAW; // Threefold repetition
+        }
 
 
         boolean insufficient = true;
@@ -228,12 +274,16 @@ public class Field {
     private void calculateMaterial(byte capturedPiece) {
         if (PieceUtil.isEmpty(capturedPiece)) return;
 
-        if (PieceUtil.isWhite(capturedPiece))
+        if (PieceUtil.isWhite(capturedPiece)) {
             capturedWhitePieces.add(capturedPiece);
-        else
+            changesInLastMove.add(new FieldChange("capturedWhitePieces", undo -> capturedWhitePieces.removeLast()));
+        } else {
             capturedBlackPieces.add(capturedPiece);
-
+            changesInLastMove.add(new FieldChange("capturedBlackPieces", undo -> capturedBlackPieces.removeLast()));
+        }
+        var before = pieceEvaluation;
         pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece);
+        changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
     }
 
     private void moveRookIfCastlingMove(Move move) {
@@ -249,6 +299,10 @@ public class Field {
             Square rookTarget = new Square(rookTargetX, yRank);
             setPieceOnSquare(rookTarget, getPieceBySquare(rookStart));
             setPieceOnSquare(rookStart, PieceUtil.EMPTY);
+            changesInLastMove.add(new FieldChange("board", undo -> {
+                setPieceOnSquare(rookStart, getPieceBySquare(rookTarget));
+                setPieceOnSquare(rookTarget,PieceUtil.EMPTY);
+            }));
 
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
         }
@@ -263,6 +317,7 @@ public class Field {
      * @param capturedPiece The piece (if any) that was captured by this move.
      */
     private void removeCastlingRightsIfNeeded(Move move, byte capturedPiece) {
+        var rightsBefore = castlingInformation;
         Square start = move.getStartingSquare();
         Square target = move.getTargetSquare();
         byte movingPiece = getPieceBySquare(target);
@@ -294,6 +349,16 @@ public class Field {
             else if (target.x() == 7)
                 castlingInformation = CastlingUtil.remove(castlingInformation,
                         blackTurn ? CastlingUtil.WHITE_KING_SIDE : CastlingUtil.BLACK_KING_SIDE);
+
+        if (rightsBefore != castlingInformation) {
+            changesInLastMove.add(new FieldChange("castlingInformation", undo -> castlingInformation = rightsBefore));
+        }
+    }
+
+    public boolean undoMove(Move move) {
+        if (move.equals(lastMove) == false) return false;
+        changesInLastMove.forEach(FieldChange::undo);
+        return true;
     }
 
     /**
@@ -429,9 +494,7 @@ public class Field {
                 : null;
 
         clone.seenPositions.clear();
-        for (byte[] position : this.seenPositions) {
-            clone.seenPositions.add(position.clone());
-        }
+        clone.seenPositions.addAll(this.seenPositions);
 
         clone.capturedWhitePieces.clear();
         clone.capturedWhitePieces.addAll(this.capturedWhitePieces);
