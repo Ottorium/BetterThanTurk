@@ -4,45 +4,33 @@ import at.htlhl.chess.boardlogic.util.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-
-import static java.util.Objects.hash;
 
 /**
  * Represents a chess field/board and its state
  */
 public class Field {
 
+    private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    private final HashMap<Integer, Integer> positionCounts = new HashMap<>();
+    private final List<Byte> capturedWhitePieces = new ArrayList<>();
+    private final List<Byte> capturedBlackPieces = new ArrayList<>();
     /**
      * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link PieceUtil}.
      */
     private byte[][] board;
-
     private boolean blackTurn;
-
     /**
      * Stores the current castling rights using bit flags. To set or modify this value please use {@link CastlingUtil}.
      */
     private byte castlingInformation;
-
     private Square possibleEnPassantSquare;
-
     private int playedHalfMovesSinceLastPawnMoveOrCapture;
-
     private int numberOfNextMove;
-
-    private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-    private final List<Integer> seenPositions = new ArrayList<>();
-
     private GameState gameState = GameState.NOT_DECIDED;
-
     private MoveChecker moveChecker = new MoveChecker(this);
-
     private int pieceEvaluation = 0;
-    private final List<Byte> capturedWhitePieces = new ArrayList<>();
-    private final List<Byte> capturedBlackPieces = new ArrayList<>();
-
     private Move lastMove;
     private ArrayList<FieldChange> changesInLastMove = new ArrayList<>();
 
@@ -73,7 +61,7 @@ public class Field {
             return false;
         }
         moveChecker = new MoveChecker(this);
-        seenPositions.clear();
+        positionCounts.clear();
         Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
         kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
         gameState = computeGameState();
@@ -207,7 +195,7 @@ public class Field {
         byte movingPiece = getPieceBySquare(move.getTargetSquare());
         byte capturedPiece = board[move.getTargetSquare().y()][move.getTargetSquare().x()];
 
-        if (PieceUtil.isPawn(movingPiece) ||PieceUtil.isEmpty(capturedPiece) == false) {
+        if (PieceUtil.isPawn(movingPiece) || PieceUtil.isEmpty(capturedPiece) == false) {
             playedHalfMovesSinceLastPawnMoveOrCapture = 0;
         } else {
             playedHalfMovesSinceLastPawnMoveOrCapture++;
@@ -227,14 +215,13 @@ public class Field {
 
 
         byte[] flatBoard = getFlattenedBoard();
-        var current = Arrays.hashCode(flatBoard);
-        seenPositions.add(current);
-        int seen = 0;
-        for (int i = seenPositions.size() - 2; i >= 0; i--) {
-            if (seenPositions.get(i) == current)
-                seen++;
-            if (seen == 2)
-                return GameState.DRAW; // Threefold repetition
+        int current = Arrays.hashCode(flatBoard);
+
+        int count = positionCounts.getOrDefault(current, 0) + 1;
+        positionCounts.put(current, count);
+
+        if (count >= 3) {
+            return GameState.DRAW; // Threefold repetition
         }
 
 
@@ -301,7 +288,7 @@ public class Field {
             setPieceOnSquare(rookStart, PieceUtil.EMPTY);
             changesInLastMove.add(new FieldChange("board", undo -> {
                 setPieceOnSquare(rookStart, getPieceBySquare(rookTarget));
-                setPieceOnSquare(rookTarget,PieceUtil.EMPTY);
+                setPieceOnSquare(rookTarget, PieceUtil.EMPTY);
             }));
 
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
@@ -389,7 +376,7 @@ public class Field {
      * Gets the position of the King in Check
      *
      * @return Position of the king in check, null if the current player is not in check
-     * */
+     */
     public Square getSquareOfCheck() {
         if (kingInCheck != (blackTurn ? Player.BLACK : Player.WHITE))
             return null;
@@ -485,7 +472,8 @@ public class Field {
         clone.blackTurn = this.blackTurn;
         clone.castlingInformation = this.castlingInformation;
         clone.playedHalfMovesSinceLastPawnMoveOrCapture = this.playedHalfMovesSinceLastPawnMoveOrCapture;
-        clone.numberOfNextMove = this.numberOfNextMove;clone.gameState = this.gameState;
+        clone.numberOfNextMove = this.numberOfNextMove;
+        clone.gameState = this.gameState;
         clone.pieceEvaluation = this.pieceEvaluation;
         clone.kingInCheck = this.kingInCheck;
 
@@ -493,8 +481,8 @@ public class Field {
                 ? new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y())
                 : null;
 
-        clone.seenPositions.clear();
-        clone.seenPositions.addAll(this.seenPositions);
+        clone.positionCounts.clear();
+        clone.positionCounts.putAll(this.positionCounts);
 
         clone.capturedWhitePieces.clear();
         clone.capturedWhitePieces.addAll(this.capturedWhitePieces);
