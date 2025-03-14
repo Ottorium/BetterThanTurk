@@ -13,7 +13,7 @@ import java.util.List;
 public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    private final HashMap<Integer, Integer> positionCounts = new HashMap<>();
+    private HashMap<Integer, Integer> positionCounts = new HashMap<>();
     private final List<Byte> capturedWhitePieces = new ArrayList<>();
     private final List<Byte> capturedBlackPieces = new ArrayList<>();
     /**
@@ -218,7 +218,9 @@ public class Field {
         int current = Arrays.hashCode(flatBoard);
 
         int count = positionCounts.getOrDefault(current, 0) + 1;
+        var before = (HashMap<Integer, Integer>) positionCounts.clone();
         positionCounts.put(current, count);
+        changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts = before));
 
         if (count >= 3) {
             return GameState.DRAW; // Threefold repetition
@@ -269,6 +271,8 @@ public class Field {
             changesInLastMove.add(new FieldChange("capturedBlackPieces", undo -> capturedBlackPieces.removeLast()));
         }
         var before = pieceEvaluation;
+        if (PieceUtil.isKing(capturedPiece))
+            System.out.println("fuck");
         pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece);
         changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
     }
