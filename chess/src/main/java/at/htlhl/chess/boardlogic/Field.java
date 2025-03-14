@@ -271,8 +271,6 @@ public class Field {
             changesInLastMove.add(new FieldChange("capturedBlackPieces", undo -> capturedBlackPieces.removeLast()));
         }
         var before = pieceEvaluation;
-        if (PieceUtil.isKing(capturedPiece))
-            System.out.println("fuck");
         pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece);
         changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
     }
