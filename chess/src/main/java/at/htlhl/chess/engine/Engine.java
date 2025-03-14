@@ -30,23 +30,18 @@ public class Engine {
     public Move getBestMove() {
         currentBestMove = null;
         maxDepth = 4;
-        var eval = getEvalOfBestMove(maxDepth);
+        var eval = negaMax(maxDepth);
         return currentBestMove;
     }
 
-    private int getEvalOfBestMove(int depth) {
-
+    int negaMax(int depth) {
         if (depth == 0) return evaluateCurrentPosition();
-
-        var allMoves = field.getMoveChecker().getAllLegalMoves();
-        boolean blackTurn = field.isBlackTurn();
-        var bestScore = blackTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-
-        for (Move move : allMoves) {
+        int bestScore = Integer.MIN_VALUE;
+        for (var move : field.getMoveChecker().getAllLegalMoves()) {
             field.forceMove(move, false);
-            var eval = getEvalOfBestMove(depth - 1);
+            var eval = -negaMax(depth - 1);
             field.undoMove(move);
-            if (blackTurn ? eval < bestScore : eval > bestScore) {
+            if (eval > bestScore) {
                 bestScore = eval;
                 if (depth == maxDepth)
                     currentBestMove = move;
@@ -57,6 +52,6 @@ public class Engine {
 
 
     private int evaluateCurrentPosition() {
-        return field.getPieceEvaluation();
+        return field.isBlackTurn() ? -field.getPieceEvaluation() : field.getPieceEvaluation();
     }
 }
