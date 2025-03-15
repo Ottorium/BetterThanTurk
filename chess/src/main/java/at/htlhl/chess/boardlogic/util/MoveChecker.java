@@ -14,6 +14,8 @@ public class MoveChecker {
     private static final int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
     private static final int[][] kingDirections = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
     private static final int[][] slidingDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    private static final byte[] whitePromotionPieces = {PieceUtil.WHITE_QUEEN, PieceUtil.WHITE_ROOK, PieceUtil.WHITE_BISHOP, PieceUtil.WHITE_KNIGHT};
+    private static final byte[] blackPromotionPieces = {PieceUtil.BLACK_QUEEN, PieceUtil.BLACK_ROOK, PieceUtil.BLACK_BISHOP, PieceUtil.BLACK_KNIGHT};
 
 
     /**
@@ -717,9 +719,18 @@ public class MoveChecker {
                     continue;
                 List<Square> possibleTargets = getTargetSquares(start, PieceUtil.isWhite(piece));
                 for (Square target : possibleTargets) {
-                    Move move = new Move(start, target);
-                    validateMove(move);  // This sets the move's legal status and other properties
-                    if (move.isLegal()) legalMoves.add(move);
+                    if (PieceUtil.isPawn(piece) && (target.y() == 0 || target.y() == 7))
+                        for (byte promotionPiece : field.isBlackTurn() ? blackPromotionPieces : whitePromotionPieces) {
+                            Move move = new Move(start, target);
+                            move.setPromotionPiece(promotionPiece);
+                            validateMove(move);  // This sets the move's legal status and other properties
+                            if (move.isLegal()) legalMoves.add(move);
+                        }
+                    else {
+                        Move move = new Move(start, target);
+                        validateMove(move);  // This sets the move's legal status and other properties
+                        if (move.isLegal()) legalMoves.add(move);
+                    }
                 }
             }
         }
