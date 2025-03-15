@@ -31,12 +31,18 @@ public class Engine {
     public Move getBestMove() {
         currentBestMove = null;
         maxDepth = 4;
-        var eval = negaMax(maxDepth);
+        int eval;
+        try {
+            eval = negaMax(maxDepth);
+        } catch (InterruptedException e) {
+            return null;
+        }
         return currentBestMove;
     }
 
-    int negaMax(int depth) {
+    int negaMax(int depth) throws InterruptedException {
         if (depth == 0) return evaluateCurrentPosition();
+        if (Thread.interrupted()) throw new InterruptedException();
         int bestScore = Integer.MIN_VALUE;
         for (var move : field.getLegalMoves()) {
             field.forceMove(move, false);
