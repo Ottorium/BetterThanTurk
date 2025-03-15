@@ -42,6 +42,7 @@ public class BoardViewController implements Initializable {
     private Pane arrowPane;
     private Square arrowStartSquare;
     private Square arrowEndSquare;
+    private byte arrowPromotionPiece;
 
     /**
      * Initializes the chess board view when the controller is loaded.
@@ -95,16 +96,12 @@ public class BoardViewController implements Initializable {
      * Draws an arrow from square s1 to square s2 on the chess board.
      * Stores the squares for later redrawing when the board resizes.
      *
-     * @param s1 The starting square.
-     * @param s2 The target square.
+     * @param move The move to draw
      */
-    public void drawArrow(Square s1, Square s2) {
-        arrowStartSquare = s1;
-        arrowEndSquare = s2;
-        if (s1.equals(s2)) {
-            arrowStartSquare = null;
-            arrowEndSquare = null;
-        }
+    public void drawArrow(Move move) {
+        arrowStartSquare = (move != null) ? move.getStartingSquare() : null;
+        arrowEndSquare = (move != null) ? move.getTargetSquare() : null;
+        arrowPromotionPiece = (move != null) ? move.getPromotionPiece() : PieceUtil.EMPTY;
         updateArrow();
     }
 
@@ -172,6 +169,9 @@ public class BoardViewController implements Initializable {
         arrowHead.setFill(ARROW_COLOR);
 
         arrowPane.getChildren().addAll(arrowBody, arrowHead);
+
+        if (PieceUtil.isEmpty(arrowPromotionPiece) == false)
+            drawPiece(arrowPromotionPiece, arrowEndSquare, 40);
     }
 
     /**
@@ -258,17 +258,23 @@ public class BoardViewController implements Initializable {
 
                 // Add piece if present
                 if (!PieceUtil.isEmpty(piece)) {
-                    Image img = PieceImageUtil.getImage(piece);
-                    ImageView imageView = new ImageView(img);
-
-                    // Bind image size to square size
-                    imageView.fitWidthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
-                    imageView.fitHeightProperty().bind(((Rectangle) square.getChildren().getFirst()).heightProperty());
-
-                    square.getChildren().add(imageView);
+                    drawPiece(piece, new Square(col, row), 100);
                 }
             }
         }
+    }
+
+    private void drawPiece(byte piece, Square square, int opacity) {
+        var stackpane = getSquarePane(chessBoard, square.x(), square.y());
+        Image img = PieceImageUtil.getImage(piece);
+        ImageView imageView = new ImageView(img);
+        imageView.setOpacity(((double) opacity) / 100);
+
+        // Bind image size to square size
+        imageView.fitWidthProperty().bind(((Rectangle) stackpane.getChildren().getFirst()).widthProperty());
+        imageView.fitHeightProperty().bind(((Rectangle) stackpane.getChildren().getFirst()).heightProperty());
+
+        stackpane.getChildren().add(imageView);
     }
 
     private static Rectangle getCheckHighlight() {
