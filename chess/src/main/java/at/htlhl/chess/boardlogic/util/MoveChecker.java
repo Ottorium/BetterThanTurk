@@ -700,8 +700,8 @@ public class MoveChecker {
      *
      * @return List of all legal moves possible in the current position
      */
-    public List<Move> getAllLegalMoves() {
-        List<Move> legalMoves = new ArrayList<>();
+    public ArrayList<Move> getAllLegalMoves() {
+        ArrayList<Move> legalMoves = new ArrayList<>();
 
         if (field.getGameState() != GameState.NOT_DECIDED)
             return legalMoves;

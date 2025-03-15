@@ -3,6 +3,8 @@ package at.htlhl.chess.engine;
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
 
+import java.util.ArrayList;
+
 public class Engine {
 
     private Field field;
@@ -37,7 +39,7 @@ public class Engine {
     int negaMax(int depth) {
         if (depth == 0) return evaluateCurrentPosition();
         int bestScore = Integer.MIN_VALUE;
-        for (var move : field.getMoveChecker().getAllLegalMoves()) {
+        for (var move : field.getLegalMoves()) {
             field.forceMove(move, false);
             var eval = -negaMax(depth - 1);
             field.undoMove(move);

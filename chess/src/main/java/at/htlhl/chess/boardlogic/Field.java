@@ -33,6 +33,7 @@ public class Field {
     private int pieceEvaluation = 0;
     private Move lastMove;
     private ArrayList<FieldChange> changesInLastMove = new ArrayList<>();
+    private ArrayList<Move> legalMoves = new ArrayList<>();
 
     private Player kingInCheck = null;
 
@@ -64,6 +65,7 @@ public class Field {
         positionCounts.clear();
         Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
         kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
+        legalMoves = moveChecker.getAllLegalMoves();
         gameState = computeGameState();
         return true;
     }
@@ -172,6 +174,11 @@ public class Field {
         blackTurn = !blackTurn;
         changesInLastMove.add(new FieldChange("blackTurn", undo -> blackTurn = !blackTurn));
 
+        var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
+        for (Move legalMove : legalMoves) legalMovesBefore.add(legalMove.clone());
+        legalMoves = moveChecker.getAllLegalMoves();
+        changesInLastMove.add(new FieldChange("legalMoves", undo -> legalMoves = legalMovesBefore));
+
         var gameStateBefore = gameState;
         gameState = computeGameState();
         changesInLastMove.add(new FieldChange("gameState", undo -> gameState = gameStateBefore));
@@ -244,7 +251,6 @@ public class Field {
         if (insufficient) return GameState.DRAW;
 
 
-        List<Move> legalMoves = moveChecker.getAllLegalMoves();
         if (legalMoves.isEmpty() == false)
             return GameState.NOT_DECIDED;
 
@@ -454,6 +460,10 @@ public class Field {
         return moveChecker;
     }
 
+    public ArrayList<Move> getLegalMoves() {
+        return legalMoves;
+    }
+
     public int getPieceEvaluation() {
         return pieceEvaluation;
     }
@@ -493,6 +503,10 @@ public class Field {
         clone.capturedBlackPieces.addAll(this.capturedBlackPieces);
 
         clone.moveChecker = new MoveChecker(clone);
+
+        var legalMovesClone = new ArrayList<Move>(legalMoves.size());
+        for (Move legalMove : legalMoves) legalMovesClone.add(legalMove.clone());
+        clone.legalMoves = legalMovesClone;
 
         return clone;
     }
