@@ -1,36 +1,30 @@
 package at.htlhl.chess.gui;
 
 import at.htlhl.chess.boardlogic.Field;
-import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.engine.Engine;
 import javafx.application.Platform;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class EngineConnector {
 
-    private final BiConsumer<Square, Square> drawArrowCallback;
+    private final Consumer<Move> drawArrowCallback;
     private Engine engine;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public EngineConnector(Field field, BiConsumer<Square, Square> drawArrow) {
+    public EngineConnector(Field field, Consumer<Move> drawArrow) {
         this.drawArrowCallback = drawArrow;
         engine = new Engine(field);
     }
 
     public void drawBestMove() {
-        drawArrowCallback.accept(null, null);
+        drawArrowCallback.accept(null);
         executor.submit(() -> {
             var bestMove = engine.getBestMove();
-            Platform.runLater(() -> {
-                if (bestMove == null) {
-                    drawArrowCallback.accept(null, null);
-                } else {
-                    drawArrowCallback.accept(bestMove.getStartingSquare(), bestMove.getTargetSquare());
-                }
-            });
+            Platform.runLater(() -> drawArrowCallback.accept(bestMove));
         });
     }
 
