@@ -1,9 +1,8 @@
 package at.htlhl.chess.engine;
 
 import at.htlhl.chess.boardlogic.Field;
+import at.htlhl.chess.boardlogic.GameState;
 import at.htlhl.chess.boardlogic.Move;
-
-import java.util.ArrayList;
 
 public class Engine {
 
@@ -54,6 +53,14 @@ public class Engine {
 
 
     private int evaluateCurrentPosition() {
+        if (field.getGameState() != GameState.NOT_DECIDED) {
+            if (field.getGameState() == GameState.DRAW)
+                return 0;
+            if (field.getGameState() == GameState.BLACK_WIN)
+                return field.isBlackTurn() ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            if (field.getGameState() == GameState.WHITE_WIN)
+                return field.isBlackTurn() ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        }
         return field.isBlackTurn() ? -field.getPieceEvaluation() : field.getPieceEvaluation();
     }
 }
