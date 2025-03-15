@@ -35,7 +35,7 @@ public class EngineConnector {
     }
 
     public void stopCurrentExecutions() {
-        executor.shutdown();
+        executor.shutdownNow();
         executor = Executors.newSingleThreadExecutor();
     }
 
