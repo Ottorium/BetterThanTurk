@@ -297,6 +297,8 @@ public class MoveChecker {
         return new ArrayList<Square>();
     }
 
+    private ArrayList<Square> cachedKingPositions;
+
     /**
      * Checks information about the move and edits it's information
      * isMoveValid, isThatEnPassant, what check will appear
@@ -334,6 +336,8 @@ public class MoveChecker {
 
         // look for move type
         gatherMoveInfo(move);
+        if (PieceUtil.isKing(getPieceBySquare(move.getStartingSquare())) == false)
+            cachedKingPositions = findKings();
 
         // look if target square is possible
         for (Square target : possibleTargets) {
@@ -360,11 +364,12 @@ public class MoveChecker {
                     if (appearedChecks.size() == 1) {
                         move.setAppearedCheck(appearedChecks.getFirst());
                     }
+                    cachedKingPositions = null;
                     return;
                 }
             }
         }
-
+        cachedKingPositions = null;
 
         move.setLegal(false);
     }
@@ -611,7 +616,7 @@ public class MoveChecker {
     public List<Player> lookForChecksOnBoard() {
         List<Player> checkedPlayers = new ArrayList<>();
         // look for checks
-        ArrayList<Square> kings = findKings();
+        ArrayList<Square> kings = cachedKingPositions == null ? findKings() : cachedKingPositions;
         for (Square king : kings) {
             boolean isWhite = PieceUtil.isWhite(getPieceBySquare(king));
             if (isKingChecked(king)) {
