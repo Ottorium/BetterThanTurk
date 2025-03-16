@@ -10,13 +10,15 @@ import java.util.stream.Collectors;
  * Utility class to check possible moves for different chess pieces.
  */
 public class MoveChecker {
-    private final Field field;
     private static final int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
+    private static final int[][] rookDirections = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    private static final int[][] bishopDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
     private static final int[][] kingDirections = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
     private static final int[][] slidingDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
     private static final byte[] whitePromotionPieces = {PieceUtil.WHITE_QUEEN, PieceUtil.WHITE_ROOK, PieceUtil.WHITE_BISHOP, PieceUtil.WHITE_KNIGHT};
     private static final byte[] blackPromotionPieces = {PieceUtil.BLACK_QUEEN, PieceUtil.BLACK_ROOK, PieceUtil.BLACK_BISHOP, PieceUtil.BLACK_KNIGHT};
-
+    private final Field field;
+    private ArrayList<Square> cachedKingPositions;
 
     /**
      * Constructs a MoveChecker object.
@@ -54,9 +56,8 @@ public class MoveChecker {
      */
     private List<Square> getPossibleBishopTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
-        int[][] directions = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
-        for (int[] dir : directions) {
+        for (int[] dir : bishopDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
@@ -80,9 +81,8 @@ public class MoveChecker {
      */
     private List<Square> getPossibleRookTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
-        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-        for (int[] dir : directions) {
+        for (int[] dir : rookDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
@@ -119,7 +119,6 @@ public class MoveChecker {
     private List<Square> getPossibleKnightTargetSquares(Square position, boolean isStartWhite) {
         List<Square> squares = new ArrayList<>();
 
-        int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
 
         for (int[] move : knightMoves) {
             int x = position.x() + move[0];
@@ -296,8 +295,6 @@ public class MoveChecker {
         }
         return new ArrayList<Square>();
     }
-
-    private ArrayList<Square> cachedKingPositions;
 
     /**
      * Checks information about the move and edits it's information
