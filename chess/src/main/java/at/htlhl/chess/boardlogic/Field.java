@@ -278,7 +278,8 @@ public class Field {
         }
         var before = pieceEvaluation;
         pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece);
-        changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
+        if (before != pieceEvaluation)
+            changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
     }
 
     private void moveRookIfCastlingMove(Move move) {
