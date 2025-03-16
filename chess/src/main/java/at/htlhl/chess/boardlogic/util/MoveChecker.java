@@ -302,9 +302,12 @@ public class MoveChecker {
      * isMoveValid, isThatEnPassant, what check will appear
      *
      * @param move The move to check.
-     * @return {@code true} if the move is legal, {@code false} otherwise.
      */
     public void validateMove(Move move) {
+        validateMove(move, getTargetSquares(move.getStartingSquare(), PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()))));
+    }
+
+    private void validateMove(Move move, List<Square> possibleTargets) {
 
         if (move == null) {
             throw new NullPointerException("Move cannot be null");
@@ -324,8 +327,6 @@ public class MoveChecker {
             return;
         }
 
-        //Get possible targets
-        List<Square> possibleTargets = getTargetSquares(move.getStartingSquare(), isStartWhite);
         if (possibleTargets.isEmpty()) {
             move.setLegal(false);
             return;
@@ -723,12 +724,12 @@ public class MoveChecker {
                         for (byte promotionPiece : field.isBlackTurn() ? blackPromotionPieces : whitePromotionPieces) {
                             Move move = new Move(start, target);
                             move.setPromotionPiece(promotionPiece);
-                            validateMove(move);  // This sets the move's legal status and other properties
+                            validateMove(move, possibleTargets);  // This sets the move's legal status and other properties
                             if (move.isLegal()) legalMoves.add(move);
                         }
                     else {
                         Move move = new Move(start, target);
-                        validateMove(move);  // This sets the move's legal status and other properties
+                        validateMove(move, possibleTargets);  // This sets the move's legal status and other properties
                         if (move.isLegal()) legalMoves.add(move);
                     }
                 }
