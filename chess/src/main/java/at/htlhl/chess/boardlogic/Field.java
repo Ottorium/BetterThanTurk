@@ -13,30 +13,93 @@ import java.util.List;
 public class Field {
 
     private static final String INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    private HashMap<Integer, Integer> positionCounts = new HashMap<>();
+
+    /**
+     * A List of all the pieces that black captured
+     */
     private final List<Byte> capturedWhitePieces = new ArrayList<>();
+
+    /**
+     * A List of all the pieces that white captured
+     */
     private final List<Byte> capturedBlackPieces = new ArrayList<>();
+
+    /**
+     * Stores the positions that have accured and how often they have accured.
+     * the accured position is stored in as an Integer (a hashcode of the board)
+     * Do not use to get all the positions, as it might not have all of them because of performance.
+     */
+    private HashMap<Integer, Integer> positionCounts = new HashMap<>();
+
     /**
      * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link PieceUtil}.
      */
     private byte[][] board;
+
+    /**
+     * true if it is blacks turn in the current position, otherwise false.
+     */
     private boolean blackTurn;
+
     /**
      * Stores the current castling rights using bit flags. To set or modify this value please use {@link CastlingUtil}.
      */
     private byte castlingInformation;
+
+    /**
+     * Stores the square the another pawn can move to to capture en passant. (see FEN-Notation)
+     */
     private Square possibleEnPassantSquare;
+
+    /**
+     * Stores the played half moves since the last event that changes the position permanently (this is used for the 50-move rule)
+     * see FEN-Notation
+     */
     private int playedHalfMovesSinceLastPawnMoveOrCapture;
+
+    /**
+     * The number of the next move in full moves
+     */
     private int numberOfNextMove;
+
+    /**
+     * The current game state
+     */
     private GameState gameState = GameState.NOT_DECIDED;
-    private MoveChecker moveChecker = new MoveChecker(this);
+
+    /**
+     * Stores the current Piece evaluation. Positive if white is up material and negative if black is up material.
+     */
     private int pieceEvaluation = 0;
+
+    /**
+     * The last executed move.
+     */
     private Move lastMove;
+
+    /**
+     * The changes that accured in the last move, this is for undoing.
+     */
     private ArrayList<FieldChange> changesInLastMove = new ArrayList<>();
+
+    /**
+     * The full list of moves that are legal in the current position.
+     */
     private ArrayList<Move> legalMoves = new ArrayList<>();
 
+    /**
+     * Stores the Player that is currently in check.
+     */
     private Player kingInCheck = null;
 
+    /**
+     * The {@link MoveChecker} used to validate moves.
+     */
+    private MoveChecker moveChecker = new MoveChecker(this);
+
+    /**
+     * Makes a new Field and initialized it with the starting chess position.
+     */
     public Field() {
         this.resetBoard();
     }
@@ -81,11 +144,9 @@ public class Field {
 
     /**
      * Resets the board to initial state
-     *
-     * @return true if reset was successful
      */
-    public boolean resetBoard() {
-        return trySetFEN(INITIAL_FEN);
+    public void resetBoard() {
+        trySetFEN(INITIAL_FEN);
     }
 
     /**
@@ -282,6 +343,9 @@ public class Field {
             changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
     }
 
+    /**
+     * Moves the Rook involved in a castling move if needed
+     */
     private void moveRookIfCastlingMove(Move move) {
         if (move.isCastlingMove()) {
             // Determine castling direction and rook starting position
@@ -351,10 +415,11 @@ public class Field {
         }
     }
 
-    public boolean undoMove(Move move) {
-        if (move.equals(lastMove) == false) return false;
+    /**
+     * Undoes the last move.
+     */
+    public void undoMove() {
         changesInLastMove.forEach(FieldChange::undo);
-        return true;
     }
 
     /**
@@ -424,7 +489,7 @@ public class Field {
     }
 
 
-    // Getters and setters
+    // Getters and setters (do not just add some setters, pay attention to move undoing!!!)
     public boolean isBlackTurn() {
         return blackTurn;
     }
@@ -437,28 +502,12 @@ public class Field {
         return possibleEnPassantSquare;
     }
 
-    public int getPlayedHalfMovesSinceLastPawnMoveOrCapture() {
-        return playedHalfMovesSinceLastPawnMoveOrCapture;
-    }
-
-    public int getNumberOfNextMove() {
-        return numberOfNextMove;
-    }
-
     public Player getKingInCheck() {
         return kingInCheck;
     }
 
-    public void setKingInCheck(Player kingInCheck) {
-        this.kingInCheck = kingInCheck;
-    }
-
     public GameState getGameState() {
         return gameState;
-    }
-
-    public MoveChecker getMoveChecker() {
-        return moveChecker;
     }
 
     public ArrayList<Move> getLegalMoves() {
@@ -510,9 +559,5 @@ public class Field {
         clone.legalMoves = legalMovesClone;
 
         return clone;
-    }
-
-    public boolean isGameOver() {
-        return gameState != GameState.NOT_DECIDED;
     }
 }

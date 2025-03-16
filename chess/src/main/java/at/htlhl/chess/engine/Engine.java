@@ -47,7 +47,7 @@ public class Engine {
         for (var move : field.getLegalMoves()) {
             field.forceMove(move, false);
             var eval = -negaMax(depth - 1);
-            field.undoMove(move);
+            field.undoMove();
             if (eval > bestScore) {
                 bestScore = eval;
                 if (depth == maxDepth)
