@@ -10,6 +10,7 @@ public class Engine {
 
     private Move currentBestMove = null;
     private int maxDepth;
+    private int executedMoves = 0;
 
     public Engine() {
         this(new Field());
@@ -30,13 +31,24 @@ public class Engine {
 
     public Move getBestMove() {
         currentBestMove = null;
+        executedMoves = 0;
         maxDepth = 4;
+        var timeBefore = System.nanoTime();
         int eval;
         try {
             eval = negaMax(maxDepth);
         } catch (InterruptedException e) {
             return null;
         }
+        var nanoTime = System.nanoTime() - timeBefore;
+        System.out.println("Engine finished calculating. Results:\n{\n" +
+                "Depth: " + maxDepth +
+                "\nTime elapsed: " + nanoTime + " ns" + " (=" + nanoTime / 1_000_000 + " ms)" +
+                "\nMoves Executed: " + executedMoves +
+                "\nTime per move: " + nanoTime / executedMoves + " ns" +
+                "\nEvaluation: " + eval +
+                "\nBest Move: " + currentBestMove +
+                "\n}\n");
         return currentBestMove;
     }
 
@@ -46,6 +58,7 @@ public class Engine {
         int bestScore = Integer.MIN_VALUE;
         for (var move : field.getLegalMoves()) {
             field.forceMove(move, false);
+            executedMoves++;
             var eval = -negaMax(depth - 1);
             field.undoMove();
             if (eval > bestScore) {
