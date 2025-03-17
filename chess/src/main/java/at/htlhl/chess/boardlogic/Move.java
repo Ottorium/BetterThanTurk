@@ -36,6 +36,23 @@ public class Move {
         return Objects.equals(targetSquare, move.targetSquare) && Objects.equals(startingSquare, move.startingSquare);
     }
 
+    public Move clone() {
+        Move clonedMove = new Move(
+                new Square(this.startingSquare.x(), this.startingSquare.y()),
+                new Square(this.targetSquare.x(), this.targetSquare.y())
+        );
+
+        clonedMove.promotionPiece = this.promotionPiece;
+        clonedMove.isCastlingMove = this.isCastlingMove;
+        clonedMove.isEnPassantMove = this.isEnPassantMove;
+        clonedMove.isLegal = this.isLegal;
+        clonedMove.appearedCheck = this.appearedCheck;
+        if (clonedMove.possibleEnPassantSquare != null)
+            clonedMove.possibleEnPassantSquare = new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y());
+
+        return clonedMove;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(startingSquare, targetSquare);

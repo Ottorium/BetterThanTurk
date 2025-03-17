@@ -15,7 +15,6 @@ public class FieldMoveTest {
     @BeforeEach
     public void setUp() {
         field = new Field();
-        field.resetBoard();
     }
 
     @Test

@@ -43,6 +43,7 @@ public class BoardViewController implements Initializable {
     private Square arrowStartSquare;
     private Square arrowEndSquare;
     private byte arrowPromotionPiece;
+    private EngineConnector engineConnector;
 
     /**
      * Initializes the chess board view when the controller is loaded.
@@ -62,9 +63,11 @@ public class BoardViewController implements Initializable {
         GridPane.setColumnSpan(arrowPane, 8);
         GridPane.setRowSpan(arrowPane, 8);
 
-        field.resetBoard();
-        Platform.runLater(this::setUpScalability);
-        drawPieces(null, null);
+        Platform.runLater(() -> {
+            setUpScalability();
+            engineConnector = new EngineConnector(field, this::drawArrow);
+            drawPieces(null, null);
+        });
         setUpInteractions();
     }
 
@@ -262,6 +265,9 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
+        engineConnector.stopCurrentExecutions();
+        engineConnector.getEngine().setField(field);
+        engineConnector.drawBestMove();
     }
 
     private void drawPiece(byte piece, Square square, int opacity) {
