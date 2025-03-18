@@ -139,7 +139,7 @@ public class Field {
      * @return Current board state as FEN string
      */
     public String getFEN() {
-        throw new UnsupportedOperationException("getFEN not implemented");
+        return FENParser.exportToFEN(board, blackTurn, castlingInformation, possibleEnPassantSquare, playedHalfMovesSinceLastPawnMoveOrCapture, numberOfNextMove);
     }
 
     /**
