@@ -14,14 +14,12 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
@@ -31,22 +29,30 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
 public class BoardViewController implements Initializable {
 
+    public static final Color ARROW_COLOR = Color.rgb(110, 110, 110);
     private static final int BOARD_SIZE = 8;
     private static final int INITIAL_SQUARE_SIZE = 60;
     private static final Color LIGHT_SQUARE_COLOR = Color.rgb(242, 226, 190);
     private static final Color DARK_SQUARE_COLOR = Color.rgb(176, 136, 104);
     private static final Color LAST_MOVE_HIGHLIGHT_COLOR = Color.rgb(255, 255, 0, 0.4);
     private static final Color KING_CHECK_COLOR = Color.rgb(255, 0, 0);
-    public static final Color ARROW_COLOR = Color.rgb(110, 110, 110);
     private final Field field = new Field();
 
     @FXML
-    public TextArea FENTextArea;
+    ToolBar toolBar;
+    @FXML
+    private FlowPane capturedWhitePieces;
+    @FXML
+    private FlowPane capturedBlackPieces;
+    @FXML
+    private TextArea FENTextArea;
     @FXML
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
@@ -56,6 +62,10 @@ public class BoardViewController implements Initializable {
     private byte arrowPromotionPiece;
     private EngineConnector engineConnector;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
+
+
+    private boolean updatingBoardListeners = false; // Guard flag to prevent chaining
+    private double middleSectionHeight = 0; // is here to prevent lagging while resizing
 
     private static Rectangle getCheckHighlight() {
         Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
@@ -133,6 +143,15 @@ public class BoardViewController implements Initializable {
         chessBoard.setMinSize(BOARD_SIZE * INITIAL_SQUARE_SIZE, BOARD_SIZE * INITIAL_SQUARE_SIZE);
         chessBoard.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
+        // Panes above and below of board
+        Pane capturedBlackPiecesPane = (Pane) capturedBlackPieces.getParent();
+        capturedBlackPiecesPane.prefWidthProperty().bind(boardPane.widthProperty());
+        Pane capturedWhitePiecesPane = (Pane) capturedWhitePieces.getParent();
+        capturedWhitePiecesPane.prefWidthProperty().bind(boardPane.widthProperty());
+        capturedWhitePiecesPane.prefHeightProperty().bind(boardPane.getScene().heightProperty().subtract(toolBar.heightProperty()).subtract(boardPane.widthProperty()).divide(2));
+        capturedBlackPiecesPane.prefHeightProperty().bind(capturedWhitePiecesPane.prefHeightProperty());
+        capturedBlackPieces.prefWidthProperty().bind(capturedWhitePiecesPane.prefWidthProperty());
+        capturedWhitePieces.prefWidthProperty().bind(capturedWhitePiecesPane.prefWidthProperty());
 
         for (int row = 0; row < BOARD_SIZE; row++) {
             for (int col = 0; col < BOARD_SIZE; col++) {
@@ -142,7 +161,7 @@ public class BoardViewController implements Initializable {
                 // Bind rectangle dimensions to the calculated size
                 square.widthProperty().bind(squareSizeBinding);
                 square.heightProperty().bind(squareSizeBinding);
-             }
+            }
         }
     }
 
@@ -269,12 +288,14 @@ public class BoardViewController implements Initializable {
 
     /**
      * calls all ui update methods, like drawPieces or updateFEN
-     * @param moveToHighlight for drawPieces
+     *
+     * @param moveToHighlight    for drawPieces
      * @param kingCheckHighlight for drawPieces
      */
-    private void updateUI(Move moveToHighlight, Square kingCheckHighlight){
-        drawPieces(moveToHighlight,kingCheckHighlight);
+    private void updateUI(Move moveToHighlight, Square kingCheckHighlight) {
+        drawPieces(moveToHighlight, kingCheckHighlight);
         updateFENinFENTextArea();
+        updateCapturedPieces();
     }
 
 
@@ -366,10 +387,10 @@ public class BoardViewController implements Initializable {
     /**
      * Updates the FEN text area with the current board's FEN string. Shows an error if FEN retrieval is unsupported.
      */
-    private void updateFENinFENTextArea(){
-        try{
+    private void updateFENinFENTextArea() {
+        try {
             FENTextArea.setText(field.getFEN());
-        } catch (UnsupportedOperationException e){
+        } catch (UnsupportedOperationException e) {
             System.err.println(e.getMessage());
         }
     }
@@ -377,11 +398,26 @@ public class BoardViewController implements Initializable {
     /**
      * Sets the chess board based on the FEN string in the text area. Alerts if the FEN is invalid.
      */
-    private void setBoardByFEN(){
-        if (!field.trySetFEN(FENTextArea.getText())){
+    private void setBoardByFEN() {
+        if (!field.trySetFEN(FENTextArea.getText())) {
             boardViewUtil.alertProblem("Invalid FEN!", "Check if your input is correct");
         }
+        updateUI(null, null);
     }
 
+    private void updateCapturedPieces() {
+        refillCapturedPieceBox(capturedWhitePieces, field.getCapturedWhitePieces());
+        refillCapturedPieceBox(capturedBlackPieces, field.getCapturedBlackPieces());
+    }
 
+    private void refillCapturedPieceBox(FlowPane box, List<Byte> pieces) {
+        box.getChildren().clear();
+        for (Byte piece : pieces) {
+            ImageView pieceImageView = new ImageView(PieceImageUtil.getImage(piece));
+            pieceImageView.setPreserveRatio(true);
+            pieceImageView.setFitHeight((double) INITIAL_SQUARE_SIZE / 2);
+            pieceImageView.setFitWidth((double) INITIAL_SQUARE_SIZE / 2);
+            box.getChildren().add(pieceImageView);
+        }
+    }
 }

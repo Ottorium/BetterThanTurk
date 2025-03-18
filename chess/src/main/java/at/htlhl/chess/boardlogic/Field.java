@@ -560,4 +560,12 @@ public class Field {
 
         return clone;
     }
+
+    public List<Byte> getCapturedWhitePieces() {
+        return capturedWhitePieces;
+    }
+
+    public List<Byte> getCapturedBlackPieces() {
+        return capturedBlackPieces;
+    }
 }
