@@ -4,20 +4,21 @@ import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
+import at.htlhl.chess.gui.util.BoardViewUtil;
+import at.htlhl.chess.gui.util.ChessBoardInteractionHandler;
+import at.htlhl.chess.gui.util.EngineConnector;
+import at.htlhl.chess.gui.util.PieceImageUtil;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.CacheHint;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -54,6 +55,7 @@ public class BoardViewController implements Initializable {
     private Square arrowEndSquare;
     private byte arrowPromotionPiece;
     private EngineConnector engineConnector;
+    private BoardViewUtil boardViewUtil = new BoardViewUtil();
 
     private static Rectangle getCheckHighlight() {
         Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
@@ -352,9 +354,8 @@ public class BoardViewController implements Initializable {
     private void initFENTextArea() {
         FENTextArea.setWrapText(true);
         FENTextArea.setOnKeyPressed(keyEvent -> {
-            System.out.println("keyEvent: " + keyEvent.getCode());
-            // remove new Line
 
+            // remove new Line
             if (Objects.requireNonNull(keyEvent.getCode()) == KeyCode.ENTER) {
                 FENTextArea.setText(FENTextArea.getText().replace("\n", ""));
                 setBoardByFEN();
@@ -378,21 +379,9 @@ public class BoardViewController implements Initializable {
      */
     private void setBoardByFEN(){
         if (!field.trySetFEN(FENTextArea.getText())){
-            alertProblem("Wrong FEN!", "Check if your input is correct");
+            boardViewUtil.alertProblem("Invalid FEN!", "Check if your input is correct");
         }
     }
 
-    /**
-     * Displays an error alert with the specified header and content text.
-     * @param headerText the header text for the alert
-     * @param contentText the content text for the alert
-     */
-    private void alertProblem(String headerText, String contentText){
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(headerText);
-        alert.setContentText(contentText);
-        alert.getDialogPane().setGraphic(null);
-        alert.showAndWait();
-    }
+
 }

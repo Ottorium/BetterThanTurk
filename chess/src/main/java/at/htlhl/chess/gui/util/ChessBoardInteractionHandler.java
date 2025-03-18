@@ -1,9 +1,10 @@
-package at.htlhl.chess.gui;
+package at.htlhl.chess.gui.util;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
+import at.htlhl.chess.gui.BoardViewController;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
