@@ -8,17 +8,10 @@ import java.util.Hashtable;
 
 public class FENParser {
 
-    private final String fen;
-
-    public FENParser(String fen) {
-        if (fen.split(" ").length != 6) throw new InvalidFENException(fen);
-        this.fen = fen;
-    }
-
-
     private static final Dictionary<Character, Byte> fenPieceMap = new Hashtable<>();
+    private static final Dictionary<Byte, Character> pieceFenMap = new Hashtable<>();
 
-    {
+    static {
         fenPieceMap.put('p', PieceUtil.BLACK_PAWN);
         fenPieceMap.put('P', PieceUtil.WHITE_PAWN);
         fenPieceMap.put('b', PieceUtil.BLACK_BISHOP);
@@ -31,6 +24,77 @@ public class FENParser {
         fenPieceMap.put('Q', PieceUtil.WHITE_QUEEN);
         fenPieceMap.put('k', PieceUtil.BLACK_KING);
         fenPieceMap.put('K', PieceUtil.WHITE_KING);
+
+        pieceFenMap.put(PieceUtil.BLACK_PAWN, 'p');
+        pieceFenMap.put(PieceUtil.WHITE_PAWN, 'P');
+        pieceFenMap.put(PieceUtil.BLACK_BISHOP, 'b');
+        pieceFenMap.put(PieceUtil.WHITE_BISHOP, 'B');
+        pieceFenMap.put(PieceUtil.BLACK_KNIGHT, 'n');
+        pieceFenMap.put(PieceUtil.WHITE_KNIGHT, 'N');
+        pieceFenMap.put(PieceUtil.BLACK_ROOK, 'r');
+        pieceFenMap.put(PieceUtil.WHITE_ROOK, 'R');
+        pieceFenMap.put(PieceUtil.BLACK_QUEEN, 'q');
+        pieceFenMap.put(PieceUtil.WHITE_QUEEN, 'Q');
+        pieceFenMap.put(PieceUtil.BLACK_KING, 'k');
+        pieceFenMap.put(PieceUtil.WHITE_KING, 'K');
+    }
+
+    private final String fen;
+
+    public FENParser(String fen) {
+        if (fen.split(" ").length != 6) throw new InvalidFENException(fen);
+        this.fen = fen;
+    }
+
+    public static String exportToFEN(
+            byte[][] board,
+            boolean blackTurn,
+            byte castlingInformation,
+            Square possibleEnPassantSquare,
+            int playedHalfMovesSinceLastPawnMoveOrCapture,
+            int numberOfNextMove) {
+
+        StringBuilder fen = new StringBuilder();
+
+
+        for (int row = 0; row <= 7; row++) {
+            int emptySquares = 0;
+            for (int col = 0; col < 8; col++) {
+                byte piece = board[row][col];
+                if (piece == PieceUtil.EMPTY) {
+                    emptySquares++;
+                    continue;
+                }
+
+                if (emptySquares > 0) {
+                    fen.append(emptySquares);
+                    emptySquares = 0;
+                }
+                fen.append(pieceFenMap.get(piece));
+
+            }
+            if (emptySquares > 0)
+                fen.append(emptySquares);
+            if (row != 7)
+                fen.append('/');
+        }
+
+        fen.append(" ").append(blackTurn ? 'b' : 'w');
+
+        String castling = "";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.WHITE_KING_SIDE)) castling += "K";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.WHITE_QUEEN_SIDE)) castling += "Q";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.BLACK_KING_SIDE)) castling += "k";
+        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.BLACK_QUEEN_SIDE)) castling += "q";
+        fen.append(" ").append(castling.isEmpty() ? "-" : castling);
+
+        fen.append(" ").append(possibleEnPassantSquare != null ? possibleEnPassantSquare.toString() : "-");
+
+        fen.append(" ").append(playedHalfMovesSinceLastPawnMoveOrCapture);
+
+        fen.append(" ").append(numberOfNextMove);
+
+        return fen.toString();
     }
 
     public byte[][] parseBoard() {
@@ -99,59 +163,5 @@ public class FENParser {
         } catch (NumberFormatException e) {
             throw new InvalidFENException(fen);
         }
-    }
-
-    public static String exportToFEN(byte[][] board, boolean blackTurn, byte castlingInformation,
-                                     Square possibleEnPassantSquare, int playedHalfMovesSinceLastPawnMoveOrCapture,
-                                     int numberOfNextMove) {
-        StringBuilder fenBuilder = new StringBuilder();
-
-        // Figure mapping as an array (index = piece + 6 to handle negative values)
-        char[] pieceChars = { 'k', 'q', 'r', 'b', 'n', 'p', ' ', 'P', 'N', 'B', 'R', 'Q', 'K' };
-
-        // 1. Board notation (top to bottom)
-        for (int row = 7; row >= 0; row--) {
-            int emptySquares = 0;
-            for (int col = 0; col < 8; col++) {
-                byte piece = board[row][col];
-                if (piece == 0) {
-                    emptySquares++;
-                } else {
-                    if (emptySquares > 0) {
-                        fenBuilder.append(emptySquares);
-                        emptySquares = 0;
-                    }
-                    fenBuilder.append(pieceChars[piece + 6]); // Direkte Umwandlung aus Array
-                }
-            }
-            if (emptySquares > 0) {
-                fenBuilder.append(emptySquares);
-            }
-            if (row > 0) {
-                fenBuilder.append('/');
-            }
-        }
-
-        // 2. who's turn
-        fenBuilder.append(" ").append(blackTurn ? 'b' : 'w');
-
-        // 3. castling rights
-        String castling = "";
-        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.WHITE_KING_SIDE)) castling += "K";
-        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.WHITE_QUEEN_SIDE)) castling += "Q";
-        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.BLACK_KING_SIDE)) castling += "k";
-        if (CastlingUtil.hasFlag(castlingInformation, CastlingUtil.BLACK_QUEEN_SIDE)) castling += "q";
-        fenBuilder.append(" ").append(castling.isEmpty() ? "-" : castling);
-
-        // 4. En-Passant possible
-        fenBuilder.append(" ").append(possibleEnPassantSquare != null ? possibleEnPassantSquare.toString() : "-");
-
-        // 5. half moves since last pawn move or capture
-        fenBuilder.append(" ").append(playedHalfMovesSinceLastPawnMoveOrCapture);
-
-        // 6. number of next move
-        fenBuilder.append(" ").append(numberOfNextMove);
-
-        return fenBuilder.toString();
     }
 }
