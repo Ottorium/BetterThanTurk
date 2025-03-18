@@ -46,6 +46,10 @@ public class FENParser {
         this.fen = fen;
     }
 
+    /**
+     * Makes a fen, representing the given board
+     * @return the fen
+     */
     public static String exportToFEN(
             byte[][] board,
             boolean blackTurn,
