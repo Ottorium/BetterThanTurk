@@ -18,4 +18,6 @@ module at.htlhl.chess {
     opens at.htlhl.chess.boardlogic to javafx.fxml;
     exports at.htlhl.chess.gui;
     opens at.htlhl.chess.gui to javafx.fxml;
+    exports at.htlhl.chess.gui.util;
+    opens at.htlhl.chess.gui.util to javafx.fxml;
 }
