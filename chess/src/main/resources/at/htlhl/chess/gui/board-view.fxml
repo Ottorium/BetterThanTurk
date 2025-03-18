@@ -1,14 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
+<VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.htlhl.chess.gui.BoardViewController">
+    <children>
+        <ToolBar prefHeight="40.0">
+            <items>
+                <Button mnemonicParsing="false" text="Button" />
+            </items>
+        </ToolBar>
+      <SplitPane dividerPositions="0.2, 0.8" VBox.vgrow="ALWAYS">
+         <items>
+                <VBox>
+                    <children>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="at.htlhl.chess.gui.BoardViewController">
-    <center>
-        <GridPane BorderPane.alignment="CENTER" fx:id="chessBoard">
-
-        </GridPane>
-    </center>
-</BorderPane>
+                    </children>
+                </VBox>
+                <VBox>
+                    <children>
+                  <HBox prefHeight="80.0" />
+                        <StackPane VBox.vgrow="ALWAYS">
+                            <children>
+                                <GridPane fx:id="chessBoard" style="-fx-alignment: center;">
+                                </GridPane>
+                            </children>
+                        </StackPane>
+                  <HBox prefHeight="80.0" />
+                    </children>
+                </VBox>
+                 <VBox>
+               <children>
+                  <TextArea text="THE FEN WILL BE HERE" />
+               </children>
+                 </VBox>
+         </items>
+      </SplitPane>
+    </children>
+</VBox>
