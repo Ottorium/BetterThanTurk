@@ -420,4 +420,7 @@ public class BoardViewController implements Initializable {
             box.getChildren().add(pieceImageView);
         }
     }
+    public void shutdown() {
+        engineConnector.shutdown();
+    }
 }
