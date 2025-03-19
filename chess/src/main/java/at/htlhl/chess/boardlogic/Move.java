@@ -13,6 +13,7 @@ public class Move {
     private boolean isLegal;
     private Player appearedCheck;
     private Square possibleEnPassantSquare;
+    private boolean isCapture;
 
     public Move(Square startingSquare, Square targetSquare) {
         this.startingSquare = startingSquare;
@@ -22,6 +23,7 @@ public class Move {
         this.isCastlingMove = false;
         this.appearedCheck = null;
         this.possibleEnPassantSquare = null;
+        this.isCapture = false;
     }
 
     @Override
@@ -47,6 +49,7 @@ public class Move {
         clonedMove.isEnPassantMove = this.isEnPassantMove;
         clonedMove.isLegal = this.isLegal;
         clonedMove.appearedCheck = this.appearedCheck;
+        clonedMove.isCapture = this.isCapture;
         if (clonedMove.possibleEnPassantSquare != null)
             clonedMove.possibleEnPassantSquare = new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y());
 
@@ -120,5 +123,13 @@ public class Move {
 
     public void setEnPassantMove(boolean enPassantMove) {
         isEnPassantMove = enPassantMove;
+    }
+
+    public boolean isCapture() {
+        return isCapture;
+    }
+
+    public void setCapture(boolean capture) {
+        isCapture = capture;
     }
 }
