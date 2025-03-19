@@ -224,7 +224,7 @@ public class Field {
         if (kingInCheckBefore != kingInCheck)
             changesInLastMove.add(new FieldChange("kingInCheck", undo -> kingInCheck = kingInCheckBefore));
 
-        calculateMaterial(capturedPiece);
+        calculateMaterial(capturedPiece, move);
         updatePlayedHalfMovesSinceLastPawnMoveOrCapture(move);
 
         if (blackTurn) {
@@ -327,7 +327,7 @@ public class Field {
      *
      * @param capturedPiece the piece to add (eg. the piece that got captured in the last move)
      */
-    private void calculateMaterial(byte capturedPiece) {
+    private void calculateMaterial(byte capturedPiece, Move move) {
         if (PieceUtil.isEmpty(capturedPiece)) return;
 
         if (PieceUtil.isWhite(capturedPiece)) {
@@ -338,7 +338,7 @@ public class Field {
             changesInLastMove.add(new FieldChange("capturedBlackPieces", undo -> capturedBlackPieces.removeLast()));
         }
         var before = pieceEvaluation;
-        pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece);
+        pieceEvaluation += PieceUtil.getRelativeValue(capturedPiece) - PieceUtil.getRelativeValue(move.getPromotionPiece());
         if (before != pieceEvaluation)
             changesInLastMove.add(new FieldChange("pieceEvaluation", undo -> pieceEvaluation = before));
     }
