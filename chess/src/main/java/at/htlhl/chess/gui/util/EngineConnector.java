@@ -29,8 +29,16 @@ public class EngineConnector {
     }
 
     public void stopCurrentExecutions() {
-        executor.shutdownNow();
+        shutdown();
         executor = Executors.newSingleThreadExecutor();
+    }
+
+    /**
+     * Shuts down the Engine. Use this right before the {@link EngineConnector} goes out of scope (fuck java for not having destructors)
+     */
+    public void shutdown() {
+        executor.shutdownNow();
+        executor = null;
     }
 
     public Engine getEngine() {
