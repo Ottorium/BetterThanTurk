@@ -4,6 +4,8 @@ import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.GameState;
 import at.htlhl.chess.boardlogic.Move;
 
+import java.util.ArrayList;
+
 public class Engine {
 
     private Field field;
@@ -61,7 +63,9 @@ public class Engine {
 
         boolean isBlacksTurn = field.isBlackTurn();
         int bestScore = isBlacksTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-        for (var move : field.getLegalMoves()) {
+        var moves = field.getLegalMoves();
+        orderMoves(moves);
+        for (var move : moves) {
             field.forceMove(move, false);
             executedMoves++;
             var eval = minimax(depth - 1, alpha, beta);
@@ -80,6 +84,14 @@ public class Engine {
         }
         return bestScore;
     }
+
+    private void orderMoves(ArrayList<Move> legalMoves) {
+        legalMoves.sort((move1, move2) -> {
+            if (move1.isCapture() != move2.isCapture()) return move1.isCapture() ? -1 : 1;
+            return 0;
+        });
+    }
+
 
     private int evaluateCurrentPosition(int depth) {
         evaluatedPositions++;
