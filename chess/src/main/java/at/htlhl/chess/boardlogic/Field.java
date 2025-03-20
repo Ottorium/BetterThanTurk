@@ -98,6 +98,11 @@ public class Field {
     private MoveChecker moveChecker = new MoveChecker(this);
 
     /**
+     * Stores the current position of both kings (for faster lookup in move checking)
+     */
+    private ArrayList<Square> cachedKingPositions;
+
+    /**
      * Makes a new Field and initialized it with the starting chess position.
      */
     public Field() {
@@ -127,6 +132,7 @@ public class Field {
         moveChecker = new MoveChecker(this);
         positionCounts.clear();
         Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
+        cachedKingPositions = moveChecker.findKings();
         kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
         legalMoves = moveChecker.getAllLegalMoves();
         gameState = computeGameState();
@@ -234,6 +240,14 @@ public class Field {
 
         blackTurn = !blackTurn;
         changesInLastMove.add(new FieldChange("blackTurn", undo -> blackTurn = !blackTurn));
+
+        if (PieceUtil.isKing(getPieceBySquare(move.getTargetSquare()))) {
+            var cachedKingPositionsBefore = cachedKingPositions;
+            cachedKingPositions = moveChecker.findKings();
+            changesInLastMove.add(new FieldChange("cachedKingPositions", undo -> {
+                cachedKingPositions = cachedKingPositionsBefore;
+            }));
+        }
 
         var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesBefore.add(legalMove.clone());
@@ -538,6 +552,7 @@ public class Field {
         clone.gameState = this.gameState;
         clone.pieceEvaluation = this.pieceEvaluation;
         clone.kingInCheck = this.kingInCheck;
+        clone.cachedKingPositions = this.cachedKingPositions;
 
         clone.possibleEnPassantSquare = this.possibleEnPassantSquare != null
                 ? new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y())
@@ -567,5 +582,13 @@ public class Field {
 
     public List<Byte> getCapturedBlackPieces() {
         return capturedBlackPieces;
+    }
+
+    public ArrayList<Square> getCachedKingPositions() {
+        return cachedKingPositions;
+    }
+
+    public void setCachedKingPositions(ArrayList<Square> kingPositions) {
+        cachedKingPositions = kingPositions;
     }
 }

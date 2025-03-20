@@ -18,7 +18,6 @@ public class MoveChecker {
     private static final byte[] whitePromotionPieces = {PieceUtil.WHITE_QUEEN, PieceUtil.WHITE_ROOK, PieceUtil.WHITE_BISHOP, PieceUtil.WHITE_KNIGHT};
     private static final byte[] blackPromotionPieces = {PieceUtil.BLACK_QUEEN, PieceUtil.BLACK_ROOK, PieceUtil.BLACK_BISHOP, PieceUtil.BLACK_KNIGHT};
     private final Field field;
-    private ArrayList<Square> cachedKingPositions;
 
     /**
      * Constructs a MoveChecker object.
@@ -333,8 +332,6 @@ public class MoveChecker {
 
         // look for move type
         gatherMoveInfo(move);
-        if (PieceUtil.isKing(getPieceBySquare(move.getStartingSquare())) == false)
-            cachedKingPositions = findKings();
 
         // look if target square is possible
         for (Square target : possibleTargets) {
@@ -363,12 +360,10 @@ public class MoveChecker {
                     if (appearedChecks.size() == 1) {
                         move.setAppearedCheck(appearedChecks.getFirst());
                     }
-                    cachedKingPositions = null;
                     return;
                 }
             }
         }
-        cachedKingPositions = null;
 
         move.setLegal(false);
     }
@@ -593,6 +588,10 @@ public class MoveChecker {
         byte savedTargetPiece = getPieceBySquare(move.getTargetSquare());
         byte savedStartingPiece = getPieceBySquare(move.getStartingSquare());
 
+        ArrayList<Square> kingsBefore = field.getCachedKingPositions();
+        if (PieceUtil.isKing(savedStartingPiece))
+            field.setCachedKingPositions(null);
+
         // make move, because it must be legal
         setPieceBySquare(move.getTargetSquare(), savedStartingPiece);
         setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
@@ -602,6 +601,8 @@ public class MoveChecker {
         // fix the board
         setPieceBySquare(move.getTargetSquare(), savedTargetPiece);
         setPieceBySquare(move.getStartingSquare(), savedStartingPiece);
+
+        field.setCachedKingPositions(kingsBefore);
 
         return checkedPlayers;
     }
@@ -615,7 +616,7 @@ public class MoveChecker {
     public List<Player> lookForChecksOnBoard() {
         List<Player> checkedPlayers = new ArrayList<>();
         // look for checks
-        ArrayList<Square> kings = cachedKingPositions == null ? findKings() : cachedKingPositions;
+        ArrayList<Square> kings = field.getCachedKingPositions() == null ? findKings() : field.getCachedKingPositions();
         for (Square king : kings) {
             boolean isWhite = PieceUtil.isWhite(getPieceBySquare(king));
             if (isKingChecked(king)) {
@@ -636,7 +637,7 @@ public class MoveChecker {
      *
      * @return Square array of king's positions
      */
-    private ArrayList<Square> findKings() {
+    public ArrayList<Square> findKings() {
         var kings = new ArrayList<Square>();
         var board = field.getBoard();
         for (int i = 0; i < 8; i++)
