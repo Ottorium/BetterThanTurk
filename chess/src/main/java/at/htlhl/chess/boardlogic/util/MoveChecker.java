@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
  * Utility class to check possible moves for different chess pieces.
  */
 public class MoveChecker {
-    private static final int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
-    private static final int[][] rookDirections = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-    private static final int[][] bishopDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-    private static final int[][] kingDirections = new int[][]{{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
-    private static final int[][] slidingDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-    private static final byte[] whitePromotionPieces = {PieceUtil.WHITE_QUEEN, PieceUtil.WHITE_ROOK, PieceUtil.WHITE_BISHOP, PieceUtil.WHITE_KNIGHT};
-    private static final byte[] blackPromotionPieces = {PieceUtil.BLACK_QUEEN, PieceUtil.BLACK_ROOK, PieceUtil.BLACK_BISHOP, PieceUtil.BLACK_KNIGHT};
+    public static final int[][] knightMoves = {{1, -2}, {1, 2}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {-2, 1}, {-2, -1}};
+    public static final int[][] rookDirections = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    public static final int[][] bishopDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+    public static final int[][] kingDirections = {{0, 1}, {0, -1}, {1, 1}, {1, -1}, {1, 0}, {-1, 1}, {-1, -1}, {-1, 0}};
+    public static final int[][] slidingDirections = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    public static final byte[] whitePromotionPieces = {PieceUtil.WHITE_QUEEN, PieceUtil.WHITE_ROOK, PieceUtil.WHITE_BISHOP, PieceUtil.WHITE_KNIGHT};
+    public static final byte[] blackPromotionPieces = {PieceUtil.BLACK_QUEEN, PieceUtil.BLACK_ROOK, PieceUtil.BLACK_BISHOP, PieceUtil.BLACK_KNIGHT};
     private final Field field;
 
     /**
@@ -33,7 +33,7 @@ public class MoveChecker {
      * @param y The y-coordinate.
      * @return True if the coordinates are within board boundaries, false otherwise.
      */
-    private boolean isOnBoard(int x, int y) {
+    public boolean isOnBoard(int x, int y) {
         return x >= 0 && x < 8 && y >= 0 && y < 8;
     }
 
@@ -266,8 +266,7 @@ public class MoveChecker {
      *
      * @return List of possible target squares
      */
-    public List<Square> getTargetSquares(Square position, boolean isStartWhite) {
-        byte piece = field.getBoard()[position.y() * 8 + position.x()];
+    public List<Square> getTargetSquares(Square position, boolean isStartWhite, byte piece) {
 
         // TODO: replace with switch case
 
@@ -302,7 +301,8 @@ public class MoveChecker {
      * @param move The move to check.
      */
     public void validateMove(Move move) {
-        validateMove(move, getTargetSquares(move.getStartingSquare(), PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare()))));
+        var position = move.getStartingSquare();
+        validateMove(move, getTargetSquares(position, PieceUtil.isWhite(getPieceBySquare(move.getStartingSquare())), field.getBoard()[position.y() * 8 + position.x()]));
     }
 
     private void validateMove(Move move, List<Square> possibleTargets) {
@@ -724,7 +724,7 @@ public class MoveChecker {
 
                 if (PieceUtil.isEmpty(piece) || PieceUtil.isWhite(piece) == field.isBlackTurn())
                     continue;
-                List<Square> possibleTargets = getTargetSquares(start, PieceUtil.isWhite(piece));
+                List<Square> possibleTargets = getTargetSquares(start, PieceUtil.isWhite(piece), field.getBoard()[start.y() * 8 + start.x()]);
                 for (Square target : possibleTargets) {
                     if (PieceUtil.isPawn(piece) && (target.y() == 0 || target.y() == 7))
                         for (byte promotionPiece : field.isBlackTurn() ? blackPromotionPieces : whitePromotionPieces) {
