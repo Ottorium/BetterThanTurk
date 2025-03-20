@@ -167,6 +167,10 @@ public class BoardViewController implements Initializable {
         }
     }
 
+    /**
+     * Adds a new arrow to Arrows to draw list
+     * @param move
+     */
     public void addArrow(Move move) {
         if (move == null) {
             return;
