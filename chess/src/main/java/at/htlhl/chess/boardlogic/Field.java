@@ -103,6 +103,21 @@ public class Field {
     private ArrayList<Square> cachedKingPositions;
 
     /**
+     * Stores the Squares that black is currently attacking and how often it is attacked
+     */
+    private HashMap<Square, Integer> blackAttackSquares;
+
+    /**
+     * Stores the Squares that white is currently attacking and how often it is attacked
+     */
+    private HashMap<Square, Integer> whiteAttackSquares;
+
+    /**
+     * Util for finding and updating the white and black attack squares
+     */
+    private AttackedSquaresUtil attackedSquaresUtil;
+
+    /**
      * Makes a new Field and initialized it with the starting chess position.
      */
     public Field() {
@@ -134,6 +149,9 @@ public class Field {
         positionCounts.clear();
         Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
         cachedKingPositions = moveChecker.findKings();
+        attackedSquaresUtil = new AttackedSquaresUtil(this);
+        blackAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.BLACK);
+        whiteAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.WHITE);
         kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
         legalMoves = moveChecker.getAllLegalMoves();
         gameState = computeGameState();
@@ -249,6 +267,8 @@ public class Field {
                 cachedKingPositions = cachedKingPositionsBefore;
             }));
         }
+
+        attackedSquaresUtil.updateCachedAttackSquares(move);
 
         var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesBefore.add(legalMove.clone());
@@ -535,7 +555,10 @@ public class Field {
         clone.gameState = this.gameState;
         clone.pieceEvaluation = this.pieceEvaluation;
         clone.kingInCheck = this.kingInCheck;
-        clone.cachedKingPositions = this.cachedKingPositions;
+
+        clone.cachedKingPositions = (ArrayList<Square>) this.cachedKingPositions.clone();
+        clone.blackAttackSquares = (HashMap<Square, Integer>) this.blackAttackSquares.clone();
+        clone.whiteAttackSquares = (HashMap<Square, Integer>) this.whiteAttackSquares.clone();
 
         clone.possibleEnPassantSquare = this.possibleEnPassantSquare != null
                 ? new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y())
@@ -551,6 +574,7 @@ public class Field {
         clone.capturedBlackPieces.addAll(this.capturedBlackPieces);
 
         clone.moveChecker = new MoveChecker(clone);
+        clone.attackedSquaresUtil = new AttackedSquaresUtil(this);
 
         var legalMovesClone = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesClone.add(legalMove.clone());
@@ -573,5 +597,33 @@ public class Field {
 
     public void setCachedKingPositions(ArrayList<Square> kingPositions) {
         cachedKingPositions = kingPositions;
+    }
+
+    public HashMap<Square, Integer> getWhiteAttackSquares() {
+        return whiteAttackSquares;
+    }
+
+    public HashMap<Square, Integer> getBlackAttackSquares() {
+        return blackAttackSquares;
+    }
+
+    /**
+     * Gets all squares currently attacked by the current player's pieces
+     * @return ArrayList of Squares attacked by the current player
+     */
+    public ArrayList<Square> getCurrentPlayerAttackSquares() {
+        return blackTurn ? new ArrayList<>(blackAttackSquares.keySet()) : new ArrayList<>(whiteAttackSquares.keySet());
+    }
+
+    public MoveChecker getMoveChecker() {
+        return moveChecker;
+    }
+
+    public ArrayList<FieldChange> getChangesInLastMove() {
+        return changesInLastMove;
+    }
+
+    public void setBlackTurn(boolean blackTurn) {
+        this.blackTurn = blackTurn;
     }
 }
