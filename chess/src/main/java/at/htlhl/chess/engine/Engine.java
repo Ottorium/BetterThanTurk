@@ -36,7 +36,7 @@ public class Engine {
         currentBestMove = null;
         evaluatedPositions = 0;
         executedMoves = 0;
-        maxDepth = 5;
+        maxDepth = 6;
         var timeBefore = System.nanoTime();
         int eval;
         try {
