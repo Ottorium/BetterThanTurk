@@ -5,6 +5,7 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.gui.BoardViewController;
+import at.htlhl.chess.gui.PlayingEntity;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -46,9 +47,6 @@ public class ChessBoardInteractionHandler {
     /** The size of each square on the board in pixels. */
     private final double squareSize;
 
-    /** Callback function to update the board UI after a move is made. */
-    private final BiConsumer<Move, Square> onBoardUpdate;
-
     /** The currently selected square, or null if no square is selected. */
     private Square selectedSquare = null;
 
@@ -57,26 +55,18 @@ public class ChessBoardInteractionHandler {
 
     private boolean autoQueen = true;
 
-    /**
-     * Constructs a new interaction handler for the chess board.
-     *
-     * @param chessBoard    The {@link GridPane} representing the chess board UI.
-     * @param field         The logical {@link Field} managing the board state.
-     * @param squareSize    The size of each square in pixels.
-     * @param onBoardUpdate Callback to refresh the board UI after a move.
-     */
-    public ChessBoardInteractionHandler(GridPane chessBoard, Field field, double squareSize, BiConsumer<Move, Square> onBoardUpdate) {
-        this.chessBoard = chessBoard;
-        this.field = field;
-        this.squareSize = squareSize;
-        this.onBoardUpdate = onBoardUpdate;
-    }
+    PlayingEntity playingEntity;
 
     /**
-     * Triggers the board update callback to refresh the UI.
+     * Constructs a new interaction handler for the chess board.
      */
-    private void updateBoard(Move move, Square kingCheckHighlight) {
-        onBoardUpdate.accept(move, kingCheckHighlight);
+    public ChessBoardInteractionHandler(PlayingEntity playingEntity) {
+        BoardViewController boardViewController = playingEntity.getBoardViewController();
+        this.chessBoard = boardViewController.getChessBoard();
+        this.field = boardViewController.getField();
+        this.squareSize = boardViewController.getSquareSize();
+        this.playingEntity = playingEntity;
+        setupInteractions();
     }
 
     /**
@@ -94,6 +84,9 @@ public class ChessBoardInteractionHandler {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
                 square.setOnMouseClicked(event -> {
+                    if (playingEntity.isMyMove() == false){
+                        return;
+                    }
                     autoQueen = event.getButton() == MouseButton.PRIMARY;
                     handleSquareClick(square);
                 });
@@ -278,6 +271,7 @@ public class ChessBoardInteractionHandler {
      */
     private void setupDragHandlers(StackPane square) {
         square.setOnDragDetected(event -> {
+            if (playingEntity.isMyMove() == false) {return;}
             if (!hasPiece(square)) return;
 
             autoQueen = event.getButton() == MouseButton.PRIMARY;
@@ -366,15 +360,20 @@ public class ChessBoardInteractionHandler {
         event.consume();
     }
 
+    /**
+     * calls PlayingEntity move, to handle move
+     * @param startingSquare
+     * @param targetSquare
+     * @return
+     */
     private boolean handleMove(Square startingSquare, Square targetSquare) {
         Move move = new Move(startingSquare, targetSquare);
         move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
         byte capturedPiece = field.getPieceBySquare(targetSquare);
-        boolean success = field.move(move);
+        boolean success = playingEntity.tryMove();
         clearSelection();
-
-        if (success == false) return false;
-        updateBoard(move, field.getSquareOfCheck());
+        if (success == false) {return false;}
+//        updateBoard(move, field.getSquareOfCheck());
         return true;
     }
 

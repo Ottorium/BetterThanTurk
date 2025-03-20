@@ -2,6 +2,7 @@ package at.htlhl.chess.gui;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
+import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.gui.util.BoardViewUtil;
@@ -57,6 +58,10 @@ public class BoardViewController implements Initializable {
     private EngineConnector engineConnector;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
     private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
+    private PlayingEntity blackPlayingEntity;
+    private PlayingEntity whitePlayingEntity;
+
+    private ChessBoardInteractionHandler chessBoardInteractionHandler;
 
 
     private boolean updatingBoardListeners = false; // Guard flag to prevent chaining
@@ -128,8 +133,15 @@ public class BoardViewController implements Initializable {
             engineConnector = new EngineConnector(field, this::addArrow);
             updateUI(null, null);
         });
-        setUpInteractions();
         initFENTextArea();
+        initPlayers();
+    }
+
+    private void initPlayers() {
+        // TODO add choice
+        blackPlayingEntity = new PlayerEntity(Player.BLACK, this);
+        whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
+        whitePlayingEntity.allowMove();
     }
 
     /**
@@ -195,25 +207,6 @@ public class BoardViewController implements Initializable {
     private void clearArrows() {
         arrowsToDraw.clear();
         updateArrows();
-    }
-
-    /**
-     * Initializes user interaction handling for the chess board.
-     * Sets up a {@link ChessBoardInteractionHandler} with the current square size to manage clicks,
-     * drag-and-drop, and other interactions, updating the board display as needed.
-     */
-    private void setUpInteractions() {
-        double currentSquareSize = (squareSizeBinding != null && squareSizeBinding.isValid())
-                ? squareSizeBinding.get()
-                : INITIAL_SQUARE_SIZE;
-
-        ChessBoardInteractionHandler interactionHandler = new ChessBoardInteractionHandler(
-                chessBoard,
-                field,
-                currentSquareSize,
-                this::updateUI // Update callback
-        );
-        interactionHandler.setupInteractions();
     }
 
     /**
@@ -386,5 +379,19 @@ public class BoardViewController implements Initializable {
 
     public void shutdown() {
         engineConnector.shutdown();
+    }
+
+    public GridPane getChessBoard() {
+        return this.chessBoard;
+    }
+
+    public Field getField() {
+        return this.field;
+    }
+
+    public double getSquareSize() {
+        return (squareSizeBinding != null && squareSizeBinding.isValid())
+                ? squareSizeBinding.get()
+                : INITIAL_SQUARE_SIZE;
     }
 }
