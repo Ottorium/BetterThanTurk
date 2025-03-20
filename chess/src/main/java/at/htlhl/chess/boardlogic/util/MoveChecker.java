@@ -357,6 +357,8 @@ public class MoveChecker {
                 if (isCheckLegal(appearedChecks)) {
                     move.setLegal(true);
 
+                    move.setCapture(PieceUtil.isEmpty(field.getPieceBySquare(move.getTargetSquare())) == false);
+
                     // redundant length check call, but that's the easiest way
                     if (appearedChecks.size() == 1) {
                         move.setAppearedCheck(appearedChecks.getFirst());
