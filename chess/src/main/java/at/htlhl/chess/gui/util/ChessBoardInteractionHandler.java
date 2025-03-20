@@ -112,11 +112,7 @@ public class ChessBoardInteractionHandler {
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
-            Move move = new Move(selectedSquare, clickedSquare);
-            move.setPromotionPiece(getPromotionPiece(selectedSquare, clickedSquare));
-            boolean success = field.move(move);
-            clearSelection();
-            if (success) updateBoard(move, field.getSquareOfCheck());
+            handleMove(selectedSquare, clickedSquare);
         } else {
             clearSelection();
             if (hasPiece(square)) {
@@ -362,15 +358,24 @@ public class ChessBoardInteractionHandler {
             Square targetSquare = (Square) square.getUserData();
 
             if (!sourceSquare.equals(targetSquare)) {
-                Move move = new Move(sourceSquare, targetSquare);
-                move.setPromotionPiece(getPromotionPiece(sourceSquare,targetSquare));
-                success = field.move(move);
-                if (success) updateBoard(move, field.getSquareOfCheck());
+                handleMove(sourceSquare, targetSquare);
             }
         }
 
         event.setDropCompleted(success);
         event.consume();
+    }
+
+    private boolean handleMove(Square startingSquare, Square targetSquare) {
+        Move move = new Move(startingSquare, targetSquare);
+        move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
+        byte capturedPiece = field.getPieceBySquare(targetSquare);
+        boolean success = field.move(move);
+        clearSelection();
+
+        if (success == false) return false;
+        updateBoard(move, field.getSquareOfCheck());
+        return true;
     }
 
     /**

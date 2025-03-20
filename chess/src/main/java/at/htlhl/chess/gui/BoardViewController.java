@@ -299,6 +299,11 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
+        tmpConnectEngine();
+    }
+
+    private void tmpConnectEngine (){
+        // TODO refactor
         engineConnector.stopCurrentExecutions();
         engineConnector = new EngineConnector(field, this::addArrow);
         engineConnector.drawBestMove();
