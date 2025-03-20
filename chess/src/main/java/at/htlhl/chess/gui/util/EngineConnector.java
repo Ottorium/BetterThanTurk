@@ -20,13 +20,12 @@ public class EngineConnector {
         engine = new Engine(field);
     }
 
-    public Move drawBestMove() {
+    public void suggestMove() {
         drawArrowCallback.accept(null);
         executor.submit(() -> {
             Move bestMove = engine.getBestMove();
             Platform.runLater(() -> drawArrowCallback.accept(bestMove));
         });
-        return null;
     }
 
     public void stopCurrentExecutions() {

@@ -321,7 +321,7 @@ public class BoardViewController implements Initializable {
         // TODO refactor
         engineConnector.stopCurrentExecutions();
         engineConnector = new EngineConnector(field, this::addArrow);
-        engineConnector.drawBestMove();
+        engineConnector.suggestMove();
     }
 
     /**
