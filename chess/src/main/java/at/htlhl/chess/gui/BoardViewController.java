@@ -34,7 +34,7 @@ import java.util.ResourceBundle;
 
 public class BoardViewController implements Initializable {
 
-    public static final Color ARROW_COLOR = Color.rgb(110, 110, 110);
+    public static final Color ARROW_COLOR = Color.rgb(110, 210, 110);
     private static final int BOARD_SIZE = 8;
     private static final int INITIAL_SQUARE_SIZE = 60;
     private static final Color LIGHT_SQUARE_COLOR = Color.rgb(242, 226, 190);
@@ -131,7 +131,7 @@ public class BoardViewController implements Initializable {
         Platform.runLater(() -> {
             setUpScalability();
             engineConnector = new EngineConnector(field, this::addArrow);
-            updateUI(null, null);
+            updateUI(null);
         });
         initFENTextArea();
         initPlayers();
@@ -181,6 +181,7 @@ public class BoardViewController implements Initializable {
 
     /**
      * Adds a new arrow to Arrows to draw list
+     *
      * @param move
      */
     public void addArrow(Move move) {
@@ -230,16 +231,37 @@ public class BoardViewController implements Initializable {
     }
 
     /**
+     * Is used to make move and update UI. For some reason calling updateUI does not update field on first call, so the piece is missing.
+     * @param move that has been made
+     */
+    public boolean makeMove(Move move, PlayingEntity me) {
+        boolean success = field.move(move);
+        if (success) {
+            updateUI(move);
+            if (blackPlayingEntity == me) {
+                whitePlayingEntity.allowMove();
+            } else {
+                blackPlayingEntity.allowMove();
+            }
+        }
+        return success;
+    }
+
+    /**
      * calls all ui update methods, like drawPieces or updateFEN
      *
-     * @param moveToHighlight    for drawPieces
-     * @param kingCheckHighlight for drawPieces
+     * @param moveToHighlight for drawPieces
      */
-    private void updateUI(Move moveToHighlight, Square kingCheckHighlight) {
-        drawPieces(moveToHighlight, kingCheckHighlight);
+    private void updateUI(Move moveToHighlight) {
+//        drawPieces(moveToHighlight, field.getSquareOfCheck());
         updateFENinFENTextArea();
         updateCapturedPieces();
         clearArrows();
+        drawPieces(moveToHighlight, field.getSquareOfCheck());
+    }
+
+    public void updateUI() {
+        updateUI(null);
     }
 
 
@@ -295,7 +317,7 @@ public class BoardViewController implements Initializable {
         tmpConnectEngine();
     }
 
-    private void tmpConnectEngine (){
+    private void tmpConnectEngine() {
         // TODO refactor
         engineConnector.stopCurrentExecutions();
         engineConnector = new EngineConnector(field, this::addArrow);
@@ -358,7 +380,7 @@ public class BoardViewController implements Initializable {
         if (!field.trySetFEN(FENTextArea.getText())) {
             boardViewUtil.alertProblem("Invalid FEN!", "Check if your input is correct");
         }
-        updateUI(null, null);
+        updateUI(null);
     }
 
     private void updateCapturedPieces() {

@@ -6,14 +6,12 @@ import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.gui.BoardViewController;
 import at.htlhl.chess.gui.PlayingEntity;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -24,6 +22,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -83,10 +82,7 @@ public class ChessBoardInteractionHandler {
     private void setupClickHandlers() {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
-                square.setOnMouseClicked(event -> {
-                    if (playingEntity.isMyMove() == false){
-                        return;
-                    }
+                square.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
                     autoQueen = event.getButton() == MouseButton.PRIMARY;
                     handleSquareClick(square);
                 });
@@ -101,7 +97,9 @@ public class ChessBoardInteractionHandler {
      */
     private void handleSquareClick(StackPane square) {
         Square clickedSquare = (Square) square.getUserData();
-
+        if (playingEntity.isMyMove() == false){
+            return;
+        }
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
@@ -232,13 +230,18 @@ public class ChessBoardInteractionHandler {
      */
     private void clearHighlights() {
         if (highlightedSquares != null) {
-            highlightedSquares.forEach(square -> {
-                StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
+            try {
+
+                highlightedSquares.forEach(square -> {
+                    StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
                 if (squarePane.getChildren().size() > 1) {
-                    squarePane.getChildren().removeLast();
+                    Platform.runLater(()->squarePane.getChildren().stream().filter(child -> child instanceof Circle).forEach(child -> {squarePane.getChildren().remove(child);}));
                 }
-            });
-            highlightedSquares = null;
+                });
+                highlightedSquares = null;
+            } catch (ConcurrentModificationException e){
+
+            }
         }
     }
 
@@ -270,7 +273,7 @@ public class ChessBoardInteractionHandler {
      * @param square The {@link StackPane} to configure for dragging.
      */
     private void setupDragHandlers(StackPane square) {
-        square.setOnDragDetected(event -> {
+        square.addEventHandler(MouseEvent.DRAG_DETECTED, event -> {
             if (playingEntity.isMyMove() == false) {return;}
             if (!hasPiece(square)) return;
 
@@ -320,7 +323,7 @@ public class ChessBoardInteractionHandler {
      * @param square The {@link StackPane} to configure as a drop target.
      */
     private void setupDropHandlers(StackPane square) {
-        square.setOnDragOver(event -> {
+        square.addEventHandler(DragEvent.DRAG_OVER, event -> {
             if (event.getGestureSource() != square && event.getDragboard().hasString()) {
                 event.acceptTransferModes(TransferMode.MOVE);
             }
@@ -369,11 +372,9 @@ public class ChessBoardInteractionHandler {
     private boolean handleMove(Square startingSquare, Square targetSquare) {
         Move move = new Move(startingSquare, targetSquare);
         move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
-        byte capturedPiece = field.getPieceBySquare(targetSquare);
-        boolean success = playingEntity.tryMove();
+        boolean success = playingEntity.tryMove(move);
         clearSelection();
         if (success == false) {return false;}
-//        updateBoard(move, field.getSquareOfCheck());
         return true;
     }
 

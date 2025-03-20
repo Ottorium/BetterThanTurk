@@ -1,9 +1,10 @@
 package at.htlhl.chess.gui;
 
+import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.gui.util.ChessBoardInteractionHandler;
 
-public class PlayerEntity extends PlayingEntity{
+public class PlayerEntity extends PlayingEntity {
 
     ChessBoardInteractionHandler chessBoardInteractionHandler;
 
@@ -15,14 +16,16 @@ public class PlayerEntity extends PlayingEntity{
     private void initInteractions() {
 
     }
+
     @Override
-    protected boolean move() {
-        return false;
+    protected boolean move(Move move) {
+        boolean success = super.move(move);
+        return success;
     }
 
     @Override
-    public boolean tryMove() {
-        boolean success = move();
+    public boolean tryMove(Move move) {
+        boolean success = move(move);
         return success;
     }
 

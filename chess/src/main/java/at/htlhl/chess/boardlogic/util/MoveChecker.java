@@ -451,6 +451,7 @@ public class MoveChecker {
      * @param move
      */
     private void gatherMoveInfo(Move move) {
+        move.setCapturedPiece(getPieceBySquare(move.getTargetSquare()));
         // Castling
         if (isCastlingMove(move)) {
             move.setCastlingMove(true);
