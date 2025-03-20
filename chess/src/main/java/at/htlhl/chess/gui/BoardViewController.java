@@ -9,7 +9,6 @@ import at.htlhl.chess.gui.util.ChessBoardInteractionHandler;
 import at.htlhl.chess.gui.util.EngineConnector;
 import at.htlhl.chess.gui.util.PieceImageUtil;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
@@ -24,8 +23,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 
 import java.net.URL;
@@ -57,15 +54,12 @@ public class BoardViewController implements Initializable {
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
-    private Square arrowStartSquare;
-    private Square arrowEndSquare;
-    private byte arrowPromotionPiece;
     private EngineConnector engineConnector;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
+    private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
 
 
     private boolean updatingBoardListeners = false; // Guard flag to prevent chaining
-    private double middleSectionHeight = 0; // is here to prevent lagging while resizing
 
     private static Rectangle getCheckHighlight() {
         Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
@@ -103,6 +97,14 @@ public class BoardViewController implements Initializable {
                         String.format("Could not find square at coordinates %d %d", col, row)));
     }
 
+    public Pane getArrowPane() {
+        return arrowPane;
+    }
+
+    public DoubleBinding squareSizeBindingProperty() {
+        return squareSizeBinding;
+    }
+
     /**
      * Initializes the chess board view when the controller is loaded.
      * Creates an empty chess board, sets the initial position using FEN, draws the pieces,
@@ -123,7 +125,7 @@ public class BoardViewController implements Initializable {
 
         Platform.runLater(() -> {
             setUpScalability();
-            engineConnector = new EngineConnector(field, this::drawArrow);
+            engineConnector = new EngineConnector(field, this::addArrow);
             updateUI(null, null);
         });
         setUpInteractions();
@@ -166,85 +168,33 @@ public class BoardViewController implements Initializable {
     }
 
     /**
-     * Draws an arrow from square s1 to square s2 on the chess board.
-     * Stores the squares for later redrawing when the board resizes.
-     *
-     * @param move The move to draw
+     * Adds a new arrow to Arrows to draw list
+     * @param move
      */
-    public void drawArrow(Move move) {
-        arrowStartSquare = (move != null) ? move.getStartingSquare() : null;
-        arrowEndSquare = (move != null) ? move.getTargetSquare() : null;
-        arrowPromotionPiece = (move != null) ? move.getPromotionPiece() : PieceUtil.EMPTY;
-        updateArrow();
+    public void addArrow(Move move) {
+        if (move == null) {
+            return;
+        }
+        Square arrowStartSquare = move.getStartingSquare();
+        Square arrowEndSquare = move.getTargetSquare();
+        byte arrowPromotionPiece = move.getPromotionPiece();
+        Arrow arrow = new Arrow(arrowStartSquare, arrowEndSquare);
+        arrow.setPromotionPiece(arrowPromotionPiece);
+        arrow.setColor(ARROW_COLOR);
+        arrowsToDraw.add(arrow);
+        updateArrows();
     }
 
-    /**
-     * Updates the arrow based on the current square size and stored squares.
-     * This method creates and binds arrow components to ensure they update with the board.
-     */
-    private void updateArrow() {
+    private void updateArrows() {
         arrowPane.getChildren().clear();
-        if (arrowStartSquare == null || arrowEndSquare == null) return;
+        for (Arrow arrow : arrowsToDraw) {
+            arrow.draw(this);
+        }
+    }
 
-        Line arrowBody = new Line();
-        Polygon arrowHead = new Polygon();
-
-        // Set up basic bindings for start and end points
-        DoubleBinding startX = squareSizeBinding.multiply(arrowStartSquare.x() + 0.5);
-        DoubleBinding startY = squareSizeBinding.multiply(arrowStartSquare.y() + 0.5);
-        DoubleBinding endX = squareSizeBinding.multiply(arrowEndSquare.x() + 0.5);
-        DoubleBinding endY = squareSizeBinding.multiply(arrowEndSquare.y() + 0.5);
-
-        // Calculate direction vector and derived values as bindings
-        DoubleBinding dx = endX.subtract(startX);
-        DoubleBinding dy = endY.subtract(startY);
-        DoubleBinding length = Bindings.createDoubleBinding(() -> Math.sqrt(dx.get() * dx.get() + dy.get() * dy.get()), dx, dy);
-        DoubleBinding dirX = Bindings.createDoubleBinding(() -> length.get() > 0 ? dx.get() / length.get() : 0, dx, length);
-        DoubleBinding dirY = Bindings.createDoubleBinding(() -> length.get() > 0 ? dy.get() / length.get() : 0, dy, length);
-        DoubleBinding perpX = Bindings.createDoubleBinding(() -> -dirY.get(), dirY);
-        DoubleBinding perpY = Bindings.createDoubleBinding(() -> dirX.get(), dirX);
-
-        // Arrow dimensions
-        DoubleBinding thickness = squareSizeBinding.multiply(0.1);
-        DoubleBinding arrowHeadLength = squareSizeBinding.multiply(0.3);
-        DoubleBinding arrowHeadWidth = squareSizeBinding.multiply(0.2);
-        DoubleBinding bodyEndX = Bindings.createDoubleBinding(() -> endX.get() - dirX.get() * arrowHeadLength.get(), endX, dirX, arrowHeadLength);
-        DoubleBinding bodyEndY = Bindings.createDoubleBinding(() -> endY.get() - dirY.get() * arrowHeadLength.get(), endY, dirY, arrowHeadLength);
-
-        // Configure arrow body
-        arrowBody.startXProperty().bind(startX);
-        arrowBody.startYProperty().bind(startY);
-        arrowBody.endXProperty().bind(bodyEndX);
-        arrowBody.endYProperty().bind(bodyEndY);
-        arrowBody.setStroke(ARROW_COLOR);
-        arrowBody.strokeWidthProperty().bind(thickness);
-
-        // Set up arrow head points updater
-        InvalidationListener pointsUpdater = obs -> {
-            arrowHead.getPoints().clear();
-            arrowHead.getPoints().addAll(
-                    endX.get(), endY.get(),
-                    bodyEndX.get() + perpX.get() * arrowHeadWidth.get(), bodyEndY.get() + perpY.get() * arrowHeadWidth.get(),
-                    bodyEndX.get() - perpX.get() * arrowHeadWidth.get(), bodyEndY.get() - perpY.get() * arrowHeadWidth.get()
-            );
-        };
-
-        // Register listeners and initialize
-        endX.addListener(pointsUpdater);
-        endY.addListener(pointsUpdater);
-        bodyEndX.addListener(pointsUpdater);
-        bodyEndY.addListener(pointsUpdater);
-        perpX.addListener(pointsUpdater);
-        perpY.addListener(pointsUpdater);
-        arrowHeadWidth.addListener(pointsUpdater);
-        pointsUpdater.invalidated(null);
-
-        arrowHead.setFill(ARROW_COLOR);
-
-        arrowPane.getChildren().addAll(arrowBody, arrowHead);
-
-        if (PieceUtil.isEmpty(arrowPromotionPiece) == false)
-            drawPiece(arrowPromotionPiece, arrowEndSquare, 40);
+    private void clearArrows() {
+        arrowsToDraw.clear();
+        updateArrows();
     }
 
     /**
@@ -296,6 +246,7 @@ public class BoardViewController implements Initializable {
         drawPieces(moveToHighlight, kingCheckHighlight);
         updateFENinFENTextArea();
         updateCapturedPieces();
+        clearArrows();
     }
 
 
@@ -349,11 +300,18 @@ public class BoardViewController implements Initializable {
             }
         }
         engineConnector.stopCurrentExecutions();
-        engineConnector = new EngineConnector(field, this::drawArrow);
+        engineConnector = new EngineConnector(field, this::addArrow);
         engineConnector.drawBestMove();
     }
 
-    private void drawPiece(byte piece, Square square, int opacity) {
+    /**
+     * draws a Piece Image on the board. Does not clear images, only adds ImageVies
+     *
+     * @param piece   byte to draw
+     * @param square  where to draw
+     * @param opacity of this piece
+     */
+    public void drawPiece(byte piece, Square square, int opacity) {
         var stackpane = getSquarePane(chessBoard, square.x(), square.y());
         Image img = PieceImageUtil.getImage(piece);
         ImageView imageView = new ImageView(img);
@@ -420,6 +378,7 @@ public class BoardViewController implements Initializable {
             box.getChildren().add(pieceImageView);
         }
     }
+
     public void shutdown() {
         engineConnector.shutdown();
     }
