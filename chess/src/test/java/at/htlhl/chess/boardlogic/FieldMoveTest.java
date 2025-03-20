@@ -823,11 +823,11 @@ public class FieldMoveTest {
     // Helper method to get all squares with pieces of the current player
     private List<Square> getAllPieceSquares(Field field, boolean isBlack) {
         List<Square> squares = new java.util.ArrayList<>();
-        byte[][] board = field.getBoard();
+        byte[] board = field.getBoard();
 
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
-                byte piece = board[y][x];
+                byte piece = board[y * 8 + x];
                 if (!PieceUtil.isEmpty(piece) &&
                         (isBlack ? PieceUtil.isBlack(piece) : PieceUtil.isWhite(piece))) {
                     squares.add(new Square(x, y));

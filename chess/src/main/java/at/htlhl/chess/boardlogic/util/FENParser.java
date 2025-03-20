@@ -51,7 +51,7 @@ public class FENParser {
      * @return the fen
      */
     public static String exportToFEN(
-            byte[][] board,
+            byte[] board,
             boolean blackTurn,
             byte castlingInformation,
             Square possibleEnPassantSquare,
@@ -64,7 +64,7 @@ public class FENParser {
         for (int row = 0; row <= 7; row++) {
             int emptySquares = 0;
             for (int col = 0; col < 8; col++) {
-                byte piece = board[row][col];
+                byte piece = board[row * 8 + col];
                 if (piece == PieceUtil.EMPTY) {
                     emptySquares++;
                     continue;
@@ -101,8 +101,8 @@ public class FENParser {
         return fen.toString();
     }
 
-    public byte[][] parseBoard() {
-        var newBoard = new byte[8][8];
+    public byte[] parseBoard() {
+        var newBoard = new byte[64];
         int currentRow = 0;
         var rows = fen.split(" ")[0].split("/");
         if (rows.length != 8) throw new InvalidFENException("FEN Invalid: " + fen);
@@ -114,7 +114,7 @@ public class FENParser {
                     currentColumn += Integer.parseInt(Character.toString(c));
                     continue;
                 }
-                newBoard[currentRow][currentColumn] = fenPieceMap.get(c);
+                newBoard[currentRow * 8 + currentColumn] = fenPieceMap.get(c);
                 currentColumn++;
             }
             currentRow++;
