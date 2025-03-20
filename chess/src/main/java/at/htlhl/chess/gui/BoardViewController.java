@@ -139,7 +139,7 @@ public class BoardViewController implements Initializable {
 
     private void initPlayers() {
         // TODO add choice
-        blackPlayingEntity = new PlayerEntity(Player.BLACK, this);
+        blackPlayingEntity = new BotEntity(Player.BLACK, this);
         whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
         whitePlayingEntity.allowMove();
     }
@@ -314,7 +314,7 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
-        tmpConnectEngine();
+//        tmpConnectEngine();
     }
 
     private void tmpConnectEngine() {

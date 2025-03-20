@@ -14,6 +14,9 @@ public abstract class PlayingEntity {
     }
 
     protected boolean move(Move move) {
+        if (move == null) {
+            return false;
+        }
         boolean success = boardViewController.makeMove(move, this);
         if (success) {
             myMove = false;
@@ -25,9 +28,7 @@ public abstract class PlayingEntity {
         myMove = true;
     }
 
-    public boolean tryMove(Move move) {
-        return false;
-    }
+    public abstract boolean tryMove(Move move);
 
     public BoardViewController getBoardViewController() {
         return boardViewController;
