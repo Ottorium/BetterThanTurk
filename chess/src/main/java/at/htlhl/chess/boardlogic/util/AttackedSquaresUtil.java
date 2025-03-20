@@ -31,6 +31,11 @@ public class AttackedSquaresUtil {
         addAttackSquares(targetSquaresToAdd, isWhite);
 
         // remove the captured piece's attack squares
+        if (move.isCapture()) {
+            byte capturedPiece = move.getCapturedPiece();
+            List<Square> targetSquaresToRemove2 = field.getMoveChecker().getTargetSquares(move.getTargetSquare(), isWhite == false, capturedPiece);
+            removeAttackSquares(targetSquaresToRemove2, isWhite);
+        }
 
         // go out from starting square and update the sliding pieces that now have more vision
 
