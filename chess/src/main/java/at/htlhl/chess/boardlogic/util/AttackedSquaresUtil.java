@@ -13,40 +13,113 @@ import java.util.List;
 public class AttackedSquaresUtil {
 
     private Field field;
+    MoveChecker moveChecker;
 
     public AttackedSquaresUtil(Field field) {
         this.field = field;
+        moveChecker = field.getMoveChecker();
     }
 
     /**
      * Updates the cached Attack squares
      */
     public void updateCachedAttackSquares(Move move) {
-        byte piece = field.getPieceBySquare(move.getTargetSquare());
-        boolean isWhite = PieceUtil.isWhite(piece);
+        Square startingSquare = move.getStartingSquare();
+        Square targetSquare = move.getTargetSquare();
+        byte movedPiece = field.getPieceBySquare(targetSquare);
+        boolean isWhite = PieceUtil.isWhite(movedPiece);
 
         // update the piece that got moved
-        List<Square> targetSquaresToRemove = field.getMoveChecker().getTargetSquares(move.getStartingSquare(), isWhite, piece);
-        List<Square> targetSquaresToAdd = getAttackedSquares(move.getTargetSquare(), isWhite, piece);
+        List<Square> targetSquaresToRemove = moveChecker.getTargetSquares(startingSquare, isWhite, movedPiece);
+        List<Square> targetSquaresToAdd = getAttackedSquares(targetSquare, isWhite, movedPiece);
         removeAttackSquares(targetSquaresToRemove, isWhite);
         addAttackSquares(targetSquaresToAdd, isWhite);
 
         // remove the captured piece's attack squares
         if (move.isCapture()) {
             byte capturedPiece = move.getCapturedPiece();
-            List<Square> targetSquaresToRemove2 = getAttackedSquares(move.getTargetSquare(), isWhite == false, capturedPiece);
-            removeAttackSquares(targetSquaresToRemove2, isWhite);
+            List<Square> targetSquaresToRemove2 = getAttackedSquares(targetSquare, isWhite == false, capturedPiece);
+            removeAttackSquares(targetSquaresToRemove2, isWhite == false);
         }
 
         // go out from starting square and update the sliding pieces that now have more vision
+        HashMap<int[], Boolean> directionsToAddTargetSquaresIn = getDirectionsOfChangedAttackSquares(startingSquare, isWhite);
+
+        for (int[] dir : directionsToAddTargetSquaresIn.keySet()) {
+            ArrayList<Square> targetSquaresToAddBecauseMovedPieceGaveMoreVision = new ArrayList<>();
+            boolean isOpponent = directionsToAddTargetSquaresIn.get(dir);
+            for (int i =  isOpponent ? 1 : 0; i < 8; i++) {
+                int x = startingSquare.x() + dir[0] * i;
+                int y = startingSquare.y() + dir[1] * i;
+                if (!moveChecker.isOnBoard(x, y)) break;
+                byte piece = field.getBoard()[y * 8 + x];
+                if (PieceUtil.isEmpty(piece) == false) {
+                    // if the piece is a different color than the attacking piece
+                    if (isOpponent == (PieceUtil.isWhite(piece) == isWhite))
+                        targetSquaresToAddBecauseMovedPieceGaveMoreVision.add(new Square(x, y));
+                    if (i != 0)
+                        break;
+                }
+                targetSquaresToAddBecauseMovedPieceGaveMoreVision.add(new Square(x, y));
+            }
+            addAttackSquares(targetSquaresToAddBecauseMovedPieceGaveMoreVision, isOpponent != isWhite);
+        }
 
         // go out from target square and update the sliding pieces that got blocked
+        HashMap<int[], Boolean> directionsToRemoveTargetSquaresIn = getDirectionsOfChangedAttackSquares(targetSquare, isWhite);
+
+        for (int[] dir : directionsToRemoveTargetSquaresIn.keySet()) {
+            ArrayList<Square> targetSquaresToRemoveBecauseMovedPieceBlockedVision = new ArrayList<>();
+            boolean isOpponent = directionsToRemoveTargetSquaresIn.get(dir);
+            for (int i =  isOpponent ? 1 : 0; i < 8; i++) {
+                int x = targetSquare.x() + dir[0] * i;
+                int y = targetSquare.y() + dir[1] * i;
+                if (!moveChecker.isOnBoard(x, y)) break;
+                byte piece = field.getBoard()[y * 8 + x];
+                if (PieceUtil.isEmpty(piece) == false) {
+                    // if the piece is a different color than the attacking piece
+                    if (isOpponent == (PieceUtil.isWhite(piece) == isWhite))
+                        targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
+                    if (i != 0)
+                        break;
+                }
+                targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
+            }
+            removeAttackSquares(targetSquaresToRemoveBecauseMovedPieceBlockedVision, isOpponent != isWhite);
+        }
 
         // if it is a castling move, remove the rooks attack squares and add its new ones
 
         // if it is an en passant move, remove the captured pawn's attacks
 
         // if it is a promotion, add the attacks of the promoted piece
+    }
+
+    private HashMap<int[], Boolean> getDirectionsOfChangedAttackSquares(Square changedSquare, boolean isWhite) {
+        var directions = new HashMap<int[], Boolean>();
+        for (int[] dir : MoveChecker.slidingDirections) {
+            for (int i = 1; i < 8; i++) {
+                int x = changedSquare.x() + dir[0] * i;
+                int y = changedSquare.y() + dir[1] * i;
+                if (!moveChecker.isOnBoard(x, y)) break;
+
+                byte piece = field.getBoard()[y * 8 + x];
+                if (PieceUtil.isEmpty(piece)) continue;
+
+                boolean isOpponent = PieceUtil.isWhite(piece) != isWhite;
+
+                boolean isDiagonal = (dir[0] != 0 && dir[1] != 0);
+
+                // if the piece isn't a sliding piece that moves correctly, continue
+                if (!(isDiagonal ?
+                        (PieceUtil.isQueen(piece) || PieceUtil.isBishop(piece)) :
+                        (PieceUtil.isQueen(piece) || PieceUtil.isRook(piece))))
+                    continue;
+
+                directions.put(new int[]{dir[0] * -1, dir[1] * -1}, isOpponent);
+            }
+        }
+        return directions;
     }
 
     private List<Square> getAttackedSquares(Square squareOfPiece, boolean isWhite, byte piece) {
