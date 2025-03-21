@@ -44,7 +44,6 @@ public class AttackedSquaresUtil {
 
         // go out from starting square and update the sliding pieces that now have more vision
         HashMap<int[], Boolean> directionsToAddTargetSquaresIn = getDirectionsOfChangedAttackSquares(startingSquare, isWhite);
-
         for (int[] dir : directionsToAddTargetSquaresIn.keySet()) {
             ArrayList<Square> targetSquaresToAddBecauseMovedPieceGaveMoreVision = new ArrayList<>();
             boolean isOpponent = directionsToAddTargetSquaresIn.get(dir);
@@ -67,7 +66,6 @@ public class AttackedSquaresUtil {
 
         // go out from target square and update the sliding pieces that got blocked
         HashMap<int[], Boolean> directionsToRemoveTargetSquaresIn = getDirectionsOfChangedAttackSquares(targetSquare, isWhite);
-
         for (int[] dir : directionsToRemoveTargetSquaresIn.keySet()) {
             ArrayList<Square> targetSquaresToRemoveBecauseMovedPieceBlockedVision = new ArrayList<>();
             boolean isOpponent = directionsToRemoveTargetSquaresIn.get(dir);
@@ -85,6 +83,10 @@ public class AttackedSquaresUtil {
                 }
                 targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
             }
+
+            if (move.isCapture() && isOpponent)
+                addAttackSquares(new ArrayList<>(List.of(move.getTargetSquare())), !isWhite);
+
             removeAttackSquares(targetSquaresToRemoveBecauseMovedPieceBlockedVision, isOpponent != isWhite);
         }
 
@@ -110,13 +112,14 @@ public class AttackedSquaresUtil {
 
                 boolean isDiagonal = (dir[0] != 0 && dir[1] != 0);
 
-                // if the piece isn't a sliding piece that moves correctly, continue
-                if (!(isDiagonal ?
-                        (PieceUtil.isQueen(piece) || PieceUtil.isBishop(piece)) :
-                        (PieceUtil.isQueen(piece) || PieceUtil.isRook(piece))))
-                    continue;
+                boolean pieceIsAPieceThatHasChangedAttackSquares = isDiagonal ?
+                        PieceUtil.isQueen(piece) || PieceUtil.isBishop(piece) :
+                        PieceUtil.isQueen(piece) || PieceUtil.isRook(piece);
 
-                directions.put(new int[]{dir[0] * -1, dir[1] * -1}, isOpponent);
+
+                if (pieceIsAPieceThatHasChangedAttackSquares)
+                    directions.put(new int[]{dir[0] * -1, dir[1] * -1}, isOpponent);
+                break;
             }
         }
         return directions;
