@@ -6,6 +6,7 @@ import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,14 +27,14 @@ public class AttackedSquaresUtil {
 
         // update the piece that got moved
         List<Square> targetSquaresToRemove = field.getMoveChecker().getTargetSquares(move.getStartingSquare(), isWhite, piece);
-        List<Square> targetSquaresToAdd = field.getMoveChecker().getTargetSquares(move.getTargetSquare(), isWhite, piece);
+        List<Square> targetSquaresToAdd = getAttackedSquares(move.getTargetSquare(), isWhite, piece);
         removeAttackSquares(targetSquaresToRemove, isWhite);
         addAttackSquares(targetSquaresToAdd, isWhite);
 
         // remove the captured piece's attack squares
         if (move.isCapture()) {
             byte capturedPiece = move.getCapturedPiece();
-            List<Square> targetSquaresToRemove2 = field.getMoveChecker().getTargetSquares(move.getTargetSquare(), isWhite == false, capturedPiece);
+            List<Square> targetSquaresToRemove2 = getAttackedSquares(move.getTargetSquare(), isWhite == false, capturedPiece);
             removeAttackSquares(targetSquaresToRemove2, isWhite);
         }
 
@@ -46,6 +47,27 @@ public class AttackedSquaresUtil {
         // if it is an en passant move, remove the captured pawn's attacks
 
         // if it is a promotion, add the attacks of the promoted piece
+    }
+
+    private List<Square> getAttackedSquares(Square squareOfPiece, boolean isWhite, byte piece) {
+        // pawns are the only pieces to move differently when they capture
+        if (PieceUtil.isPawn(piece)) {
+            int step = isWhite ? 1 : -1;
+
+            var pawnAttackSquares = Arrays.asList(
+                    new Square(squareOfPiece.x() - 1, squareOfPiece.y() - step),
+                    new Square(squareOfPiece.x() + 1, squareOfPiece.y() - step)
+            );
+
+            List<Square> squaresOnBoard = new ArrayList<>(2);
+            for (Square square : pawnAttackSquares)
+                if (field.getMoveChecker().isOnBoard(square.x(), square.y()))
+                    squaresOnBoard.add(square);
+
+            return squaresOnBoard;
+        }
+
+        return field.getMoveChecker().getTargetSquares(squareOfPiece, isWhite, piece);
     }
 
     private void addAttackSquares(List<Square> targetSquares, boolean isWhite) {
@@ -104,11 +126,24 @@ public class AttackedSquaresUtil {
         var turnBefore = field.isBlackTurn();
         field.setBlackTurn(player.equals(Player.BLACK));
 
-        var attackedSquares = new ArrayList<>(
+        var startingSquares = new ArrayList<>(
                 field.getMoveChecker().getAllLegalMoves()
                         .stream()
-                        .map(Move::getTargetSquare)
+                        .map(Move::getStartingSquare)
+                        .distinct()
                         .toList()
+        );
+
+        var attackedSquares = new ArrayList<Square>();
+
+        startingSquares.forEach(startingSquare ->
+                attackedSquares.addAll(
+                        getAttackedSquares(
+                                startingSquare,
+                                PieceUtil.isWhite(field.getPieceBySquare(startingSquare)),
+                                field.getPieceBySquare(startingSquare)
+                        )
+                )
         );
 
         HashMap<Square, Integer> squareFrequency = new HashMap<>();
