@@ -326,7 +326,6 @@ public class BoardViewController implements Initializable {
      * @param moveToHighlight for drawPieces
      */
     private void updateUI(Move moveToHighlight) {
-//        drawPieces(moveToHighlight, field.getSquareOfCheck());
         updateFENinFENTextArea();
         updateCapturedPieces();
         clearArrows();
