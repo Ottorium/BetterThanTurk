@@ -5,10 +5,8 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class AttackedSquaresUtil {
 
@@ -200,13 +198,14 @@ public class AttackedSquaresUtil {
      */
     public HashMap<Square, Integer> findAttackedSquares(Player player) {
         var turnBefore = field.isBlackTurn();
-        field.setBlackTurn(player.equals(Player.BLACK));
+        var blackTurn = player.equals(Player.BLACK);
+        field.setBlackTurn(blackTurn);
+        var board = field.getBoard();
 
         var startingSquares = new ArrayList<>(
-                field.getMoveChecker().getAllLegalMoves()
-                        .stream()
-                        .map(Move::getStartingSquare)
-                        .distinct()
+                IntStream.range(0, board.length)
+                        .filter(i -> PieceUtil.isBlack(board[i]) == blackTurn)
+                        .mapToObj(Square::parseBoardIndex)
                         .toList()
         );
 

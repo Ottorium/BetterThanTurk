@@ -18,6 +18,10 @@ public record Square(int x, int y) {
         return new Square(x, y);
     }
 
+    public static Square parseBoardIndex(int i) {
+        return new Square(i % 8, (int)Math.floor((double)i/(double)8));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

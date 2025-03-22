@@ -476,7 +476,7 @@ public class Field {
 
         for (int i = 0; i < board.length; i++)
             if (board[i] == (blackTurn ? PieceUtil.BLACK_KING : PieceUtil.WHITE_KING))
-                return new Square(i % 8, (int)Math.floor((double)i/(double)8));
+                return Square.parseBoardIndex(i);
 
         return null;
     }
