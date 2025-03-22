@@ -315,11 +315,7 @@ public class BoardViewController implements Initializable {
         boolean success = field.move(move);
         if (success) {
             updateUI(move);
-            if (blackPlayingEntity == me) {
-                whitePlayingEntity.allowMove();
-            } else {
-                blackPlayingEntity.allowMove();
-            }
+            updateMoveOrder();
         }
         return success;
     }

@@ -11,20 +11,20 @@ import java.util.function.Consumer;
 
 public class EngineConnector {
 
-    private final Consumer<Move> drawArrowCallback;
+    private final Consumer<Move> moveCallback;
     private Engine engine;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public EngineConnector(Field field, Consumer<Move> drawArrow) {
-        this.drawArrowCallback = drawArrow;
+    public EngineConnector(Field field, Consumer<Move> moveCallback) {
+        this.moveCallback = moveCallback;
         engine = new Engine(field);
     }
 
     public void suggestMove() {
-        drawArrowCallback.accept(null);
+        moveCallback.accept(null);
         executor.submit(() -> {
             Move bestMove = engine.getBestMove();
-            Platform.runLater(() -> drawArrowCallback.accept(bestMove));
+            Platform.runLater(() -> moveCallback.accept(bestMove));
         });
     }
 
