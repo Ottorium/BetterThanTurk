@@ -46,5 +46,4 @@ public class BotEntity extends PlayingEntity {
     public boolean tryMove(Move move) {
         return false;
     }
-
 }

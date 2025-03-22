@@ -22,4 +22,12 @@ public class PlayerEntity extends PlayingEntity {
     public boolean tryMove(Move move) {
         return move(move);
     }
+
+    /**
+     * Removes events handler from objects
+     */
+    @Override
+    public void removeInteractions(){
+        chessBoardInteractionHandler.removeInteractions();
+    }
 }

@@ -162,14 +162,8 @@ public class BoardViewController implements Initializable {
     }
 
     private void removeSquareListeners(){
-        for (Node node : chessBoard.getChildren()) {
-            if (node instanceof StackPane) {
-                node.removeEventHandler(MouseEvent.MOUSE_CLICKED, event -> {});
-                node.removeEventHandler(DragEvent.DRAG_OVER, event -> {});
-                node.removeEventHandler(MouseEvent.DRAG_DETECTED, event -> {});
-            }
-        }
-
+        blackPlayingEntity.removeInteractions();
+        whitePlayingEntity.removeInteractions();
     }
 
     private void initPlayers() {

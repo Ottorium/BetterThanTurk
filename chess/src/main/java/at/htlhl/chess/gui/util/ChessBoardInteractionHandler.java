@@ -63,6 +63,7 @@ public class ChessBoardInteractionHandler {
     private final EventHandler<MouseEvent> clickHandler = new EventHandler<>() {
         @Override
         public void handle(MouseEvent event) {
+            System.out.println(event.getSource());
             if (playingEntity.isMyMove() == false) {return;}
 
             autoQueen = event.getButton() == MouseButton.PRIMARY;
@@ -129,8 +130,17 @@ public class ChessBoardInteractionHandler {
         setupDragAndDrop();
     }
 
+    /**
+     * Removes all handlers from stackPane
+     */
     public void removeInteractions(){
-
+        for (Node node : chessBoard.getChildren()) {
+            if (node instanceof StackPane square) {
+                square.removeEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
+                square.removeEventHandler(MouseEvent.DRAG_DETECTED, dragHandler);
+                square.removeEventHandler(DragEvent.DRAG_DROPPED, dropHandler);
+            }
+        }
     }
 
     /**
