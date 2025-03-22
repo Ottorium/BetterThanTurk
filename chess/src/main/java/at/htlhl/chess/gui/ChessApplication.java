@@ -24,9 +24,4 @@ public class ChessApplication extends Application {
         stage.setScene(scene);
         stage.show();
     }
-
-    @Override
-    public void stop() {
-        boardViewController.shutdown();
-    }
 }
