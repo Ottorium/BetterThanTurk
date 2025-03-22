@@ -431,4 +431,12 @@ public class BoardViewController implements Initializable {
                 ? squareSizeBinding.get()
                 : INITIAL_SQUARE_SIZE;
     }
+
+    /**
+     * is used to stop engine threads
+     */
+    public void shutdown(){
+        blackPlayingEntity.shutdown();
+        whitePlayingEntity.shutdown();
+    }
 }

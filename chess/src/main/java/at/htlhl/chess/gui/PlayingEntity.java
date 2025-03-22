@@ -33,4 +33,5 @@ public abstract class PlayingEntity {
                 (boardViewController.getField().isBlackTurn() == false && player.equals(Player.WHITE));
     }
     public void removeInteractions(){};
+    public void shutdown(){}
 }

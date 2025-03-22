@@ -46,4 +46,10 @@ public class BotEntity extends PlayingEntity {
     public boolean tryMove(Move move) {
         return false;
     }
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
+        connector.shutdown();
+    }
 }
