@@ -141,7 +141,7 @@ public class AttackedSquaresUtil {
             return squaresOnBoard;
         }
 
-        return field.getMoveChecker().getTargetSquares(squareOfPiece, isWhite, piece);
+        return field.getMoveChecker().getTargetSquares(squareOfPiece, isWhite, piece, true);
     }
 
     private void addAttackSquares(List<Square> targetSquares, boolean isWhite) {
