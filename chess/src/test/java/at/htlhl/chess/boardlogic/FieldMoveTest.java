@@ -190,28 +190,21 @@ public class FieldMoveTest {
     @Test
     public void testPerftInitialPosition() {
         field.resetBoard();
-        List<Square> startingSquares = getAllPieceSquares(field, false);
-        int moveCount = countLegalMoves(field, startingSquares);
-
-        assertEquals(20, moveCount, "Initial position should have 20 legal moves");
+        assertEquals(20, field.getLegalMoves().size(), "Initial position should have 20 legal moves");
     }
 
     @Test
     public void testPerftPosition2() {
         field.trySetFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        List<Square> startingSquares = getAllPieceSquares(field, false);
-        int moveCount = countLegalMoves(field, startingSquares);
-
-        assertEquals(48, moveCount, "Kiwipete position should have 48 legal moves");
+        var legalMoves = field.getLegalMoves();
+        System.out.println(legalMoves);
+        assertEquals(48, legalMoves.size(), "Kiwipete position should have 48 legal moves");
     }
 
     @Test
     public void testPerftPosition3() {
         field.trySetFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-        List<Square> startingSquares = getAllPieceSquares(field, false);
-        int moveCount = countLegalMoves(field, startingSquares);
-
-        assertEquals(14, moveCount, "Position 3 should have 14 legal moves");
+        assertEquals(14, field.getLegalMoves().size(), "Position 3 should have 14 legal moves");
     }
 
     @Test
@@ -808,16 +801,6 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertFalse(result, "Promotion must be to a piece of the same color as the pawn");
-    }
-
-    // Helper method to count legal moves
-    private int countLegalMoves(Field field, List<Square> startingSquares) {
-        int count = 0;
-        for (Square start : startingSquares) {
-            List<Square> targets = field.getLegalTargetsForSquare(start);
-            count += targets.size();
-        }
-        return count;
     }
 
     // Helper method to get all squares with pieces of the current player

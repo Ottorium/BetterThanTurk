@@ -126,6 +126,23 @@ public class Move {
         this.capturedPiece = capturedPiece;
     }
 
+    public int[] getDirection() {
+        if (startingSquare == null || targetSquare == null) {
+            return new int[]{0, 0};
+        }
+
+        int dx = targetSquare.x() - startingSquare.x();
+        int dy = targetSquare.y() - startingSquare.y();
+
+
+        if (dx != 0)
+            dx = dx > 0 ? 1 : -1;
+        if (dy != 0)
+            dy = dy > 0 ? 1 : -1;
+
+        return new int[]{dx, dy};
+    }
+
     /**
      * parses a move from a string like a1a2
      */

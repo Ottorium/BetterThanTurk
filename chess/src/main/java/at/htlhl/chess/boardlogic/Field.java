@@ -158,7 +158,7 @@ public class Field {
         blackAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.BLACK);
         whiteAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.WHITE);
         pins = attackedSquaresUtil.lookForPins(blackTurn ? Player.BLACK : Player.WHITE);
-        check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.WHITE : Player.BLACK);
+        check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.BLACK : Player.WHITE);
         legalMoves = moveChecker.getAllLegalMoves();
         gameState = computeGameState();
         return true;
@@ -277,7 +277,7 @@ public class Field {
         changesInLastMoveBefore.add(new FieldChange("pinsBefore", undo -> pins = pinsBefore));
 
         var checkBefore = check;
-        check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.WHITE : Player.BLACK);
+        check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.BLACK : Player.WHITE);
         changesInLastMoveBefore.add(new FieldChange("checkBefore", undo -> check = checkBefore));
 
         var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
@@ -532,25 +532,7 @@ public class Field {
     }
 
     public Player getPlayerInCheck() {
-        Square blackKingPosition;
-        Square whiteKingPosition;
-        Player playerInCheck = null;
-        if (cachedKingPositions == null || cachedKingPositions.size() != 2)
-            throw new RuntimeException("Expected king positions to be saved in cachenKingPositions");
-
-        if (PieceUtil.isWhite(getPieceBySquare(cachedKingPositions.getFirst()))) {
-            whiteKingPosition = cachedKingPositions.getFirst();
-            blackKingPosition = cachedKingPositions.get(1);
-        } else {
-            blackKingPosition = cachedKingPositions.getFirst();
-            whiteKingPosition = cachedKingPositions.get(1);
-        }
-
-        if (moveChecker.isKingChecked(blackKingPosition))
-            playerInCheck = Player.BLACK;
-        else if (moveChecker.isKingChecked(whiteKingPosition))
-            playerInCheck = Player.WHITE;
-        return playerInCheck;
+        return check == null ? null : check.getPlayerInCheck();
     }
 
     public GameState getGameState() {
@@ -675,5 +657,9 @@ public class Field {
 
     public ArrayList<Pin> getPins() {
         return pins;
+    }
+
+    public Check getCheck() {
+        return check;
     }
 }

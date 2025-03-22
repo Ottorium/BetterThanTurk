@@ -9,10 +9,20 @@ public class Check {
     private Player playerInCheck;
     private boolean isDoubleCheck;
     private ArrayList<Square> possibleBlockingOrCapturingSquares;
+    private ArrayList<int[]> directionsFromWhichTheChecksAreComingIfSlidingPiece;
 
-    public Check(Player playerInCheck, ArrayList<Square> possibleBlockingSquares, boolean isDoubleCheck) {
+    public ArrayList<int[]> getDirectionsFromWhichTheChecksAreComingIfSlidingPiece() {
+        return directionsFromWhichTheChecksAreComingIfSlidingPiece;
+    }
+
+    public void setDirectionsFromWhichTheChecksAreComingIfSlidingPiece(ArrayList<int[]> directionsFromWhichTheChecksAreComingIfSlidingPiece) {
+        this.directionsFromWhichTheChecksAreComingIfSlidingPiece = directionsFromWhichTheChecksAreComingIfSlidingPiece;
+    }
+
+    public Check(Player playerInCheck, ArrayList<Square> possibleBlockingSquares, ArrayList<int[]> directionsFromWhichTheChecksAreComing, boolean isDoubleCheck) {
         this.playerInCheck = playerInCheck;
         this.possibleBlockingOrCapturingSquares = possibleBlockingSquares;
+        this.directionsFromWhichTheChecksAreComingIfSlidingPiece = directionsFromWhichTheChecksAreComing;
         this.isDoubleCheck = isDoubleCheck;
     }
 
@@ -41,6 +51,6 @@ public class Check {
     }
 
     public Check clone() {
-        return new Check(playerInCheck, possibleBlockingOrCapturingSquares, isDoubleCheck);
+        return new Check(playerInCheck, possibleBlockingOrCapturingSquares, directionsFromWhichTheChecksAreComingIfSlidingPiece, isDoubleCheck);
     }
 }

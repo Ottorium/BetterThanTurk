@@ -262,6 +262,8 @@ public class AttackedSquaresUtil {
                 boolean isOpponent = PieceUtil.isWhite(piece) == blackTurn;
 
                 if (!isOpponent) {
+                    if (thisPieceMayBePinned != null)
+                        break;
                     thisPieceMayBePinned = currentSquare;
                 } else if (thisPieceMayBePinned != null) {
                     if (((dir[0] != 0 && dir[1] != 0) && (PieceUtil.isBishop(piece) || PieceUtil.isQueen(piece)))
@@ -271,6 +273,7 @@ public class AttackedSquaresUtil {
                                 currentSquare,
                                 new ArrayList<>(Arrays.asList(dir, new int[]{dir[0] * -1, dir[1] * -1}))));
                     }
+                    break;
                 }
             }
         }
@@ -288,7 +291,7 @@ public class AttackedSquaresUtil {
     }
 
     public Check lookForCheck(Player player) {
-        var kingPosition = getKingPositionOfPlayer(player == Player.WHITE ? Player.BLACK : Player.WHITE);
+        var kingPosition = getKingPositionOfPlayer(player == Player.WHITE ? Player.WHITE : Player.BLACK);
         boolean isStartWhite = PieceUtil.isWhite(field.getPieceBySquare(kingPosition));
         int kingX = kingPosition.x();
         int kingY = kingPosition.y();
@@ -301,7 +304,7 @@ public class AttackedSquaresUtil {
             if (moveChecker.isOnBoard(x, y)) {
                 byte piece = board[y * 8 + x];
                 if (PieceUtil.isKnight(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
-                    checks.add(new Check(player, new ArrayList<>(), false));
+                    checks.add(new Check(player, new ArrayList<>(List.of(new Square(x, y))), new ArrayList<>(), false));
                 }
             }
         }
@@ -319,12 +322,19 @@ public class AttackedSquaresUtil {
                 boolean isOpponent = PieceUtil.isWhite(piece) != isStartWhite;
                 if (!isOpponent) break;
 
-                if ((dir[0] != 0 && dir[1] != 0) &&  // Diagonal
-                        (PieceUtil.isBishop(piece) || PieceUtil.isQueen(piece))) {
-                    checks.add(new Check(player, getPossibleBlockOrCaptureSquares(new Square(x, y), kingPosition), false));
-                } else if ((dir[0] == 0 || dir[1] == 0) &&  // Straight
-                        (PieceUtil.isRook(piece) || PieceUtil.isQueen(piece))) {
-                    checks.add(new Check(player, getPossibleBlockOrCaptureSquares(new Square(x, y), kingPosition), false));
+
+                if ((dir[0] != 0 && dir[1] != 0) && (PieceUtil.isBishop(piece) || PieceUtil.isQueen(piece))) {
+                    checks.add(new Check(
+                            player,
+                            getPossibleBlockOrCaptureSquares(new Square(x, y), kingPosition),
+                            new ArrayList<>(List.of(new int[]{dir[0] * -1, dir[1] * -1})),
+                            false));
+                } else if ((dir[0] == 0 || dir[1] == 0) && (PieceUtil.isRook(piece) || PieceUtil.isQueen(piece))) {
+                    checks.add(new Check(
+                            player,
+                            getPossibleBlockOrCaptureSquares(new Square(x, y), kingPosition),
+                            new ArrayList<>(List.of(new int[]{dir[0] * -1, dir[1] * -1})),
+                            false));
                 }
                 break; // Blocked by another piece
             }
@@ -338,7 +348,7 @@ public class AttackedSquaresUtil {
             if (moveChecker.isOnBoard(x, y)) {
                 byte piece = board[y * 8 + x];
                 if (PieceUtil.isPawn(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
-                    checks.add(new Check(player, new ArrayList<>(Arrays.asList(new Square(x, y))), false));
+                    checks.add(new Check(player, new ArrayList<>(List.of(new Square(x, y))), new ArrayList<>(), false));
                 }
             }
         }
@@ -347,8 +357,12 @@ public class AttackedSquaresUtil {
 
         if (checks.isEmpty())
             return null;
-        if (checks.size() > 1)
-            return new Check(player, new ArrayList<>(), true);
+        if (checks.size() > 1) {
+            if (checks.size() > 2) throw new RuntimeException("Triple checks ????");
+            ArrayList<int[]> combinedDirections = checks.getFirst().getDirectionsFromWhichTheChecksAreComingIfSlidingPiece();
+            combinedDirections.addAll(checks.get(1).getDirectionsFromWhichTheChecksAreComingIfSlidingPiece());
+            return new Check(player, new ArrayList<>(), combinedDirections, true);
+        }
         return checks.getFirst();
     }
 

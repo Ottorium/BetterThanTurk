@@ -3,6 +3,7 @@ package at.htlhl.chess.boardlogic.util;
 import at.htlhl.chess.boardlogic.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -380,13 +381,46 @@ public class MoveChecker {
     }
 
     private boolean wouldPutCurrentPlayerInCheck(Move move) {
+        // Check if the piece is pinned and if the move direction is allowed
+        for (Pin pin : field.getPins()) {
+            if (pin.getPinnedPiece().equals(move.getStartingSquare())) {
+                var moveDirection = move.getDirection();
+                var allowedDirections = pin.getAllowedMoveDirections();
+                if (allowedDirections.stream().noneMatch(dir -> Arrays.equals(dir, moveDirection)))
+                    return true;
+            }
+        }
 
-        if (field.getPins()
-                .stream()
-                .anyMatch(pin -> pin.getPinnedPiece().equals(move.getStartingSquare()))
-        ) return true;
+        // If king is moving, make sure it's not moving to an attacked square
+        boolean isKingMove = PieceUtil.isKing(getPieceBySquare(move.getStartingSquare()));
+        if (isKingMove) {
+            ArrayList<Square> passivePlayerAttackSquares = field.getPassivePlayerAttackSquares();
+            if (passivePlayerAttackSquares.contains(move.getTargetSquare()))
+                return true;
+        }
 
-        return PieceUtil.isKing(getPieceBySquare(move.getStartingSquare())) && field.getPassivePlayerAttackSquares().contains(move.getTargetSquare());
+        // If there's a check, make sure the move addresses the check
+        if (field.getPlayerInCheck() != null) {
+            var check = field.getCheck();
+            var possibleBlockingOrCapturingSquares = check.getPossibleBlockingOrCapturingSquares();
+
+            if (isKingMove) {
+                // Make sure king isn't moving along a check line
+                return check.getDirectionsFromWhichTheChecksAreComingIfSlidingPiece()
+                        .stream()
+                        .anyMatch(dir -> Arrays.equals(dir, move.getDirection()));
+            }
+
+            // If it's a double check, king must move
+            if (check.isDoubleCheck() && !isKingMove)
+                return true;
+
+            // Otherwise, the move must block or capture the checking piece
+            return possibleBlockingOrCapturingSquares.stream()
+                    .noneMatch(square -> square.equals(move.getTargetSquare()));
+        }
+
+        return false;
     }
 
     /**
@@ -405,65 +439,20 @@ public class MoveChecker {
 
         boolean noChecks = true;
 
-        if (kingMoveDistance > 0) {
-            // try one square
-            Square kingSquare = new Square(move.getStartingSquare().x() + 1, yRank);
-            setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
-            setPieceBySquare(kingSquare, king);
-            if (isKingChecked(kingSquare)) {
-                noChecks = false;
-            }
-            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
-            setPieceBySquare(move.getStartingSquare(), king);
-        } else {
-            // try first square
-            Square kingSquare = new Square(move.getStartingSquare().x() - 1, yRank);
-            setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
-            setPieceBySquare(kingSquare, king);
-            if (isKingChecked(kingSquare)) {
-                noChecks = false;
-            }
-            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+        Square kingSquare;
+        if (kingMoveDistance > 0)
+            kingSquare = new Square(move.getStartingSquare().x() + 1, yRank);
+        else
+            kingSquare = new Square(move.getStartingSquare().x() - 1, yRank);
 
-            // try second square
-            kingSquare = new Square(move.getStartingSquare().x() - 2, yRank);
-            setPieceBySquare(kingSquare, king);
-            if (isKingChecked(kingSquare)) {
-                noChecks = false;
-            }
-            setPieceBySquare(kingSquare, PieceUtil.EMPTY);
-            setPieceBySquare(move.getStartingSquare(), king);
-        }
+        setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+        setPieceBySquare(kingSquare, king);
+        if (manuallyTestIfKingIsChecked(kingSquare))
+            noChecks = false;
+        setPieceBySquare(kingSquare, PieceUtil.EMPTY);
+        setPieceBySquare(move.getStartingSquare(), king);
 
         return noChecks;
-    }
-
-    /**
-     * Looks for checks produced by EnPassant move
-     *
-     * @param move to look at
-     * @return appeared Check. It must be legal
-     */
-
-    private List<Player> lookForChecksInEnPassant(Move move) {
-        Square possibleEnPassantSquare = field.getPossibleEnPassantSquare();
-        Square deletedPawn = field.isBlackTurn() ? new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() - 1) : new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + 1);
-        byte startingPawn = getPieceBySquare(move.getStartingSquare());
-        byte opponentPawn = getPieceBySquare(deletedPawn);
-        // simulating move
-        setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
-        setPieceBySquare(move.getTargetSquare(), startingPawn);
-        setPieceBySquare(deletedPawn, PieceUtil.EMPTY);
-
-        // check if checks are legal
-        List<Player> appearedChecks = lookForChecksOnBoard();
-
-        // move everything back
-        setPieceBySquare(move.getStartingSquare(), startingPawn);
-        setPieceBySquare(move.getTargetSquare(), PieceUtil.EMPTY);
-        setPieceBySquare(deletedPawn, opponentPawn);
-
-        return appearedChecks;
     }
 
     /**
@@ -524,7 +513,7 @@ public class MoveChecker {
      * @param position King position
      * @return true if king is checked, false otherwise
      */
-    public boolean isKingChecked(Square position) {
+    private boolean manuallyTestIfKingIsChecked(Square position) {
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
         byte[] board = field.getBoard();
         int kingX = position.x();
@@ -593,68 +582,6 @@ public class MoveChecker {
     }
 
     /**
-     * Simulates move and looks if checks appeared. Edge cases like castling are not handled here now
-     *
-     * @param move that will be simulated
-     * @return List<Player> of appeared checks
-     */
-
-    private List<Player> lookForChecksInMove(Move move) {
-
-        // If move is en passant, there is another method
-        if (move.isEnPassantMove()) {
-            return lookForChecksInEnPassant(move);
-        }
-
-        //save pieces to revert move
-        byte savedTargetPiece = getPieceBySquare(move.getTargetSquare());
-        byte savedStartingPiece = getPieceBySquare(move.getStartingSquare());
-
-        ArrayList<Square> kingsBefore = field.getCachedKingPositions();
-        if (PieceUtil.isKing(savedStartingPiece))
-            field.setCachedKingPositions(null);
-
-        // make move, because it must be legal
-        setPieceBySquare(move.getTargetSquare(), savedStartingPiece);
-        setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
-
-        List<Player> checkedPlayers = lookForChecksOnBoard();
-
-        // fix the board
-        setPieceBySquare(move.getTargetSquare(), savedTargetPiece);
-        setPieceBySquare(move.getStartingSquare(), savedStartingPiece);
-
-        field.setCachedKingPositions(kingsBefore);
-
-        return checkedPlayers;
-    }
-
-    /**
-     * Looks for current checks On Board
-     *
-     * @return List<Player> that are checked
-     */
-
-    public List<Player> lookForChecksOnBoard() {
-        List<Player> checkedPlayers = new ArrayList<>();
-        // look for checks
-        ArrayList<Square> kings = field.getCachedKingPositions() == null ? findKings() : field.getCachedKingPositions();
-        for (Square king : kings) {
-            boolean isWhite = PieceUtil.isWhite(getPieceBySquare(king));
-            if (isKingChecked(king)) {
-                if (isWhite) {
-                    checkedPlayers.add(Player.WHITE);
-                } else {
-                    checkedPlayers.add(Player.BLACK);
-                }
-            }
-        }
-        return checkedPlayers;
-    }
-
-    ;
-
-    /**
      * Finds both kings on board
      *
      * @return Square array of king's positions
@@ -670,39 +597,6 @@ public class MoveChecker {
                         return kings;
                 }
         return kings;
-    }
-
-    ;
-
-    /**
-     * Looks if the check is legal in such way
-     * For example, if only one check is on board, or if the check appeared after your move
-     *
-     * @return true if the check is legal
-     */
-    private boolean isCheckLegal(List<Player> possibleChecks) {
-        if (possibleChecks.size() > 1) {
-            return false;
-        }
-        if (possibleChecks.isEmpty()) {
-            return true;
-        }
-
-
-        //if your color check appeared after your move
-        if (field.getPlayerInCheck() == null) {
-            if (field.isBlackTurn()) {
-                return !possibleChecks.getFirst().equals(Player.BLACK);
-            } else {
-                return !possibleChecks.getFirst().equals(Player.WHITE);
-            }
-        }
-
-        //if your check did not disappear
-        if (field.getPlayerInCheck().equals(possibleChecks.getFirst())) {
-            return false;
-        }
-        return true;
     }
 
 
