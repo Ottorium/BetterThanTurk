@@ -14,11 +14,16 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
@@ -44,6 +49,12 @@ public class BoardViewController implements Initializable {
     private final Field field = new Field();
 
     @FXML
+    public Button newGameButton;
+    @FXML
+    public ChoiceBox whitePlayerChoiceBox;
+    @FXML
+    public ChoiceBox blackPlayerChoiceBox;
+    @FXML
     ToolBar toolBar;
     @FXML
     private FlowPane capturedWhitePieces;
@@ -55,7 +66,6 @@ public class BoardViewController implements Initializable {
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
-    private EngineConnector engineConnector;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
     private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
     private PlayingEntity blackPlayingEntity;
@@ -121,27 +131,92 @@ public class BoardViewController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         createEmptyChessBoard();
+        initArrowPane();
+        initFENTextArea();
+        initMenu();
+        initPlayers(); // must be after initMenu
+        initWithRunLater();
+    }
 
+    private void initWithRunLater() {
+        Platform.runLater(() -> {
+            setUpScalability();
+            updateUI(null);
+        });
+    }
+
+    private void initArrowPane() {
         arrowPane = new Pane();
         arrowPane.setMouseTransparent(true);
         chessBoard.add(arrowPane, 0, 0);
         GridPane.setColumnSpan(arrowPane, 8);
         GridPane.setRowSpan(arrowPane, 8);
+    }
 
-        Platform.runLater(() -> {
-            setUpScalability();
-            engineConnector = new EngineConnector(field, this::addArrow);
-            updateUI(null);
-        });
-        initFENTextArea();
+    private void initMenu() {
+        newGameButton.setOnAction(l -> newGame());
+        fillChoiceBoxes();
+    }
+
+    private void fillChoiceBoxes() {
+        blackPlayerChoiceBox.getItems().clear();
+        whitePlayerChoiceBox.getItems().clear();
+        blackPlayerChoiceBox.getItems().addAll(PlayingEntity.Type.values());
+        blackPlayerChoiceBox.setValue(PlayingEntity.Type.values()[0]);
+        whitePlayerChoiceBox.getItems().addAll(PlayingEntity.Type.values());
+        whitePlayerChoiceBox.setValue(PlayingEntity.Type.values()[0]);
+    }
+
+    private void newGame() {
+        removeSquareListeners();
+        field.resetBoard();
         initPlayers();
+        updateUI();
+    }
+
+    private void removeSquareListeners() {
+        blackPlayingEntity.removeInteractions();
+        whitePlayingEntity.removeInteractions();
     }
 
     private void initPlayers() {
-        // TODO add choice
-        blackPlayingEntity = new BotEntity(Player.BLACK, this);
-        whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
-        whitePlayingEntity.allowMove();
+        switch (blackPlayerChoiceBox.getValue()) {
+            case PlayingEntity.Type.PLAYER:
+                blackPlayingEntity = new PlayerEntity(Player.BLACK, this);
+                break;
+            case PlayingEntity.Type.CUSTOM_BOT:
+                blackPlayingEntity = new BotEntity(Player.BLACK, this);
+                break;
+            case PlayingEntity.Type.STOCKFISH:
+                System.err.println("Stockfish is not connected yet, using custom_bot");
+                blackPlayingEntity = new BotEntity(Player.BLACK, this);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
+        }
+        switch (whitePlayerChoiceBox.getValue()) {
+            case PlayingEntity.Type.PLAYER:
+                whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
+                break;
+            case PlayingEntity.Type.CUSTOM_BOT:
+                whitePlayingEntity = new BotEntity(Player.WHITE, this);
+                break;
+            case PlayingEntity.Type.STOCKFISH:
+                System.err.println("Stockfish is not connected yet, using custom_bot");
+                whitePlayingEntity = new BotEntity(Player.WHITE, this);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
+        }
+        updateMoveOrder();
+    }
+
+    private void updateMoveOrder(){
+        if (field.isBlackTurn()){
+            blackPlayingEntity.allowMove();
+        } else {
+            whitePlayingEntity.allowMove();
+        }
     }
 
     /**
@@ -232,6 +307,7 @@ public class BoardViewController implements Initializable {
 
     /**
      * Is used to make move and update UI. For some reason calling updateUI does not update field on first call, so the piece is missing.
+     *
      * @param move that has been made
      */
     public boolean makeMove(Move move, PlayingEntity me) {
@@ -316,14 +392,6 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
-//        tmpConnectEngine();
-    }
-
-    private void tmpConnectEngine() {
-        // TODO refactor
-        engineConnector.stopCurrentExecutions();
-        engineConnector = new EngineConnector(field, this::addArrow);
-        engineConnector.suggestMove();
     }
 
     /**
@@ -383,6 +451,7 @@ public class BoardViewController implements Initializable {
             boardViewUtil.alertProblem("Invalid FEN!", "Check if your input is correct");
         }
         updateUI(null);
+        updateMoveOrder();
     }
 
     private void updateCapturedPieces() {
@@ -401,10 +470,6 @@ public class BoardViewController implements Initializable {
         }
     }
 
-    public void shutdown() {
-        engineConnector.shutdown();
-    }
-
     public GridPane getChessBoard() {
         return this.chessBoard;
     }
@@ -417,5 +482,13 @@ public class BoardViewController implements Initializable {
         return (squareSizeBinding != null && squareSizeBinding.isValid())
                 ? squareSizeBinding.get()
                 : INITIAL_SQUARE_SIZE;
+    }
+
+    /**
+     * is used to stop engine threads
+     */
+    public void shutdown() {
+        blackPlayingEntity.shutdown();
+        whitePlayingEntity.shutdown();
     }
 }

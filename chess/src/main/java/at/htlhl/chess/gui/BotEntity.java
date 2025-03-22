@@ -3,7 +3,6 @@ package at.htlhl.chess.gui;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.gui.util.EngineConnector;
-import javafx.application.Platform;
 
 public class BotEntity extends PlayingEntity {
 
@@ -16,15 +15,15 @@ public class BotEntity extends PlayingEntity {
 
     @Override
     protected boolean move(Move move) {
-        boolean success = super.move(move);
-        return success;
+        return super.move(move);
     }
 
     @Override
-    protected void allowMove(){
+    protected void allowMove() {
         super.allowMove();
-
-        startEngine();
+        if (isMyMove() == true) {
+            startEngine();
+        }
     }
 
     private void startEngine() {
@@ -36,7 +35,7 @@ public class BotEntity extends PlayingEntity {
     /**
      * Will be called by an engine
      */
-    private void suggestMove(Move move){
+    private void suggestMove(Move move) {
         if (move == null) return;
         // move is best move here
         move(move);
@@ -52,4 +51,9 @@ public class BotEntity extends PlayingEntity {
         return false;
     }
 
+    @Override
+    public void shutdown() {
+        super.shutdown();
+        connector.shutdown();
+    }
 }

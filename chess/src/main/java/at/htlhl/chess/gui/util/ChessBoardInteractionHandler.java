@@ -7,6 +7,7 @@ import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.gui.BoardViewController;
 import at.htlhl.chess.gui.PlayingEntity;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -22,39 +23,110 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 /**
  * Handles user interactions with the chess board, including clicking and drag-and-drop functionality.
  * Manages piece movement, square selection, and highlighting of legal moves.
  */
 public class ChessBoardInteractionHandler {
-    /** The scale factor applied to pieces during drag operations. For some reason, this does not work on some linux distros*/
+    /**
+     * The scale factor applied to pieces during drag operations. For some reason, this does not work on some linux distros
+     */
     private static final double DRAG_SCALE = 1.1;
 
-    /** The color used to highlight legal move targets on the board. */
+    /**
+     * The color used to highlight legal move targets on the board.
+     */
     private static final Color HIGHLIGHT_COLOR = Color.rgb(100, 100, 100, 0.5);
 
-    /** The {@link GridPane} representing the chess board UI. */
+    /**
+     * The {@link GridPane} representing the chess board UI.
+     */
     private final GridPane chessBoard;
 
-    /** The logical representation of the chess board and its state as a {@link Field}. */
+    /**
+     * The logical representation of the chess board and its state as a {@link Field}.
+     */
     private final Field field;
 
-    /** The size of each square on the board in pixels. */
+    /**
+     * The size of each square on the board in pixels.
+     */
     private final double squareSize;
-
-    /** The currently selected square, or null if no square is selected. */
+    private final PlayingEntity playingEntity;
+    /**
+     * The currently selected square, or null if no square is selected.
+     */
     private Square selectedSquare = null;
-
-    /** List of squares highlighted as legal move targets, or null if no highlights are active. */
+    /**
+     * List of squares highlighted as legal move targets, or null if no highlights are active.
+     */
     private List<Square> highlightedSquares = null;
-
     private boolean autoQueen = true;
+    /**
+     * Handles square click
+     */
+    private final EventHandler<MouseEvent> clickHandler = new EventHandler<>() {
+        @Override
+        public void handle(MouseEvent event) {
+            if (playingEntity.isMyMove() == false) {
+                return;
+            }
 
-    PlayingEntity playingEntity;
+            autoQueen = event.getButton() == MouseButton.PRIMARY;
+            handleSquareClick((StackPane) event.getSource());
+        }
+    };
+
+    /**
+     * Handles drag
+     */
+
+    private final EventHandler<MouseEvent> dragHandler = new EventHandler<>() {
+        @Override
+        public void handle(MouseEvent event) {
+            if (playingEntity.isMyMove() == false) {
+                return;
+            }
+
+            StackPane square = (StackPane) event.getSource();
+            if (!hasPiece(square)) return;
+
+            autoQueen = event.getButton() == MouseButton.PRIMARY;
+
+            selectSquare((Square) square.getUserData());
+
+            ImageView piece = (ImageView) square.getChildren().getLast();
+            Square sourceSquare = (Square) square.getUserData();
+            Dragboard db = piece.startDragAndDrop(TransferMode.MOVE);
+
+            ClipboardContent content = new ClipboardContent();
+            content.putString(sourceSquare.x() + "," + sourceSquare.y());
+            db.setContent(content);
+
+            setupDragView(db, piece, square);
+
+            event.consume();
+        }
+    };
+
+    /**
+     * Handles drop
+     */
+
+    private final EventHandler<DragEvent> dropHandler = new EventHandler<>() {
+        @Override
+        public void handle(DragEvent event) {
+            if (playingEntity.isMyMove() == false) {
+                return;
+            }
+
+            handleDrop(event, (StackPane) event.getSource());
+        }
+    };
 
     /**
      * Constructs a new interaction handler for the chess board.
@@ -71,9 +143,22 @@ public class ChessBoardInteractionHandler {
     /**
      * Sets up all user interaction handlers for the chess board, including clicks and drag-and-drop.
      */
-    public void setupInteractions() {
+    private void setupInteractions() {
         setupClickHandlers();
         setupDragAndDrop();
+    }
+
+    /**
+     * Removes all handlers from stackPane
+     */
+    public void removeInteractions() {
+        for (Node node : chessBoard.getChildren()) {
+            if (node instanceof StackPane square) {
+                square.removeEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
+                square.removeEventHandler(MouseEvent.DRAG_DETECTED, dragHandler);
+                square.removeEventHandler(DragEvent.DRAG_DROPPED, dropHandler);
+            }
+        }
     }
 
     /**
@@ -82,10 +167,7 @@ public class ChessBoardInteractionHandler {
     private void setupClickHandlers() {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
-                square.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                    autoQueen = event.getButton() == MouseButton.PRIMARY;
-                    handleSquareClick(square);
-                });
+                square.addEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
             }
         }
     }
@@ -97,9 +179,6 @@ public class ChessBoardInteractionHandler {
      */
     private void handleSquareClick(StackPane square) {
         Square clickedSquare = (Square) square.getUserData();
-        if (playingEntity.isMyMove() == false){
-            return;
-        }
         if (selectedSquare == null && hasPiece(square)) {
             selectSquare(clickedSquare);
         } else if (selectedSquare != null && isHighlightedSquare(clickedSquare)) {
@@ -230,18 +309,21 @@ public class ChessBoardInteractionHandler {
      */
     private void clearHighlights() {
         if (highlightedSquares != null) {
-            try {
-
-                highlightedSquares.forEach(square -> {
-                    StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
+            final List<Circle> removalCandidates = new ArrayList<>();
+            highlightedSquares.forEach(square -> {
+                StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
                 if (squarePane.getChildren().size() > 1) {
-                    Platform.runLater(()->squarePane.getChildren().stream().filter(child -> child instanceof Circle).forEach(child -> {squarePane.getChildren().remove(child);}));
+                    squarePane.getChildren().stream().filter(child -> child instanceof Circle).forEach(child -> {
+                        removalCandidates.add((Circle) child);
+                    });
                 }
-                });
-                highlightedSquares = null;
-            } catch (ConcurrentModificationException e){
 
-            }
+            });
+            highlightedSquares.forEach(square -> {
+                StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
+                removalCandidates.forEach(child -> squarePane.getChildren().remove(child));
+            });
+            highlightedSquares = null;
         }
     }
 
@@ -273,26 +355,7 @@ public class ChessBoardInteractionHandler {
      * @param square The {@link StackPane} to configure for dragging.
      */
     private void setupDragHandlers(StackPane square) {
-        square.addEventHandler(MouseEvent.DRAG_DETECTED, event -> {
-            if (playingEntity.isMyMove() == false) {return;}
-            if (!hasPiece(square)) return;
-
-            autoQueen = event.getButton() == MouseButton.PRIMARY;
-
-            selectSquare((Square) square.getUserData());
-
-            ImageView piece = (ImageView) square.getChildren().getLast();
-            Square sourceSquare = (Square) square.getUserData();
-            Dragboard db = piece.startDragAndDrop(TransferMode.MOVE);
-
-            ClipboardContent content = new ClipboardContent();
-            content.putString(sourceSquare.x() + "," + sourceSquare.y());
-            db.setContent(content);
-
-            setupDragView(db, piece, square);
-
-            event.consume();
-        });
+        square.addEventHandler(MouseEvent.DRAG_DETECTED, dragHandler);
     }
 
     /**
@@ -323,14 +386,14 @@ public class ChessBoardInteractionHandler {
      * @param square The {@link StackPane} to configure as a drop target.
      */
     private void setupDropHandlers(StackPane square) {
-        square.addEventHandler(DragEvent.DRAG_OVER, event -> {
+        square.setOnDragOver(event -> {
             if (event.getGestureSource() != square && event.getDragboard().hasString()) {
                 event.acceptTransferModes(TransferMode.MOVE);
             }
             event.consume();
         });
 
-        square.setOnDragDropped(event -> handleDrop(event, square));
+        square.addEventHandler(DragEvent.DRAG_DROPPED, dropHandler);
     }
 
     /**
@@ -365,6 +428,7 @@ public class ChessBoardInteractionHandler {
 
     /**
      * calls PlayingEntity move, to handle move
+     *
      * @param startingSquare
      * @param targetSquare
      * @return
@@ -374,7 +438,9 @@ public class ChessBoardInteractionHandler {
         move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
         boolean success = playingEntity.tryMove(move);
         clearSelection();
-        if (success == false) {return false;}
+        if (success == false) {
+            return false;
+        }
         return true;
     }
 
