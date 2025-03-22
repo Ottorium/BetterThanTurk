@@ -28,6 +28,11 @@ public abstract class PlayingEntity {
         myMove = true;
     }
 
+    /**
+     * tries to call a move execution
+     * @param move move to execute
+     * @return true if success
+     */
     public abstract boolean tryMove(Move move);
 
     public BoardViewController getBoardViewController() {

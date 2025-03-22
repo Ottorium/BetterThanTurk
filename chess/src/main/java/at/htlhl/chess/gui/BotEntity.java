@@ -42,6 +42,11 @@ public class BotEntity extends PlayingEntity {
         move(move);
     }
 
+    /**
+     * is useless here, but is required
+     * @param move move to execute
+     * @return
+     */
     @Override
     public boolean tryMove(Move move) {
         return false;
