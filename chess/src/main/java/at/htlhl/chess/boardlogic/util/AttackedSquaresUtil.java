@@ -12,10 +12,12 @@ public class AttackedSquaresUtil {
 
     MoveChecker moveChecker;
     private Field field;
+    byte[] board;
 
     public AttackedSquaresUtil(Field field) {
         this.field = field;
         moveChecker = field.getMoveChecker();
+        board = field.getBoard();
     }
 
     /**
@@ -29,9 +31,9 @@ public class AttackedSquaresUtil {
 
         // update the piece that got moved
         int boardIndexOfTargetSquare = targetSquare.y() * 8 + targetSquare.x();
-        field.getBoard()[boardIndexOfTargetSquare] = move.getCapturedPiece();
+        board[boardIndexOfTargetSquare] = move.getCapturedPiece();
         List<Square> targetSquaresToRemove = getAttackedSquares(startingSquare, isWhite, movedPiece);
-        field.getBoard()[boardIndexOfTargetSquare] = movedPiece;
+        board[boardIndexOfTargetSquare] = movedPiece;
 
         List<Square> targetSquaresToAdd = getAttackedSquares(targetSquare, isWhite, movedPiece);
         removeAttackSquares(targetSquaresToRemove, isWhite);
@@ -53,7 +55,7 @@ public class AttackedSquaresUtil {
                 int x = startingSquare.x() + dir[0] * i;
                 int y = startingSquare.y() + dir[1] * i;
                 if (!moveChecker.isOnBoard(x, y)) break;
-                byte piece = field.getBoard()[y * 8 + x];
+                byte piece = board[y * 8 + x];
                 if (PieceUtil.isEmpty(piece) == false) {
                     targetSquaresToAddBecauseMovedPieceGaveMoreVision.add(new Square(x, y));
                     break;
@@ -73,7 +75,7 @@ public class AttackedSquaresUtil {
                     int x = targetSquare.x() + dir[0] * i;
                     int y = targetSquare.y() + dir[1] * i;
                     if (!moveChecker.isOnBoard(x, y)) break;
-                    byte piece = field.getBoard()[y * 8 + x];
+                    byte piece = board[y * 8 + x];
                     if (PieceUtil.isEmpty(piece) == false) {
                         targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
                         break;
@@ -84,11 +86,22 @@ public class AttackedSquaresUtil {
             }
         }
 
-        // if it is a castling move, remove the rooks attack squares and add its new ones
+        // lazy approach: calculate everything new, as castling and en passant moves don't occur that often.
+        if (move.isCastlingMove() || move.isEnPassantMove()) {
+            var whiteBefore = (HashMap<Square, Integer>) field.getWhiteAttackSquares().clone();
+            field.setWhiteAttackSquares(findAttackedSquares(Player.WHITE));
+            field.getChangesInLastMove().add(new FieldChange("whiteAttackSquares", undo -> field.setWhiteAttackSquares(whiteBefore)));
 
-        // if it is an en passant move, remove the captured pawn's attacks
+            var blackBefore = (HashMap<Square, Integer>) field.getBlackAttackSquares().clone();
+            field.setBlackAttackSquares(findAttackedSquares(Player.BLACK));
+            field.getChangesInLastMove().add(new FieldChange("blackAttackSquares", undo -> field.setBlackAttackSquares(blackBefore)));
+        }
+
 
         // if it is a promotion, add the attacks of the promoted piece
+        if (PieceUtil.isEmpty(move.getPromotionPiece()) == false) {
+            addAttackSquares(getAttackedSquares(targetSquare, isWhite, move.getPromotionPiece()), isWhite);
+        }
     }
 
     private HashMap<int[], Boolean> getDirectionsOfChangedAttackSquares(Square changedSquare, boolean isWhite, Square executedMoveTargetSquare) {

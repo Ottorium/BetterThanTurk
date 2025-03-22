@@ -607,6 +607,14 @@ public class Field {
         return blackAttackSquares;
     }
 
+    public void setWhiteAttackSquares(HashMap<Square, Integer> value) {
+        whiteAttackSquares = value;
+    }
+
+    public void setBlackAttackSquares(HashMap<Square, Integer> value) {
+        blackAttackSquares = value;
+    }
+
     /**
      * Gets all squares currently attacked by the current player's pieces
      * @return ArrayList of Squares attacked by the current player
