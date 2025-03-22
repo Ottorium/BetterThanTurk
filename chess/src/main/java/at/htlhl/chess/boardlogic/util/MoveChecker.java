@@ -354,7 +354,7 @@ public class MoveChecker {
                 if (isCheckLegal(appearedChecks)) {
                     move.setLegal(true);
 
-                    move.setCapture(PieceUtil.isEmpty(field.getPieceBySquare(move.getTargetSquare())) == false);
+                    move.setCapturedPiece(field.getPieceBySquare(move.getTargetSquare()));
 
                     // redundant length check call, but that's the easiest way
                     if (appearedChecks.size() == 1) {
@@ -451,6 +451,7 @@ public class MoveChecker {
      * @param move
      */
     private void gatherMoveInfo(Move move) {
+        move.setCapturedPiece(getPieceBySquare(move.getTargetSquare()));
         // Castling
         if (isCastlingMove(move)) {
             move.setCastlingMove(true);

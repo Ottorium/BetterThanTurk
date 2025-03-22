@@ -2,6 +2,7 @@ package at.htlhl.chess.gui;
 
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
+import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.gui.util.BoardViewUtil;
@@ -33,7 +34,7 @@ import java.util.ResourceBundle;
 
 public class BoardViewController implements Initializable {
 
-    public static final Color ARROW_COLOR = Color.rgb(110, 110, 110);
+    public static final Color ARROW_COLOR = Color.rgb(110, 210, 110);
     private static final int BOARD_SIZE = 8;
     private static final int INITIAL_SQUARE_SIZE = 60;
     private static final Color LIGHT_SQUARE_COLOR = Color.rgb(242, 226, 190);
@@ -57,6 +58,10 @@ public class BoardViewController implements Initializable {
     private EngineConnector engineConnector;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
     private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
+    private PlayingEntity blackPlayingEntity;
+    private PlayingEntity whitePlayingEntity;
+
+    private ChessBoardInteractionHandler chessBoardInteractionHandler;
 
 
     private boolean updatingBoardListeners = false; // Guard flag to prevent chaining
@@ -126,10 +131,17 @@ public class BoardViewController implements Initializable {
         Platform.runLater(() -> {
             setUpScalability();
             engineConnector = new EngineConnector(field, this::addArrow);
-            updateUI(null, null);
+            updateUI(null);
         });
-        setUpInteractions();
         initFENTextArea();
+        initPlayers();
+    }
+
+    private void initPlayers() {
+        // TODO add choice
+        blackPlayingEntity = new BotEntity(Player.BLACK, this);
+        whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
+        whitePlayingEntity.allowMove();
     }
 
     /**
@@ -169,6 +181,7 @@ public class BoardViewController implements Initializable {
 
     /**
      * Adds a new arrow to Arrows to draw list
+     *
      * @param move
      */
     public void addArrow(Move move) {
@@ -198,25 +211,6 @@ public class BoardViewController implements Initializable {
     }
 
     /**
-     * Initializes user interaction handling for the chess board.
-     * Sets up a {@link ChessBoardInteractionHandler} with the current square size to manage clicks,
-     * drag-and-drop, and other interactions, updating the board display as needed.
-     */
-    private void setUpInteractions() {
-        double currentSquareSize = (squareSizeBinding != null && squareSizeBinding.isValid())
-                ? squareSizeBinding.get()
-                : INITIAL_SQUARE_SIZE;
-
-        ChessBoardInteractionHandler interactionHandler = new ChessBoardInteractionHandler(
-                chessBoard,
-                field,
-                currentSquareSize,
-                this::updateUI // Update callback
-        );
-        interactionHandler.setupInteractions();
-    }
-
-    /**
      * Creates an empty 8x8 chess board with alternating light and dark squares.
      * Each square is represented by a {@link StackPane} containing a colored {@link Rectangle}.
      */
@@ -237,16 +231,39 @@ public class BoardViewController implements Initializable {
     }
 
     /**
+     * Is used to make move and update UI. For some reason calling updateUI does not update field on first call, so the piece is missing.
+     * @param move that has been made
+     */
+    public boolean makeMove(Move move, PlayingEntity me) {
+        boolean success = field.move(move);
+        if (success) {
+            updateUI(move);
+            if (blackPlayingEntity == me) {
+                whitePlayingEntity.allowMove();
+            } else {
+                blackPlayingEntity.allowMove();
+            }
+        }
+        return success;
+    }
+
+    /**
      * calls all ui update methods, like drawPieces or updateFEN
      *
-     * @param moveToHighlight    for drawPieces
-     * @param kingCheckHighlight for drawPieces
+     * @param moveToHighlight for drawPieces
      */
-    private void updateUI(Move moveToHighlight, Square kingCheckHighlight) {
-        drawPieces(moveToHighlight, kingCheckHighlight);
+    private void updateUI(Move moveToHighlight) {
         updateFENinFENTextArea();
         updateCapturedPieces();
         clearArrows();
+        drawPieces(moveToHighlight, field.getSquareOfCheck());
+    }
+
+    /**
+     * calls all ui update methods, like drawPieces or updateFEN
+     */
+    public void updateUI() {
+        updateUI(null);
     }
 
 
@@ -299,9 +316,14 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
+//        tmpConnectEngine();
+    }
+
+    private void tmpConnectEngine() {
+        // TODO refactor
         engineConnector.stopCurrentExecutions();
         engineConnector = new EngineConnector(field, this::addArrow);
-        engineConnector.drawBestMove();
+        engineConnector.suggestMove();
     }
 
     /**
@@ -360,7 +382,7 @@ public class BoardViewController implements Initializable {
         if (!field.trySetFEN(FENTextArea.getText())) {
             boardViewUtil.alertProblem("Invalid FEN!", "Check if your input is correct");
         }
-        updateUI(null, null);
+        updateUI(null);
     }
 
     private void updateCapturedPieces() {
@@ -381,5 +403,19 @@ public class BoardViewController implements Initializable {
 
     public void shutdown() {
         engineConnector.shutdown();
+    }
+
+    public GridPane getChessBoard() {
+        return this.chessBoard;
+    }
+
+    public Field getField() {
+        return this.field;
+    }
+
+    public double getSquareSize() {
+        return (squareSizeBinding != null && squareSizeBinding.isValid())
+                ? squareSizeBinding.get()
+                : INITIAL_SQUARE_SIZE;
     }
 }
