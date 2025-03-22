@@ -49,17 +49,14 @@ public class AttackedSquaresUtil {
         for (int[] dir : directionsToAddTargetSquaresIn.keySet()) {
             ArrayList<Square> targetSquaresToAddBecauseMovedPieceGaveMoreVision = new ArrayList<>();
             boolean isOpponent = directionsToAddTargetSquaresIn.get(dir);
-            for (int i = isOpponent ? 1 : 0; i < 8; i++) {
+            for (int i = 1; i < 8; i++) {
                 int x = startingSquare.x() + dir[0] * i;
                 int y = startingSquare.y() + dir[1] * i;
                 if (!moveChecker.isOnBoard(x, y)) break;
                 byte piece = field.getBoard()[y * 8 + x];
                 if (PieceUtil.isEmpty(piece) == false) {
-                    // if the piece is a different color than the attacking piece
-                    if (isOpponent == (PieceUtil.isWhite(piece) == isWhite))
-                        targetSquaresToAddBecauseMovedPieceGaveMoreVision.add(new Square(x, y));
-                    if (i != 0)
-                        break;
+                    targetSquaresToAddBecauseMovedPieceGaveMoreVision.add(new Square(x, y));
+                    break;
                 }
                 targetSquaresToAddBecauseMovedPieceGaveMoreVision.add(new Square(x, y));
             }
@@ -72,17 +69,14 @@ public class AttackedSquaresUtil {
             for (int[] dir : directionsToRemoveTargetSquaresIn.keySet()) {
                 ArrayList<Square> targetSquaresToRemoveBecauseMovedPieceBlockedVision = new ArrayList<>();
                 boolean isOpponent = directionsToRemoveTargetSquaresIn.get(dir);
-                for (int i = isOpponent ? 1 : 0; i < 8; i++) {
+                for (int i = 1; i < 8; i++) {
                     int x = targetSquare.x() + dir[0] * i;
                     int y = targetSquare.y() + dir[1] * i;
                     if (!moveChecker.isOnBoard(x, y)) break;
                     byte piece = field.getBoard()[y * 8 + x];
                     if (PieceUtil.isEmpty(piece) == false) {
-                        // if the piece is a different color than the attacking piece
-                        if (isOpponent == (PieceUtil.isWhite(piece) == isWhite))
-                            targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
-                        if (i != 0)
-                            break;
+                        targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
+                        break;
                     }
                     targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
                 }
