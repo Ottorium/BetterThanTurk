@@ -14,11 +14,15 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
@@ -43,6 +47,8 @@ public class BoardViewController implements Initializable {
     private static final Color KING_CHECK_COLOR = Color.rgb(255, 0, 0);
     private final Field field = new Field();
 
+    @FXML
+    public Button newGameButton;
     @FXML
     ToolBar toolBar;
     @FXML
@@ -121,20 +127,49 @@ public class BoardViewController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         createEmptyChessBoard();
+        initArrowPane();
+        initFENTextArea();
+        initPlayers();
+        initMenu();
+        initWithRunLater();
+    }
 
-        arrowPane = new Pane();
-        arrowPane.setMouseTransparent(true);
-        chessBoard.add(arrowPane, 0, 0);
-        GridPane.setColumnSpan(arrowPane, 8);
-        GridPane.setRowSpan(arrowPane, 8);
-
+    private void initWithRunLater() {
         Platform.runLater(() -> {
             setUpScalability();
             engineConnector = new EngineConnector(field, this::addArrow);
             updateUI(null);
         });
-        initFENTextArea();
+    }
+
+    private void initArrowPane(){
+        arrowPane = new Pane();
+        arrowPane.setMouseTransparent(true);
+        chessBoard.add(arrowPane, 0, 0);
+        GridPane.setColumnSpan(arrowPane, 8);
+        GridPane.setRowSpan(arrowPane, 8);
+    }
+
+    private void initMenu(){
+        newGameButton.setOnAction(l -> newGame());
+    }
+
+    private void newGame(){
+        removeSquareListeners();
+        field.resetBoard();
         initPlayers();
+        updateUI();
+    }
+
+    private void removeSquareListeners(){
+        for (Node node : chessBoard.getChildren()) {
+            if (node instanceof StackPane) {
+                node.removeEventHandler(MouseEvent.MOUSE_CLICKED, event -> {});
+                node.removeEventHandler(DragEvent.DRAG_OVER, event -> {});
+                node.removeEventHandler(MouseEvent.DRAG_DETECTED, event -> {});
+            }
+        }
+
     }
 
     private void initPlayers() {

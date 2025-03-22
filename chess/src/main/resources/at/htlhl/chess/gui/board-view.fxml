@@ -16,7 +16,7 @@
     <children>
         <ToolBar fx:id="toolBar" prefHeight="40.0">
             <items>
-                <Button mnemonicParsing="false" text="Button"/>
+                <Button fx:id="newGameButton" text="New Game"/>
             </items>
         </ToolBar>
         <SplitPane dividerPositions="0.2, 0.8" VBox.vgrow="ALWAYS">

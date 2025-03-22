@@ -4,7 +4,6 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 
 public abstract class PlayingEntity {
-    protected boolean myMove = false;
     protected Player player;
     protected BoardViewController boardViewController;
 
@@ -17,15 +16,10 @@ public abstract class PlayingEntity {
         if (move == null) {
             return false;
         }
-        boolean success = boardViewController.makeMove(move, this);
-        if (success) {
-            myMove = false;
-        }
-        return success;
+        return boardViewController.makeMove(move, this);
     }
 
     protected void allowMove() {
-        myMove = true;
     }
 
     public abstract boolean tryMove(Move move);
@@ -35,6 +29,7 @@ public abstract class PlayingEntity {
     }
 
     public boolean isMyMove() {
-        return myMove;
+        return (boardViewController.getField().isBlackTurn() && player.equals(Player.BLACK)) ||
+                (boardViewController.getField().isBlackTurn() == false && player.equals(Player.WHITE));
     }
 }

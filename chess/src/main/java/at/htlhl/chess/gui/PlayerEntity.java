@@ -13,24 +13,13 @@ public class PlayerEntity extends PlayingEntity {
         this.chessBoardInteractionHandler = new ChessBoardInteractionHandler(this);
     }
 
-    private void initInteractions() {
-
-    }
-
     @Override
     protected boolean move(Move move) {
-        boolean success = super.move(move);
-        return success;
+        return super.move(move);
     }
 
     @Override
     public boolean tryMove(Move move) {
-        boolean success = move(move);
-        return success;
-    }
-
-    @Override
-    protected void allowMove() {
-        super.allowMove();
+        return move(move);
     }
 }
