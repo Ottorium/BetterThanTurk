@@ -44,8 +44,14 @@ public class MoveChecker {
      * @param y The y-coordinate.
      * @return True if the target square is empty or occupied by an opponent's piece.
      */
-    private boolean isTargetSquarePossible(int x, int y, boolean isStartWhite) {
-        return isOnBoard(x, y) && (PieceUtil.isEmpty(field.getBoard()[y * 8 + x]) || PieceUtil.isWhite(field.getBoard()[y * 8 + x]) != isStartWhite);
+    private boolean isTargetSquarePossible(int x, int y, boolean isStartWhite, boolean captureOwnPieces) {
+        if (!isOnBoard(x, y)) return false;
+
+        if (captureOwnPieces) return true;
+
+        byte square = field.getBoard()[y * 8 + x];
+        return PieceUtil.isEmpty(square) ||
+                PieceUtil.isWhite(square) != isStartWhite;
     }
 
     /**
@@ -53,14 +59,14 @@ public class MoveChecker {
      *
      * @return A list of valid squares the bishop can move to.
      */
-    private List<Square> getPossibleBishopTargetSquares(Square position, boolean isStartWhite) {
+    private List<Square> getPossibleBishopTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
         List<Square> squares = new ArrayList<>();
 
         for (int[] dir : bishopDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (isTargetSquarePossible(x, y, isStartWhite)) {
+                if (isTargetSquarePossible(x, y, isStartWhite, captureOwnPieces)) {
                     squares.add(new Square(x, y));
                     if (!PieceUtil.isEmpty(field.getBoard()[y * 8 + x])) {
                         break;
@@ -78,14 +84,14 @@ public class MoveChecker {
      *
      * @return A list of valid squares the rook can move to.
      */
-    private List<Square> getPossibleRookTargetSquares(Square position, boolean isStartWhite) {
+    private List<Square> getPossibleRookTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
         List<Square> squares = new ArrayList<>();
 
         for (int[] dir : rookDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = position.x() + dir[0] * i;
                 int y = position.y() + dir[1] * i;
-                if (isTargetSquarePossible(x, y, isStartWhite)) {
+                if (isTargetSquarePossible(x, y, isStartWhite, captureOwnPieces)) {
                     squares.add(new Square(x, y));
                     if (!PieceUtil.isEmpty(field.getBoard()[y * 8 + x])) {
                         break;
@@ -103,10 +109,10 @@ public class MoveChecker {
      *
      * @return A list of valid squares the queen can move to.
      */
-    private List<Square> getPossibleQueenTargetSquares(Square position, boolean isStartWhite) {
+    private List<Square> getPossibleQueenTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
         List<Square> squares = new ArrayList<>();
-        squares.addAll(getPossibleBishopTargetSquares(position, isStartWhite));
-        squares.addAll(getPossibleRookTargetSquares(position, isStartWhite));
+        squares.addAll(getPossibleBishopTargetSquares(position, isStartWhite, captureOwnPieces));
+        squares.addAll(getPossibleRookTargetSquares(position, isStartWhite, captureOwnPieces));
         return squares;
     }
 
@@ -115,14 +121,14 @@ public class MoveChecker {
      *
      * @return A list of valid squares the knight can move to.
      */
-    private List<Square> getPossibleKnightTargetSquares(Square position, boolean isStartWhite) {
+    private List<Square> getPossibleKnightTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
         List<Square> squares = new ArrayList<>();
 
 
         for (int[] move : knightMoves) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
-            if (isTargetSquarePossible(x, y, isStartWhite)) {
+            if (isTargetSquarePossible(x, y, isStartWhite, captureOwnPieces)) {
                 squares.add(new Square(x, y));
             }
         }
@@ -187,7 +193,9 @@ public class MoveChecker {
      *
      * @return ArrayList of squares where pawn can legally move
      */
-    private List<Square> getPossiblePawnTargetSquares(Square position, boolean isStartWhite) {
+    private List<Square> getPossiblePawnTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
+        if (captureOwnPieces) throw new UnsupportedOperationException("Capture own pieces are not supported in Pawn move");
+
         List<Square> squares = new ArrayList<>();
 
         int step = 1;
@@ -218,7 +226,7 @@ public class MoveChecker {
      * Looks for all possible moves for this king
      */
 
-    private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite) {
+    private List<Square> getPossibleKingTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
         List<Square> squares = new ArrayList<>();
         ArrayList<int[]> targets = new ArrayList<>();
         targets.add(new int[]{0, 1});
@@ -238,7 +246,9 @@ public class MoveChecker {
         if (CastlingUtil.hasFlag(castlingInfo, kingSideFlag) &&
                 PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() + 1, position.y()))) &&
                 PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() + 2, position.y())))) {
-            targets.add(new int[]{2, 0});
+            // captureOwnPieces is used for attack squares, and castling is not possible if there is an enemy piece
+            if (captureOwnPieces == false)
+                targets.add(new int[]{2, 0});
         }
 
         // Check queenside castling - spaces between king (x) and rook (x-4) must be empty
@@ -246,14 +256,16 @@ public class MoveChecker {
                 PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 1, position.y()))) &&
                 PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 2, position.y()))) &&
                 PieceUtil.isEmpty(field.getPieceBySquare(new Square(position.x() - 3, position.y())))) {
-            targets.add(new int[]{-2, 0});
+            // captureOwnPieces is used for attack squares, and castling is not possible if there is an enemy piece
+            if (captureOwnPieces == false)
+                targets.add(new int[]{-2, 0});
         }
 
 
         for (int[] move : targets) {
             int x = position.x() + move[0];
             int y = position.y() + move[1];
-            if (isTargetSquarePossible(x, y, isStartWhite)) {
+            if (isTargetSquarePossible(x, y, isStartWhite, captureOwnPieces)) {
                 squares.add(new Square(x, y));
             }
         }
@@ -267,31 +279,35 @@ public class MoveChecker {
      * @return List of possible target squares
      */
     public List<Square> getTargetSquares(Square position, boolean isStartWhite, byte piece) {
+        return getTargetSquares(position, isStartWhite, piece, false);
+    }
+
+    public List<Square> getTargetSquares(Square position, boolean isStartWhite, byte piece, boolean captureOwnPieces) {
 
         // TODO: replace with switch case
 
         if (PieceUtil.isEmpty(piece)) {
-            return new ArrayList<Square>();
+            return new ArrayList<>();
         }
         if (PieceUtil.isBishop(piece)) {
-            return getPossibleBishopTargetSquares(position, isStartWhite);
+            return getPossibleBishopTargetSquares(position, isStartWhite, captureOwnPieces);
         }
         if (PieceUtil.isRook(piece)) {
-            return getPossibleRookTargetSquares(position, isStartWhite);
+            return getPossibleRookTargetSquares(position, isStartWhite, captureOwnPieces);
         }
         if (PieceUtil.isKnight(piece)) {
-            return getPossibleKnightTargetSquares(position, isStartWhite);
+            return getPossibleKnightTargetSquares(position, isStartWhite, captureOwnPieces);
         }
         if (PieceUtil.isQueen(piece)) {
-            return getPossibleQueenTargetSquares(position, isStartWhite);
+            return getPossibleQueenTargetSquares(position, isStartWhite, captureOwnPieces);
         }
         if (PieceUtil.isPawn(piece)) {
-            return getPossiblePawnTargetSquares(position, isStartWhite);
+            return getPossiblePawnTargetSquares(position, isStartWhite, captureOwnPieces);
         }
         if (PieceUtil.isKing(piece)) {
-            return getPossibleKingTargetSquares(position, isStartWhite);
+            return getPossibleKingTargetSquares(position, isStartWhite, captureOwnPieces);
         }
-        return new ArrayList<Square>();
+        return new ArrayList<>();
     }
 
     /**
