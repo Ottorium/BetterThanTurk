@@ -11,8 +11,8 @@ import java.util.stream.IntStream;
 public class AttackedSquaresUtil {
 
     MoveChecker moveChecker;
-    private Field field;
     byte[] board;
+    private Field field;
 
     public AttackedSquaresUtil(Field field) {
         this.field = field;
@@ -238,5 +238,144 @@ public class AttackedSquaresUtil {
 
         field.setBlackTurn(turnBefore);
         return squareFrequency;
+    }
+
+    public ArrayList<Pin> lookForPins(Player player) {
+        boolean blackTurn = player != Player.WHITE;
+        var kingPosition = getKingPositionOfPlayer(player);
+        var kingX = kingPosition.x();
+        var kingY = kingPosition.y();
+        var pins = new ArrayList<Pin>();
+
+        for (int[] dir : MoveChecker.slidingDirections) {
+            Square thisPieceMayBePinned = null;
+
+            for (int i = 1; i < 8; i++) {
+                int x = kingX + dir[0] * i;
+                int y = kingY + dir[1] * i;
+                if (!moveChecker.isOnBoard(x, y)) break;
+                byte piece = board[y * 8 + x];
+
+                if (PieceUtil.isEmpty(piece)) continue;
+
+                Square currentSquare = new Square(x, y);
+                boolean isOpponent = PieceUtil.isWhite(piece) == blackTurn;
+
+                if (!isOpponent) {
+                    thisPieceMayBePinned = currentSquare;
+                } else if (thisPieceMayBePinned != null) {
+                    if (((dir[0] != 0 && dir[1] != 0) && (PieceUtil.isBishop(piece) || PieceUtil.isQueen(piece)))
+                            || ((dir[0] == 0 || dir[1] == 0) && (PieceUtil.isRook(piece) || PieceUtil.isQueen(piece)))) {
+                        pins.add(new Pin(
+                                thisPieceMayBePinned,
+                                currentSquare,
+                                new ArrayList<>(Arrays.asList(dir, new int[]{dir[0] * -1, dir[1] * -1}))));
+                    }
+                }
+            }
+        }
+
+        return pins;
+    }
+
+    private Square getKingPositionOfPlayer(Player player) {
+        Square king1 = field.getCachedKingPositions().getFirst();
+        boolean isWhiteKing1 = PieceUtil.isWhite(field.getPieceBySquare(king1));
+
+        return (isWhiteKing1 == (player == Player.WHITE))
+                ? king1
+                : field.getCachedKingPositions().get(1);
+    }
+
+    public Check lookForCheck(Player player) {
+        var kingPosition = getKingPositionOfPlayer(player == Player.WHITE ? Player.BLACK : Player.WHITE);
+        boolean isStartWhite = PieceUtil.isWhite(field.getPieceBySquare(kingPosition));
+        int kingX = kingPosition.x();
+        int kingY = kingPosition.y();
+
+        ArrayList<Check> checks = new ArrayList<>();
+
+        for (int[] move : MoveChecker.knightMoves) {
+            int x = kingX + move[0];
+            int y = kingY + move[1];
+            if (moveChecker.isOnBoard(x, y)) {
+                byte piece = board[y * 8 + x];
+                if (PieceUtil.isKnight(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
+                    checks.add(new Check(player, new ArrayList<>(), false));
+                }
+            }
+        }
+
+
+        for (int[] dir : MoveChecker.slidingDirections) {
+            for (int i = 1; i < 8; i++) {
+                int x = kingX + dir[0] * i;
+                int y = kingY + dir[1] * i;
+                if (!moveChecker.isOnBoard(x, y)) break;
+
+                byte piece = board[y * 8 + x];
+                if (PieceUtil.isEmpty(piece)) continue;
+
+                boolean isOpponent = PieceUtil.isWhite(piece) != isStartWhite;
+                if (!isOpponent) break;
+
+                if ((dir[0] != 0 && dir[1] != 0) &&  // Diagonal
+                        (PieceUtil.isBishop(piece) || PieceUtil.isQueen(piece))) {
+                    checks.add(new Check(player, getPossibleBlockOrCaptureSquares(new Square(x, y), kingPosition), false));
+                } else if ((dir[0] == 0 || dir[1] == 0) &&  // Straight
+                        (PieceUtil.isRook(piece) || PieceUtil.isQueen(piece))) {
+                    checks.add(new Check(player, getPossibleBlockOrCaptureSquares(new Square(x, y), kingPosition), false));
+                }
+                break; // Blocked by another piece
+            }
+        }
+
+        int pawnDir = isStartWhite ? -1 : 1;  // White pawns attack up, black down
+        int[] pawnXOffsets = {-1, 1};
+        for (int xOffset : pawnXOffsets) {
+            int x = kingX + xOffset;
+            int y = kingY + pawnDir;
+            if (moveChecker.isOnBoard(x, y)) {
+                byte piece = board[y * 8 + x];
+                if (PieceUtil.isPawn(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
+                    checks.add(new Check(player, new ArrayList<>(Arrays.asList(new Square(x, y))), false));
+                }
+            }
+        }
+
+        // we don't need king checks here as we don't look in the future and kings shouldn't touch
+
+        if (checks.isEmpty())
+            return null;
+        if (checks.size() > 1)
+            return new Check(player, new ArrayList<>(), true);
+        return checks.getFirst();
+    }
+
+    private ArrayList<Square> getPossibleBlockOrCaptureSquares(Square attackerSquare, Square kingSquare) {
+        ArrayList<Square> possibleSquares = new ArrayList<>();
+
+        int attackerX = attackerSquare.x();
+        int attackerY = attackerSquare.y();
+        int kingX = kingSquare.x();
+        int kingY = kingSquare.y();
+
+        int dx = Integer.compare(attackerX, kingX);
+        int dy = Integer.compare(attackerY, kingY);
+
+        int currentX = kingX + dx;
+        int currentY = kingY + dy;
+        while (true) {
+            Square square = new Square(currentX, currentY);
+            possibleSquares.add(square);
+
+            // break when the attacker's position is reached
+            if (currentX == attackerX && currentY == attackerY) break;
+
+            currentX += dx;
+            currentY += dy;
+        }
+
+        return possibleSquares;
     }
 }

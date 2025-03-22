@@ -365,18 +365,28 @@ public class MoveChecker {
                         return;
                     }
                 }
-                // Look for check
-                List<Player> appearedChecks = lookForChecksInMove(move);
-                if (isCheckLegal(appearedChecks)) {
-                    move.setLegal(true);
 
-                    move.setCapturedPiece(field.getPieceBySquare(move.getTargetSquare()));
-                    return;
+                if (wouldPutCurrentPlayerInCheck(move)) {
+                    continue;
                 }
+
+                move.setLegal(true);
+                move.setCapturedPiece(field.getPieceBySquare(move.getTargetSquare()));
+                return;
             }
         }
 
         move.setLegal(false);
+    }
+
+    private boolean wouldPutCurrentPlayerInCheck(Move move) {
+
+        if (field.getPins()
+                .stream()
+                .anyMatch(pin -> pin.getPinnedPiece().equals(move.getStartingSquare()))
+        ) return true;
+
+        return PieceUtil.isKing(getPieceBySquare(move.getStartingSquare())) && field.getPassivePlayerAttackSquares().contains(move.getTargetSquare());
     }
 
     /**
