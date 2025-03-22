@@ -191,8 +191,7 @@ public class BoardViewController implements Initializable {
                 blackPlayingEntity = new BotEntity(Player.BLACK, this);
                 break;
             case PlayingEntity.Type.STOCKFISH:
-                System.err.println("Stockfish is not connected yet, using custom_bot");
-                blackPlayingEntity = new BotEntity(Player.BLACK, this);
+                blackPlayingEntity = new StockfishEntity(Player.BLACK, this);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
@@ -205,11 +204,10 @@ public class BoardViewController implements Initializable {
                 whitePlayingEntity = new BotEntity(Player.WHITE, this);
                 break;
             case PlayingEntity.Type.STOCKFISH:
-                System.err.println("Stockfish is not connected yet, using custom_bot");
-                whitePlayingEntity = new BotEntity(Player.WHITE, this);
+                whitePlayingEntity = new StockfishEntity(Player.WHITE, this);
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
+                throw new IllegalStateException("Unexpected value: " + whitePlayerChoiceBox.getValue());
         }
         updateMoveOrder();
     }

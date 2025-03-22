@@ -19,6 +19,7 @@ public class ChessApplication extends Application {
     /*
         Current existing properties:
         stockfish_path
+        stockfish_thread_count
      */
 
     BoardViewController boardViewController;
@@ -30,6 +31,7 @@ public class ChessApplication extends Application {
 
         // look for missing properties
         requestProperties();
+        printProperties();
 
         launch();
     }
@@ -80,18 +82,16 @@ public class ChessApplication extends Application {
     }
 
     private static void requestProperties() {
-        // adding stockfish
-        if (prop.stringPropertyNames().contains("stockfish_path") == false) {
-            getStockfishPath();
-        }
-        // other properties
+        setPropertyToInput("stockfish_path");
+        setPropertyToInput("stockfish_thread_count");
     }
 
-    private static void getStockfishPath() {
-        System.out.print("Please enter stockfish_path: ");
-        Scanner scanner = new Scanner(System.in);
-        String stockfishPath = scanner.nextLine();
-        prop.setProperty("stockfish_path", stockfishPath);
+    private static void setPropertyToInput(String propertyName) {
+        if(prop.stringPropertyNames().contains(propertyName) == false) {
+            System.out.printf("Please enter %s: ", propertyName);
+            Scanner scanner = new Scanner(System.in);
+            prop.setProperty(propertyName, scanner.nextLine());
+        }
     }
 
     private static void createConfigDirectory(){
@@ -99,5 +99,10 @@ public class ChessApplication extends Application {
         if (!configDir.exists()) {
             configDir.mkdirs();
         }
+    }
+
+    private static void printProperties(){
+        System.out.println("Your settings:");
+        prop.stringPropertyNames().forEach(key -> System.out.println("\t" + key + "=" + prop.getProperty(key)));
     }
 }

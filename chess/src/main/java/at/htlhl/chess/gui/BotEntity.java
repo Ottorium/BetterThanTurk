@@ -14,7 +14,7 @@ public class BotEntity extends PlayingEntity {
     }
 
     @Override
-    protected boolean move(Move move) {
+    public boolean move(Move move) {
         return super.move(move);
     }
 
@@ -39,11 +39,6 @@ public class BotEntity extends PlayingEntity {
         if (move == null) return;
         // move is best move here
         move(move);
-    }
-
-    @Override
-    public boolean tryMove(Move move) {
-        return false;
     }
 
     @Override

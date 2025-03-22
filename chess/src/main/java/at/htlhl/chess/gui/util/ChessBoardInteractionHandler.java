@@ -72,7 +72,6 @@ public class ChessBoardInteractionHandler {
     private final EventHandler<MouseEvent> clickHandler = new EventHandler<>() {
         @Override
         public void handle(MouseEvent event) {
-            System.out.println(event.getSource());
             if (playingEntity.isMyMove() == false) {
                 return;
             }
@@ -433,7 +432,7 @@ public class ChessBoardInteractionHandler {
     private boolean handleMove(Square startingSquare, Square targetSquare) {
         Move move = new Move(startingSquare, targetSquare);
         move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
-        boolean success = playingEntity.tryMove(move);
+        boolean success = playingEntity.move(move);
         clearSelection();
         if (success == false) {
             return false;

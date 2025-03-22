@@ -12,7 +12,7 @@ public abstract class PlayingEntity {
         this.boardViewController = boardViewController;
     }
 
-    protected boolean move(Move move) {
+    public boolean move(Move move) {
         if (move == null) {
             return false;
         }
@@ -21,8 +21,6 @@ public abstract class PlayingEntity {
 
     protected void allowMove() {
     }
-
-    public abstract boolean tryMove(Move move);
 
     public BoardViewController getBoardViewController() {
         return boardViewController;
@@ -35,8 +33,6 @@ public abstract class PlayingEntity {
 
     public void removeInteractions() {
     }
-
-    ;
 
     public void shutdown() {
     }
