@@ -55,6 +55,8 @@ public class BoardViewController implements Initializable {
     @FXML
     public ChoiceBox blackPlayerChoiceBox;
     @FXML
+    public Button clearSettingsButton;
+    @FXML
     ToolBar toolBar;
     @FXML
     private FlowPane capturedWhitePieces;
@@ -155,6 +157,7 @@ public class BoardViewController implements Initializable {
 
     private void initMenu() {
         newGameButton.setOnAction(l -> newGame());
+        clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
     }
 
@@ -488,5 +491,11 @@ public class BoardViewController implements Initializable {
     public void shutdown() {
         blackPlayingEntity.shutdown();
         whitePlayingEntity.shutdown();
+    }
+
+    private void clearSettings(){
+        ChessApplication.prop.clear();
+        ChessApplication.saveProperties();
+        System.exit(0);
     }
 }
