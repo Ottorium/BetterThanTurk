@@ -574,7 +574,7 @@ public class Field {
         clone.capturedBlackPieces.addAll(this.capturedBlackPieces);
 
         clone.moveChecker = new MoveChecker(clone);
-        clone.attackedSquaresUtil = new AttackedSquaresUtil(this);
+        clone.attackedSquaresUtil = new AttackedSquaresUtil(clone);
 
         var legalMovesClone = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesClone.add(legalMove.clone());
