@@ -10,8 +10,8 @@ import java.util.stream.IntStream;
 
 public class AttackedSquaresUtil {
 
-    private Field field;
     MoveChecker moveChecker;
+    private Field field;
 
     public AttackedSquaresUtil(Field field) {
         this.field = field;
@@ -28,7 +28,11 @@ public class AttackedSquaresUtil {
         boolean isWhite = PieceUtil.isWhite(movedPiece);
 
         // update the piece that got moved
-        List<Square> targetSquaresToRemove = moveChecker.getTargetSquares(startingSquare, isWhite, movedPiece);
+        int boardIndexOfTargetSquare = targetSquare.y() * 8 + targetSquare.x();
+        field.getBoard()[boardIndexOfTargetSquare] = move.getCapturedPiece();
+        List<Square> targetSquaresToRemove = getAttackedSquares(startingSquare, isWhite, movedPiece);
+        field.getBoard()[boardIndexOfTargetSquare] = movedPiece;
+
         List<Square> targetSquaresToAdd = getAttackedSquares(targetSquare, isWhite, movedPiece);
         removeAttackSquares(targetSquaresToRemove, isWhite);
         addAttackSquares(targetSquaresToAdd, isWhite);
@@ -41,11 +45,11 @@ public class AttackedSquaresUtil {
         }
 
         // go out from starting square and update the sliding pieces that now have more vision
-        HashMap<int[], Boolean> directionsToAddTargetSquaresIn = getDirectionsOfChangedAttackSquares(startingSquare, isWhite);
+        HashMap<int[], Boolean> directionsToAddTargetSquaresIn = getDirectionsOfChangedAttackSquares(startingSquare, isWhite, move.getTargetSquare());
         for (int[] dir : directionsToAddTargetSquaresIn.keySet()) {
             ArrayList<Square> targetSquaresToAddBecauseMovedPieceGaveMoreVision = new ArrayList<>();
             boolean isOpponent = directionsToAddTargetSquaresIn.get(dir);
-            for (int i =  isOpponent ? 1 : 0; i < 8; i++) {
+            for (int i = isOpponent ? 1 : 0; i < 8; i++) {
                 int x = startingSquare.x() + dir[0] * i;
                 int y = startingSquare.y() + dir[1] * i;
                 if (!moveChecker.isOnBoard(x, y)) break;
@@ -63,29 +67,27 @@ public class AttackedSquaresUtil {
         }
 
         // go out from target square and update the sliding pieces that got blocked
-        HashMap<int[], Boolean> directionsToRemoveTargetSquaresIn = getDirectionsOfChangedAttackSquares(targetSquare, isWhite);
-        for (int[] dir : directionsToRemoveTargetSquaresIn.keySet()) {
-            ArrayList<Square> targetSquaresToRemoveBecauseMovedPieceBlockedVision = new ArrayList<>();
-            boolean isOpponent = directionsToRemoveTargetSquaresIn.get(dir);
-            for (int i =  isOpponent ? 1 : 0; i < 8; i++) {
-                int x = targetSquare.x() + dir[0] * i;
-                int y = targetSquare.y() + dir[1] * i;
-                if (!moveChecker.isOnBoard(x, y)) break;
-                byte piece = field.getBoard()[y * 8 + x];
-                if (PieceUtil.isEmpty(piece) == false) {
-                    // if the piece is a different color than the attacking piece
-                    if (isOpponent == (PieceUtil.isWhite(piece) == isWhite))
-                        targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
-                    if (i != 0)
-                        break;
+        if (move.isCapture() == false) {
+            HashMap<int[], Boolean> directionsToRemoveTargetSquaresIn = getDirectionsOfChangedAttackSquares(targetSquare, isWhite, null);
+            for (int[] dir : directionsToRemoveTargetSquaresIn.keySet()) {
+                ArrayList<Square> targetSquaresToRemoveBecauseMovedPieceBlockedVision = new ArrayList<>();
+                boolean isOpponent = directionsToRemoveTargetSquaresIn.get(dir);
+                for (int i = isOpponent ? 1 : 0; i < 8; i++) {
+                    int x = targetSquare.x() + dir[0] * i;
+                    int y = targetSquare.y() + dir[1] * i;
+                    if (!moveChecker.isOnBoard(x, y)) break;
+                    byte piece = field.getBoard()[y * 8 + x];
+                    if (PieceUtil.isEmpty(piece) == false) {
+                        // if the piece is a different color than the attacking piece
+                        if (isOpponent == (PieceUtil.isWhite(piece) == isWhite))
+                            targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
+                        if (i != 0)
+                            break;
+                    }
+                    targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
                 }
-                targetSquaresToRemoveBecauseMovedPieceBlockedVision.add(new Square(x, y));
+                removeAttackSquares(targetSquaresToRemoveBecauseMovedPieceBlockedVision, isOpponent != isWhite);
             }
-
-            if (move.isCapture() && isOpponent)
-                addAttackSquares(new ArrayList<>(List.of(move.getTargetSquare())), !isWhite);
-
-            removeAttackSquares(targetSquaresToRemoveBecauseMovedPieceBlockedVision, isOpponent != isWhite);
         }
 
         // if it is a castling move, remove the rooks attack squares and add its new ones
@@ -95,13 +97,14 @@ public class AttackedSquaresUtil {
         // if it is a promotion, add the attacks of the promoted piece
     }
 
-    private HashMap<int[], Boolean> getDirectionsOfChangedAttackSquares(Square changedSquare, boolean isWhite) {
+    private HashMap<int[], Boolean> getDirectionsOfChangedAttackSquares(Square changedSquare, boolean isWhite, Square executedMoveTargetSquare) {
         var directions = new HashMap<int[], Boolean>();
         for (int[] dir : MoveChecker.slidingDirections) {
             for (int i = 1; i < 8; i++) {
                 int x = changedSquare.x() + dir[0] * i;
                 int y = changedSquare.y() + dir[1] * i;
                 if (!moveChecker.isOnBoard(x, y)) break;
+                if (Objects.equals(executedMoveTargetSquare, new Square(x, y))) break;
 
                 byte piece = field.getBoard()[y * 8 + x];
                 if (PieceUtil.isEmpty(piece)) continue;
