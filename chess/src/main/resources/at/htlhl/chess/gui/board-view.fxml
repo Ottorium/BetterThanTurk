@@ -18,10 +18,10 @@
         <ToolBar fx:id="toolBar" prefHeight="40.0">
             <items>
                 <Button fx:id="newGameButton" text="New Game"/>
-                <Label text="Black"/>
-                <ChoiceBox fx:id="blackPlayerChoiceBox" prefWidth="150.0"/>
                 <Label text="White"/>
-                <ChoiceBox fx:id="whitePlayerChoiceBox" prefWidth="150.0"/>
+                <ChoiceBox fx:id="whitePlayerChoiceBox"/>
+                <Label text="Black"/>
+                <ChoiceBox fx:id="blackPlayerChoiceBox"/>
             </items>
         </ToolBar>
         <SplitPane dividerPositions="0.2, 0.8" VBox.vgrow="ALWAYS">

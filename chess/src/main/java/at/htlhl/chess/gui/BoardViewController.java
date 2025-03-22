@@ -208,7 +208,15 @@ public class BoardViewController implements Initializable {
             default:
                 throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
         }
-        whitePlayingEntity.allowMove(); //TODO fix move ordering, including fen move order update after setting fen
+        updateMoveOrder();
+    }
+
+    private void updateMoveOrder(){
+        if (field.isBlackTurn()){
+            blackPlayingEntity.allowMove();
+        } else {
+            whitePlayingEntity.allowMove();
+        }
     }
 
     /**
@@ -441,6 +449,7 @@ public class BoardViewController implements Initializable {
             boardViewUtil.alertProblem("Invalid FEN!", "Check if your input is correct");
         }
         updateUI(null);
+        updateMoveOrder();
     }
 
     private void updateCapturedPieces() {
