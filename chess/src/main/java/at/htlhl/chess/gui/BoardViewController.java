@@ -61,7 +61,6 @@ public class BoardViewController implements Initializable {
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
-    private EngineConnector engineConnector;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
     private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
     private PlayingEntity blackPlayingEntity;
@@ -137,7 +136,6 @@ public class BoardViewController implements Initializable {
     private void initWithRunLater() {
         Platform.runLater(() -> {
             setUpScalability();
-            engineConnector = new EngineConnector(field, this::addArrow);
             updateUI(null);
         });
     }
@@ -343,14 +341,6 @@ public class BoardViewController implements Initializable {
                 }
             }
         }
-//        tmpConnectEngine();
-    }
-
-    private void tmpConnectEngine() {
-        // TODO refactor
-        engineConnector.stopCurrentExecutions();
-        engineConnector = new EngineConnector(field, this::addArrow);
-        engineConnector.suggestMove();
     }
 
     /**
@@ -426,10 +416,6 @@ public class BoardViewController implements Initializable {
             pieceImageView.setFitWidth((double) INITIAL_SQUARE_SIZE / 2);
             box.getChildren().add(pieceImageView);
         }
-    }
-
-    public void shutdown() {
-        engineConnector.shutdown();
     }
 
     public GridPane getChessBoard() {
