@@ -259,10 +259,10 @@ public class BoardViewController implements Initializable {
      * @param kingCheckHighlight The square containing the king in check, to highlight with a red radial gradient.
      */
     private void drawPieces(Move moveToHighlight, Square kingCheckHighlight) {
-        for (int row = 0; row < field.getBoard().length; row++) {
-            for (int col = 0; col < field.getBoard()[row].length; col++) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
                 StackPane square = getSquarePane(chessBoard, col, row);
-                var piece = field.getBoard()[row][col];
+                var piece = field.getBoard()[row * 8 + col];
 
                 if (square == null) continue;
 

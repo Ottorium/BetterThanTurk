@@ -23,13 +23,13 @@ class FENParserTest {
     @Test
     void parseBoard_ComplexPosition_ShouldReturnCorrectBoard() {
         FENParser parser = new FENParser(COMPLEX_CASTLING_FEN);
-        byte[][] board = parser.parseBoard();
-        assertEquals(PieceUtil.BLACK_ROOK, board[0][0]);
-        assertEquals(PieceUtil.BLACK_KING, board[0][4]);
-        assertEquals(PieceUtil.BLACK_ROOK, board[0][7]);
-        assertEquals(PieceUtil.WHITE_KING, board[7][2]);
-        assertEquals(PieceUtil.WHITE_ROOK, board[7][3]);
-        assertEquals(PieceUtil.WHITE_ROOK, board[7][7]);
+        byte[] board = parser.parseBoard();
+        assertEquals(PieceUtil.BLACK_ROOK, board[0]);
+        assertEquals(PieceUtil.BLACK_KING, board[4]);
+        assertEquals(PieceUtil.BLACK_ROOK, board[7]);
+        assertEquals(PieceUtil.WHITE_KING, board[7 * 8 + 2]);
+        assertEquals(PieceUtil.WHITE_ROOK, board[7* 8 + 3]);
+        assertEquals(PieceUtil.WHITE_ROOK, board[7 * 8 + 7]);
     }
 
     @Test
@@ -84,13 +84,13 @@ class FENParserTest {
         assertEquals(60, new FENParser(ENDGAME_FEN).parseNumberOfNextMove());
     }
 
-    private byte[][] createBoardFromFEN(String fen) {
+    private byte[] createBoardFromFEN(String fen) {
         return new FENParser(fen).parseBoard();
     }
 
     @Test
     void exportToFEN_InitialPosition_ShouldReturnCorrectFEN() {
-        byte[][] board = createBoardFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        byte[] board = createBoardFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         String result = FENParser.exportToFEN(
                 board,
                 false, // white's turn
@@ -107,7 +107,7 @@ class FENParserTest {
 
     @Test
     void exportToFEN_EarlyGamePosition_ShouldReturnCorrectFEN() {
-        byte[][] board = createBoardFromFEN("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3");
+        byte[] board = createBoardFromFEN("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3");
         String result = FENParser.exportToFEN(
                 board,
                 false, // white's turn
@@ -124,7 +124,7 @@ class FENParserTest {
 
     @Test
     void exportToFEN_EnPassantPosition_ShouldReturnCorrectFEN() {
-        byte[][] board = createBoardFromFEN("rnbqkb1r/pppp1ppp/5n2/4p3/3P4/2N5/PPP1PPPP/R1BQKBNR w KQkq e6 0 3");
+        byte[] board = createBoardFromFEN("rnbqkb1r/pppp1ppp/5n2/4p3/3P4/2N5/PPP1PPPP/R1BQKBNR w KQkq e6 0 3");
         String result = FENParser.exportToFEN(
                 board,
                 false, // white's turn
@@ -141,7 +141,7 @@ class FENParserTest {
 
     @Test
     void exportToFEN_PartialCastlingPosition_ShouldReturnCorrectFEN() {
-        byte[][] board = createBoardFromFEN("rnbq1bnr/ppppkppp/8/8/8/8/PPPP1PPP/RNBQ1RK1 b - - 2 6");
+        byte[] board = createBoardFromFEN("rnbq1bnr/ppppkppp/8/8/8/8/PPPP1PPP/RNBQ1RK1 b - - 2 6");
         String result = FENParser.exportToFEN(
                 board,
                 true, // black's turn
@@ -155,7 +155,7 @@ class FENParserTest {
 
     @Test
     void exportToFEN_ComplexCastlingPosition_ShouldReturnCorrectFEN() {
-        byte[][] board = createBoardFromFEN("r3k2r/ppp2ppp/2n1b3/3np3/2B5/2N1P3/PPP2PPP/2KR3R b q - 14 12");
+        byte[]board = createBoardFromFEN("r3k2r/ppp2ppp/2n1b3/3np3/2B5/2N1P3/PPP2PPP/2KR3R b q - 14 12");
         String result = FENParser.exportToFEN(
                 board,
                 true, // black's turn
@@ -169,7 +169,7 @@ class FENParserTest {
 
     @Test
     void exportToFEN_EndgamePosition_ShouldReturnCorrectFEN() {
-        byte[][] board = createBoardFromFEN("4k3/8/8/8/8/3K4/8/8 b - - 50 60");
+        byte[] board = createBoardFromFEN("4k3/8/8/8/8/3K4/8/8 b - - 50 60");
         String result = FENParser.exportToFEN(
                 board,
                 true, // black's turn
