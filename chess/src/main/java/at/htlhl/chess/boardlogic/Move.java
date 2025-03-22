@@ -11,7 +11,6 @@ public class Move {
     private boolean isCastlingMove;
     private boolean isEnPassantMove;
     private boolean isLegal;
-    private Player appearedCheck;
     private Square possibleEnPassantSquare;
     private byte capturedPiece;
 
@@ -21,7 +20,6 @@ public class Move {
         this.promotionPiece = PieceUtil.EMPTY;
         this.isLegal = false;
         this.isCastlingMove = false;
-        this.appearedCheck = null;
         this.possibleEnPassantSquare = null;
         this.capturedPiece = PieceUtil.EMPTY;
     }
@@ -48,7 +46,6 @@ public class Move {
         clonedMove.isCastlingMove = this.isCastlingMove;
         clonedMove.isEnPassantMove = this.isEnPassantMove;
         clonedMove.isLegal = this.isLegal;
-        clonedMove.appearedCheck = this.appearedCheck;
         clonedMove.capturedPiece = this.capturedPiece;
         if (clonedMove.possibleEnPassantSquare != null)
             clonedMove.possibleEnPassantSquare = new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y());
@@ -99,14 +96,6 @@ public class Move {
 
     public void setLegal(boolean legal) {
         isLegal = legal;
-    }
-
-    public Player getAppearedCheck() {
-        return appearedCheck;
-    }
-
-    public void setAppearedCheck(Player appearedCheck) {
-        this.appearedCheck = appearedCheck;
     }
 
     public Square getPossibleEnPassantSquare() {

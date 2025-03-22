@@ -88,11 +88,6 @@ public class Field {
     private ArrayList<Move> legalMoves = new ArrayList<>();
 
     /**
-     * Stores the Player that is currently in check.
-     */
-    private Player kingInCheck = null;
-
-    /**
      * The {@link MoveChecker} used to validate moves.
      */
     private MoveChecker moveChecker = new MoveChecker(this);
@@ -147,12 +142,10 @@ public class Field {
         gameState = GameState.NOT_DECIDED;
         moveChecker = new MoveChecker(this);
         positionCounts.clear();
-        Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
         cachedKingPositions = moveChecker.findKings();
         attackedSquaresUtil = new AttackedSquaresUtil(this);
         blackAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.BLACK);
         whiteAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.WHITE);
-        kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
         legalMoves = moveChecker.getAllLegalMoves();
         gameState = computeGameState();
         return true;
@@ -244,10 +237,6 @@ public class Field {
                                             PieceUtil.BLACK_PAWN
                                             : PieceUtil.WHITE_PAWN)));
         }
-        var kingInCheckBefore = kingInCheck;
-        kingInCheck = move.getAppearedCheck();
-        if (kingInCheckBefore != kingInCheck)
-            changesInLastMove.add(new FieldChange("kingInCheck", undo -> kingInCheck = kingInCheckBefore));
 
         calculateMaterial(capturedPiece, move);
         updatePlayedHalfMovesSinceLastPawnMoveOrCapture(move);
@@ -349,12 +338,13 @@ public class Field {
         if (legalMoves.isEmpty() == false)
             return GameState.NOT_DECIDED;
 
-        if (kingInCheck == (blackTurn ? Player.BLACK : Player.WHITE)) {
+        if (getPlayerInCheck() == (blackTurn ? Player.BLACK : Player.WHITE)) {
             return isBlackTurn() ? GameState.WHITE_WIN : GameState.BLACK_WIN;
         } else {
             return GameState.DRAW; // Stalemate
         }
     }
+
 
     /**
      * Adds the Captured piece to the class variables keeping track of the current captured pieces
@@ -471,7 +461,7 @@ public class Field {
      * @return Position of the king in check, null if the current player is not in check
      */
     public Square getSquareOfCheck() {
-        if (kingInCheck != (blackTurn ? Player.BLACK : Player.WHITE))
+        if (getPlayerInCheck() != (blackTurn ? Player.BLACK : Player.WHITE))
             return null;
 
         for (int i = 0; i < board.length; i++)
@@ -520,8 +510,26 @@ public class Field {
         return possibleEnPassantSquare;
     }
 
-    public Player getKingInCheck() {
-        return kingInCheck;
+    public Player getPlayerInCheck() {
+        Square blackKingPosition;
+        Square whiteKingPosition;
+        Player playerInCheck = null;
+        if (cachedKingPositions == null || cachedKingPositions.size() != 2)
+            throw new RuntimeException("Expected king positions to be saved in cachenKingPositions");
+
+        if (PieceUtil.isWhite(getPieceBySquare(cachedKingPositions.getFirst()))) {
+            whiteKingPosition = cachedKingPositions.getFirst();
+            blackKingPosition = cachedKingPositions.get(1);
+        } else {
+            blackKingPosition = cachedKingPositions.getFirst();
+            whiteKingPosition = cachedKingPositions.get(1);
+        }
+
+        if (moveChecker.isKingChecked(blackKingPosition))
+            playerInCheck = Player.BLACK;
+        else if (moveChecker.isKingChecked(whiteKingPosition))
+            playerInCheck = Player.WHITE;
+        return playerInCheck;
     }
 
     public GameState getGameState() {
@@ -554,7 +562,6 @@ public class Field {
         clone.numberOfNextMove = this.numberOfNextMove;
         clone.gameState = this.gameState;
         clone.pieceEvaluation = this.pieceEvaluation;
-        clone.kingInCheck = this.kingInCheck;
 
         clone.cachedKingPositions = (ArrayList<Square>) this.cachedKingPositions.clone();
         clone.blackAttackSquares = (HashMap<Square, Integer>) this.blackAttackSquares.clone();

@@ -356,7 +356,7 @@ public class MoveChecker {
 
                 //Looks for checks between castling
                 if (move.isCastlingMove()) {
-                    if (field.getKingInCheck() != null) {
+                    if (field.getPlayerInCheck() != null) {
                         move.setLegal(false);
                         return;
                     }
@@ -371,11 +371,6 @@ public class MoveChecker {
                     move.setLegal(true);
 
                     move.setCapturedPiece(field.getPieceBySquare(move.getTargetSquare()));
-
-                    // redundant length check call, but that's the easiest way
-                    if (appearedChecks.size() == 1) {
-                        move.setAppearedCheck(appearedChecks.getFirst());
-                    }
                     return;
                 }
             }
@@ -519,7 +514,7 @@ public class MoveChecker {
      * @param position King position
      * @return true if king is checked, false otherwise
      */
-    private boolean isKingChecked(Square position) {
+    public boolean isKingChecked(Square position) {
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
         byte[] board = field.getBoard();
         int kingX = position.x();
@@ -685,7 +680,7 @@ public class MoveChecker {
 
 
         //if your color check appeared after your move
-        if (field.getKingInCheck() == null) {
+        if (field.getPlayerInCheck() == null) {
             if (field.isBlackTurn()) {
                 return !possibleChecks.getFirst().equals(Player.BLACK);
             } else {
@@ -694,7 +689,7 @@ public class MoveChecker {
         }
 
         //if your check did not disappear
-        if (field.getKingInCheck().equals(possibleChecks.getFirst())) {
+        if (field.getPlayerInCheck().equals(possibleChecks.getFirst())) {
             return false;
         }
         return true;

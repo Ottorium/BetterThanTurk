@@ -123,7 +123,7 @@ public class FieldMoveTest {
 
     @Test
     public void testEnPassantDiscoveredCheck() {
-        field.trySetFEN("8/8/8/K1pP2r1/8/8/8/8 w - c6 0 1");
+        field.trySetFEN("7k/8/8/K1pP2r1/8/8/8/8 w - - 0 1");
 
         Square start = Square.parseString("d5");
         Square target = Square.parseString("c6");
@@ -160,7 +160,7 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertTrue(result, "Valid check move should return true");
-        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check");
+        assertEquals(Player.BLACK, field.getPlayerInCheck(), "Black king should be in check");
     }
 
     @Test
@@ -342,7 +342,7 @@ public class FieldMoveTest {
         field.move(move);
 
         assertEquals(GameState.BLACK_WIN, field.getGameState(), "Game should end in black's victory (Fool's Mate)");
-        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+        assertEquals(Player.WHITE, field.getPlayerInCheck(), "White king should be in check");
     }
 
     @Test
@@ -356,7 +356,7 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertTrue(result, "Valid discovered check move should return true");
-        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check via discovered check");
+        assertEquals(Player.BLACK, field.getPlayerInCheck(), "Black king should be in check via discovered check");
     }
 
     @Test
@@ -445,7 +445,7 @@ public class FieldMoveTest {
     public void testCastlingFromCheck() {
         field.trySetFEN("rnbqk2r/pppp1ppp/5n2/4p3/1b2P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 4");
 
-        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+        assertEquals(Player.WHITE, field.getPlayerInCheck(), "White king should be in check");
 
         Square start = Square.parseString("e1");
         Square target = Square.parseString("g1");
@@ -539,7 +539,7 @@ public class FieldMoveTest {
 
         assertTrue(result, "Checkmate move should be valid");
         assertEquals(GameState.WHITE_WIN, field.getGameState(), "Game should end in white's victory");
-        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check");
+        assertEquals(Player.BLACK, field.getPlayerInCheck(), "Black king should be in check");
     }
 
     @Test
@@ -596,7 +596,7 @@ public class FieldMoveTest {
     public void testMoveBlockingCheck() {
         field.trySetFEN("rnb1kbnr/pppp1ppp/8/4p3/7q/5P2/PPPPP1PP/RNBQKBNR w KQkq - 0 1");
 
-        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+        assertEquals(Player.WHITE, field.getPlayerInCheck(), "White king should be in check");
 
         Square start = Square.parseString("g2");
         Square target = Square.parseString("g3");
@@ -605,7 +605,7 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertTrue(result, "Valid blocking move should return true");
-        assertNull(field.getKingInCheck(), "No king should be in check after blocking");
+        assertNull(field.getPlayerInCheck(), "No king should be in check after blocking");
     }
 
     @Test
@@ -655,7 +655,7 @@ public class FieldMoveTest {
         field.trySetFEN("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1");
 
         assertEquals(GameState.DRAW, field.getGameState(), "Game should be stalemate despite having multiple pieces");
-        assertNull(field.getKingInCheck(), "King should not be in check during stalemate");
+        assertNull(field.getPlayerInCheck(), "King should not be in check during stalemate");
     }
 
     @Test
