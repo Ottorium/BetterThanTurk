@@ -32,6 +32,16 @@ public abstract class PlayingEntity {
         return (boardViewController.getField().isBlackTurn() && player.equals(Player.BLACK)) ||
                 (boardViewController.getField().isBlackTurn() == false && player.equals(Player.WHITE));
     }
-    public void removeInteractions(){};
-    public void shutdown(){}
+
+    public void removeInteractions() {
+    }
+
+    ;
+
+    public void shutdown() {
+    }
+
+    public enum Type {
+        PLAYER, CUSTOM_BOT, STOCKFISH
+    }
 }

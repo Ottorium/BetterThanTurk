@@ -27,7 +27,7 @@ public class PlayerEntity extends PlayingEntity {
      * Removes events handler from objects
      */
     @Override
-    public void removeInteractions(){
+    public void removeInteractions() {
         chessBoardInteractionHandler.removeInteractions();
     }
 }

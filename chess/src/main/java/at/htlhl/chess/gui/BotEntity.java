@@ -3,7 +3,6 @@ package at.htlhl.chess.gui;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.gui.util.EngineConnector;
-import javafx.application.Platform;
 
 public class BotEntity extends PlayingEntity {
 

@@ -32,31 +32,40 @@ import java.util.List;
  * Manages piece movement, square selection, and highlighting of legal moves.
  */
 public class ChessBoardInteractionHandler {
-    /** The scale factor applied to pieces during drag operations. For some reason, this does not work on some linux distros*/
+    /**
+     * The scale factor applied to pieces during drag operations. For some reason, this does not work on some linux distros
+     */
     private static final double DRAG_SCALE = 1.1;
 
-    /** The color used to highlight legal move targets on the board. */
+    /**
+     * The color used to highlight legal move targets on the board.
+     */
     private static final Color HIGHLIGHT_COLOR = Color.rgb(100, 100, 100, 0.5);
 
-    /** The {@link GridPane} representing the chess board UI. */
+    /**
+     * The {@link GridPane} representing the chess board UI.
+     */
     private final GridPane chessBoard;
 
-    /** The logical representation of the chess board and its state as a {@link Field}. */
+    /**
+     * The logical representation of the chess board and its state as a {@link Field}.
+     */
     private final Field field;
 
-    /** The size of each square on the board in pixels. */
+    /**
+     * The size of each square on the board in pixels.
+     */
     private final double squareSize;
-
-    /** The currently selected square, or null if no square is selected. */
-    private Square selectedSquare = null;
-
-    /** List of squares highlighted as legal move targets, or null if no highlights are active. */
-    private List<Square> highlightedSquares = null;
-
-    private boolean autoQueen = true;
-
     private final PlayingEntity playingEntity;
-
+    /**
+     * The currently selected square, or null if no square is selected.
+     */
+    private Square selectedSquare = null;
+    /**
+     * List of squares highlighted as legal move targets, or null if no highlights are active.
+     */
+    private List<Square> highlightedSquares = null;
+    private boolean autoQueen = true;
     /**
      * Handles square click
      */
@@ -64,7 +73,9 @@ public class ChessBoardInteractionHandler {
         @Override
         public void handle(MouseEvent event) {
             System.out.println(event.getSource());
-            if (playingEntity.isMyMove() == false) {return;}
+            if (playingEntity.isMyMove() == false) {
+                return;
+            }
 
             autoQueen = event.getButton() == MouseButton.PRIMARY;
             handleSquareClick((StackPane) event.getSource());
@@ -78,7 +89,9 @@ public class ChessBoardInteractionHandler {
     private final EventHandler<MouseEvent> dragHandler = new EventHandler<>() {
         @Override
         public void handle(MouseEvent event) {
-            if (playingEntity.isMyMove() == false) {return;}
+            if (playingEntity.isMyMove() == false) {
+                return;
+            }
 
             StackPane square = (StackPane) event.getSource();
             if (!hasPiece(square)) return;
@@ -104,7 +117,9 @@ public class ChessBoardInteractionHandler {
     private final EventHandler<DragEvent> dropHandler = new EventHandler<>() {
         @Override
         public void handle(DragEvent event) {
-            if (playingEntity.isMyMove() == false) {return;}
+            if (playingEntity.isMyMove() == false) {
+                return;
+            }
 
             handleDrop(event, (StackPane) event.getSource());
         }
@@ -133,7 +148,7 @@ public class ChessBoardInteractionHandler {
     /**
      * Removes all handlers from stackPane
      */
-    public void removeInteractions(){
+    public void removeInteractions() {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
                 square.removeEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
@@ -149,7 +164,7 @@ public class ChessBoardInteractionHandler {
     private void setupClickHandlers() {
         for (Node node : chessBoard.getChildren()) {
             if (node instanceof StackPane square) {
-                square.addEventHandler(MouseEvent.MOUSE_CLICKED,clickHandler);
+                square.addEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
             }
         }
     }
@@ -295,13 +310,15 @@ public class ChessBoardInteractionHandler {
             highlightedSquares.forEach(square -> {
                 StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
                 if (squarePane.getChildren().size() > 1) {
-                    squarePane.getChildren().stream().filter(child -> child instanceof Circle).forEach(child -> {removalCandidates.add((Circle) child);});
+                    squarePane.getChildren().stream().filter(child -> child instanceof Circle).forEach(child -> {
+                        removalCandidates.add((Circle) child);
+                    });
                 }
 
             });
             highlightedSquares.forEach(square -> {
-                    StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
-                    removalCandidates.forEach(child -> squarePane.getChildren().remove(child));
+                StackPane squarePane = BoardViewController.getSquarePane(chessBoard, square.x(), square.y());
+                removalCandidates.forEach(child -> squarePane.getChildren().remove(child));
             });
             highlightedSquares = null;
         }
@@ -408,6 +425,7 @@ public class ChessBoardInteractionHandler {
 
     /**
      * calls PlayingEntity move, to handle move
+     *
      * @param startingSquare
      * @param targetSquare
      * @return
@@ -417,7 +435,9 @@ public class ChessBoardInteractionHandler {
         move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
         boolean success = playingEntity.tryMove(move);
         clearSelection();
-        if (success == false) {return false;}
+        if (success == false) {
+            return false;
+        }
         return true;
     }
 

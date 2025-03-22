@@ -16,6 +16,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
@@ -49,6 +50,10 @@ public class BoardViewController implements Initializable {
 
     @FXML
     public Button newGameButton;
+    @FXML
+    public ChoiceBox whitePlayerChoiceBox;
+    @FXML
+    public ChoiceBox blackPlayerChoiceBox;
     @FXML
     ToolBar toolBar;
     @FXML
@@ -128,8 +133,8 @@ public class BoardViewController implements Initializable {
         createEmptyChessBoard();
         initArrowPane();
         initFENTextArea();
-        initPlayers();
         initMenu();
+        initPlayers(); // must be after initMenu
         initWithRunLater();
     }
 
@@ -140,7 +145,7 @@ public class BoardViewController implements Initializable {
         });
     }
 
-    private void initArrowPane(){
+    private void initArrowPane() {
         arrowPane = new Pane();
         arrowPane.setMouseTransparent(true);
         chessBoard.add(arrowPane, 0, 0);
@@ -148,27 +153,62 @@ public class BoardViewController implements Initializable {
         GridPane.setRowSpan(arrowPane, 8);
     }
 
-    private void initMenu(){
+    private void initMenu() {
         newGameButton.setOnAction(l -> newGame());
+        fillChoiceBoxes();
     }
 
-    private void newGame(){
+    private void fillChoiceBoxes() {
+        blackPlayerChoiceBox.getItems().clear();
+        whitePlayerChoiceBox.getItems().clear();
+        blackPlayerChoiceBox.getItems().addAll(PlayingEntity.Type.values());
+        blackPlayerChoiceBox.setValue(PlayingEntity.Type.values()[0]);
+        whitePlayerChoiceBox.getItems().addAll(PlayingEntity.Type.values());
+        whitePlayerChoiceBox.setValue(PlayingEntity.Type.values()[0]);
+    }
+
+    private void newGame() {
         removeSquareListeners();
         field.resetBoard();
         initPlayers();
         updateUI();
     }
 
-    private void removeSquareListeners(){
+    private void removeSquareListeners() {
         blackPlayingEntity.removeInteractions();
         whitePlayingEntity.removeInteractions();
     }
 
     private void initPlayers() {
-        // TODO add choice
-        blackPlayingEntity = new BotEntity(Player.BLACK, this);
-        whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
-        whitePlayingEntity.allowMove();
+        switch (blackPlayerChoiceBox.getValue()) {
+            case PlayingEntity.Type.PLAYER:
+                blackPlayingEntity = new PlayerEntity(Player.BLACK, this);
+                break;
+            case PlayingEntity.Type.CUSTOM_BOT:
+                blackPlayingEntity = new BotEntity(Player.BLACK, this);
+                break;
+            case PlayingEntity.Type.STOCKFISH:
+                System.err.println("Stockfish is not connected yet, using custom_bot");
+                blackPlayingEntity = new BotEntity(Player.BLACK, this);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
+        }
+        switch (whitePlayerChoiceBox.getValue()) {
+            case PlayingEntity.Type.PLAYER:
+                whitePlayingEntity = new PlayerEntity(Player.WHITE, this);
+                break;
+            case PlayingEntity.Type.CUSTOM_BOT:
+                whitePlayingEntity = new BotEntity(Player.WHITE, this);
+                break;
+            case PlayingEntity.Type.STOCKFISH:
+                System.err.println("Stockfish is not connected yet, using custom_bot");
+                whitePlayingEntity = new BotEntity(Player.WHITE, this);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
+        }
+        whitePlayingEntity.allowMove(); //TODO fix move ordering, including fen move order update after setting fen
     }
 
     /**
@@ -259,6 +299,7 @@ public class BoardViewController implements Initializable {
 
     /**
      * Is used to make move and update UI. For some reason calling updateUI does not update field on first call, so the piece is missing.
+     *
      * @param move that has been made
      */
     public boolean makeMove(Move move, PlayingEntity me) {
@@ -435,7 +476,7 @@ public class BoardViewController implements Initializable {
     /**
      * is used to stop engine threads
      */
-    public void shutdown(){
+    public void shutdown() {
         blackPlayingEntity.shutdown();
         whitePlayingEntity.shutdown();
     }
