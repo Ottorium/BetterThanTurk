@@ -72,7 +72,6 @@ public class ChessBoardInteractionHandler {
     private final EventHandler<MouseEvent> clickHandler = new EventHandler<>() {
         @Override
         public void handle(MouseEvent event) {
-            System.out.println(event.getSource());
             if (playingEntity.isMyMove() == false) {
                 return;
             }
@@ -83,7 +82,7 @@ public class ChessBoardInteractionHandler {
     };
 
     /**
-     *
+     * Handles drag
      */
 
     private final EventHandler<MouseEvent> dragHandler = new EventHandler<>() {
@@ -113,6 +112,10 @@ public class ChessBoardInteractionHandler {
             event.consume();
         }
     };
+
+    /**
+     * Handles drop
+     */
 
     private final EventHandler<DragEvent> dropHandler = new EventHandler<>() {
         @Override

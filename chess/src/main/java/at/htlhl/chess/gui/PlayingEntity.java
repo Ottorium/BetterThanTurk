@@ -36,8 +36,6 @@ public abstract class PlayingEntity {
     public void removeInteractions() {
     }
 
-    ;
-
     public void shutdown() {
     }
 
