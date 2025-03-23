@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.net.URL;
 
 public enum SoundEffect {
-    MOVE("sounds/move.wav"),
-    CAPTURE("sounds/capture.wav"),
-    THE_ROOK("sounds/the_rook.wav");
+    MOVE("sounds/soft-move.wav"),
+    CAPTURE("sounds/capture1.wav"),
+    THE_ROOK("sounds/the-rook.wav");
 
     private final String resourcePath;
 
