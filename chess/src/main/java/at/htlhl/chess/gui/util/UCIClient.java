@@ -28,19 +28,23 @@ public class UCIClient {
     }
 
     /**
+     * Looks if process is alive
+     * @return true if is alive
+     */
+    public boolean isAlive() {
+        return process != null && process.isAlive();
+    }
+
+    /**
      * Starts the process
      *
      * @param cmd command name in console( f.e. "stockfish"). if the command is not in PATH env virable, the full path has to be defined
      */
-    public void start(String cmd) {
+    public void start(String cmd) throws IOException {
         var pb = new ProcessBuilder(cmd);
-        try {
-            this.process = pb.start();
-            this.reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            this.writer = new OutputStreamWriter(process.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.process = pb.start();
+        this.reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        this.writer = new OutputStreamWriter(process.getOutputStream());
         initialiseEngineUci();
     }
 

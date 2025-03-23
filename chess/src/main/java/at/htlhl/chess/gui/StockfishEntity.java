@@ -5,6 +5,7 @@ import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.gui.util.UCIClient;
 import javafx.application.Platform;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -19,7 +20,12 @@ public class StockfishEntity extends PlayingEntity {
     }
 
     private void connectToStockfish() {
-        client.start(ChessApplication.prop.getProperty("stockfish_path"));
+        try {
+            client.start(ChessApplication.prop.getProperty("stockfish_path"));
+        } catch (IOException e) {
+            System.err.println("Stockfish connection failed: " + e.getMessage());
+            boardViewController.alertWithNewGame("Stockfish connection failed", e.getMessage());
+        }
     }
 
     @Override
@@ -41,7 +47,9 @@ public class StockfishEntity extends PlayingEntity {
     @Override
     public void shutdown() {
         super.shutdown();
-        client.close();
+        if (client.isAlive()){
+            client.close();
+        }
         executor.shutdownNow();
         executor = null;
     }

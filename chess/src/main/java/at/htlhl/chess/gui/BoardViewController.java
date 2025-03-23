@@ -494,4 +494,15 @@ public class BoardViewController implements Initializable {
         ChessApplication.saveProperties();
         System.exit(0);
     }
+
+    /**
+     * Shows alert and starts a new game with default settings
+     * @param headerText alert header
+     * @param contentText alert content
+     */
+    public void alertWithNewGame(String headerText, String contentText) {
+        boardViewUtil.alertProblem(headerText, contentText);
+        fillChoiceBoxes();
+        newGame();
+    }
 }
