@@ -34,7 +34,7 @@ public class Field {
     /**
      * Stores the current board with each square being one byte using bit flags. To set or modify this value please use {@link PieceUtil}.
      */
-    private byte[][] board;
+    private byte[] board;
 
     /**
      * true if it is blacks turn in the current position, otherwise false.
@@ -275,7 +275,7 @@ public class Field {
     private void updatePlayedHalfMovesSinceLastPawnMoveOrCapture(Move move) {
         var before = playedHalfMovesSinceLastPawnMoveOrCapture;
         byte movingPiece = getPieceBySquare(move.getTargetSquare());
-        byte capturedPiece = board[move.getTargetSquare().y()][move.getTargetSquare().x()];
+        byte capturedPiece = board[move.getTargetSquare().y() * 8 + move.getTargetSquare().x()];
 
         if (PieceUtil.isPawn(movingPiece) || PieceUtil.isEmpty(capturedPiece) == false) {
             playedHalfMovesSinceLastPawnMoveOrCapture = 0;
@@ -296,8 +296,7 @@ public class Field {
         }
 
 
-        byte[] flatBoard = getFlattenedBoard();
-        int current = Arrays.hashCode(flatBoard);
+        int current = Arrays.hashCode(board);
 
         int count = positionCounts.getOrDefault(current, 0) + 1;
         var before = (HashMap<Integer, Integer>) positionCounts.clone();
@@ -311,7 +310,7 @@ public class Field {
 
         boolean insufficient = true;
         int numberOfPieces = 0;
-        for (byte piece : flatBoard) {
+        for (byte piece : board) {
             if (piece == PieceUtil.EMPTY) continue;
 
             if (++numberOfPieces >= 4
@@ -441,23 +440,8 @@ public class Field {
      *
      * @return 2D array representing the board
      */
-    public byte[][] getBoard() {
+    public byte[] getBoard() {
         return board;
-    }
-
-    /**
-     * Gets the current board state as a 1d Array
-     *
-     * @return an array flattened to 1D representing the board
-     */
-    public byte[] getFlattenedBoard() {
-        byte[] flatArray = new byte[64];
-        int index = 0;
-        for (byte[] row : board)
-            for (byte b : row)
-                flatArray[index++] = b;
-
-        return flatArray;
     }
 
     /**
@@ -469,10 +453,9 @@ public class Field {
         if (kingInCheck != (blackTurn ? Player.BLACK : Player.WHITE))
             return null;
 
-        for (int row = 0; row < board.length; row++)
-            for (int col = 0; col < board[row].length; col++)
-                if (board[row][col] == (blackTurn ? PieceUtil.BLACK_KING : PieceUtil.WHITE_KING))
-                    return new Square(col, row);
+        for (int i = 0; i < board.length; i++)
+            if (board[i] == (blackTurn ? PieceUtil.BLACK_KING : PieceUtil.WHITE_KING))
+                return new Square(i % 8, (int)Math.floor((double)i/(double)8));
 
         return null;
     }
@@ -492,14 +475,14 @@ public class Field {
      * Gets piece byte from board
      */
     public byte getPieceBySquare(Square square) {
-        return board[square.y()][square.x()];
+        return board[square.y() * 8 + square.x()];
     }
 
     /**
      * Sets piece byte on board
      */
     private void setPieceOnSquare(Square square, byte piece) {
-        board[square.y()][square.x()] = piece;
+        board[square.y() * 8 + square.x()] = piece;
     }
 
 
@@ -540,10 +523,9 @@ public class Field {
     public Field clone() {
         Field clone = new Field();
 
-        clone.board = new byte[board.length][board[0].length];
-        for (int i = 0; i < board.length; i++) {
-            System.arraycopy(board[i], 0, clone.board[i], 0, board[i].length);
-        }
+        clone.board = new byte[board.length];
+        System.arraycopy(board, 0, clone.board, 0, board.length);
+
 
         clone.blackTurn = this.blackTurn;
         clone.castlingInformation = this.castlingInformation;

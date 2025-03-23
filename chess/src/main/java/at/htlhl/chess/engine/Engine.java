@@ -10,7 +10,7 @@ public class Engine {
 
     private Field field;
 
-    private Move currentBestMove = null;
+    private ArrayList<EvaluatedMove> evaluatedMoves = null;
     private int maxDepth;
     private int executedMoves = 0;
     private int evaluatedPositions = 0;
@@ -33,28 +33,37 @@ public class Engine {
     }
 
     public Move getBestMove() {
-        currentBestMove = null;
+        return getBestMoves().getFirst().move();
+    }
+
+    public ArrayList<EvaluatedMove> getBestMoves() {
+        evaluatedMoves = new ArrayList<>(15);
         evaluatedPositions = 0;
         executedMoves = 0;
         maxDepth = 6;
         var timeBefore = System.nanoTime();
-        int eval;
         try {
-            eval = minimax(maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            minimax(maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
         } catch (InterruptedException e) {
             return null;
         }
         var nanoTime = System.nanoTime() - timeBefore;
+
+        evaluatedMoves.sort((m1, m2) ->
+                field.isBlackTurn() ? Integer.compare(m1.evaluation(), m2.evaluation()) : Integer.compare(m2.evaluation(), m1.evaluation())
+        );
+
         System.out.println("Engine finished calculating. Results:\n{\n" +
                 "Depth: " + maxDepth +
                 "\nTime elapsed: " + nanoTime + " ns" + " (=" + nanoTime / 1_000_000 + " ms)" +
                 "\nMoves Executed: " + executedMoves +
                 "\nPositions Evaluated: " + evaluatedPositions +
                 "\nTime per move: " + nanoTime / executedMoves + " ns" +
-                "\nEvaluation: " + eval +
-                "\nBest Move: " + currentBestMove +
+                "\nEvaluation: " + evaluatedMoves.getFirst().evaluation() +
+                "\nBest Moves: " + evaluatedMoves +
                 "\n}\n");
-        return currentBestMove;
+
+        return evaluatedMoves;
     }
 
     private int minimax(int depth, int alpha, int beta) throws InterruptedException {
@@ -66,20 +75,22 @@ public class Engine {
         var moves = field.getLegalMoves();
         orderMoves(moves);
         for (var move : moves) {
+
             field.forceMove(move, false);
             executedMoves++;
             var eval = minimax(depth - 1, alpha, beta);
             field.undoMove();
-            if (isBlacksTurn ? eval < bestScore : eval > bestScore) {
+
+            if (isBlacksTurn ? eval < bestScore : eval > bestScore)
                 bestScore = eval;
-                if (depth == maxDepth)
-                    currentBestMove = move;
-            }
+            if (depth == maxDepth)
+                evaluatedMoves.add(new EvaluatedMove(move, eval));
 
             //alpha-beta pruning
-            if (isBlacksTurn) beta = Math.min(beta, eval);
-            else alpha = Math.max(alpha, eval);
-
+            if (isBlacksTurn)
+                beta = Math.min(beta, eval);
+            else
+                alpha = Math.max(alpha, eval);
             if (beta <= alpha) break;
         }
         return bestScore;

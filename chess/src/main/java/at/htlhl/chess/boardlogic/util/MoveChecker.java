@@ -45,7 +45,7 @@ public class MoveChecker {
      * @return True if the target square is empty or occupied by an opponent's piece.
      */
     private boolean isTargetSquarePossible(int x, int y, boolean isStartWhite) {
-        return isOnBoard(x, y) && (PieceUtil.isEmpty(field.getBoard()[y][x]) || PieceUtil.isWhite(field.getBoard()[y][x]) != isStartWhite);
+        return isOnBoard(x, y) && (PieceUtil.isEmpty(field.getBoard()[y * 8 + x]) || PieceUtil.isWhite(field.getBoard()[y * 8 + x]) != isStartWhite);
     }
 
     /**
@@ -62,7 +62,7 @@ public class MoveChecker {
                 int y = position.y() + dir[1] * i;
                 if (isTargetSquarePossible(x, y, isStartWhite)) {
                     squares.add(new Square(x, y));
-                    if (!PieceUtil.isEmpty(field.getBoard()[y][x])) {
+                    if (!PieceUtil.isEmpty(field.getBoard()[y * 8 + x])) {
                         break;
                     }
                 } else {
@@ -87,7 +87,7 @@ public class MoveChecker {
                 int y = position.y() + dir[1] * i;
                 if (isTargetSquarePossible(x, y, isStartWhite)) {
                     squares.add(new Square(x, y));
-                    if (!PieceUtil.isEmpty(field.getBoard()[y][x])) {
+                    if (!PieceUtil.isEmpty(field.getBoard()[y * 8 + x])) {
                         break;
                     }
                 } else {
@@ -141,7 +141,7 @@ public class MoveChecker {
             return false;
         }
 
-        if (!PieceUtil.isEmpty(field.getBoard()[y][x]) && (PieceUtil.isWhite(field.getBoard()[y][x]) != isStartWhite)) {
+        if (!PieceUtil.isEmpty(field.getBoard()[y * 8 + x]) && (PieceUtil.isWhite(field.getBoard()[y * 8 + x]) != isStartWhite)) {
             return true;
         }
 
@@ -164,7 +164,7 @@ public class MoveChecker {
      */
     private boolean isPawnTargetSquarePossible(int x, int y) {
         if (isOnBoard(x, y)) {
-            return PieceUtil.isEmpty(field.getBoard()[y][x]);
+            return PieceUtil.isEmpty(field.getBoard()[y * 8 + x]);
         }
         return false;
     }
@@ -267,7 +267,7 @@ public class MoveChecker {
      * @return List of possible target squares
      */
     public List<Square> getTargetSquares(Square position, boolean isStartWhite) {
-        byte piece = field.getBoard()[position.y()][position.x()];
+        byte piece = field.getBoard()[position.y() * 8 + position.x()];
 
         // TODO: replace with switch case
 
@@ -354,7 +354,7 @@ public class MoveChecker {
                 if (isCheckLegal(appearedChecks)) {
                     move.setLegal(true);
 
-                    move.setCapture(PieceUtil.isEmpty(field.getPieceBySquare(move.getTargetSquare())) == false);
+                    move.setCapturedPiece(field.getPieceBySquare(move.getTargetSquare()));
 
                     // redundant length check call, but that's the easiest way
                     if (appearedChecks.size() == 1) {
@@ -505,7 +505,7 @@ public class MoveChecker {
      */
     private boolean isKingChecked(Square position) {
         boolean isStartWhite = PieceUtil.isWhite(getPieceBySquare(position));
-        byte[][] board = field.getBoard();
+        byte[] board = field.getBoard();
         int kingX = position.x();
         int kingY = position.y();
 
@@ -513,7 +513,7 @@ public class MoveChecker {
             int x = kingX + move[0];
             int y = kingY + move[1];
             if (isOnBoard(x, y)) {
-                byte piece = board[y][x];
+                byte piece = board[y * 8 + x];
                 if (PieceUtil.isKnight(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
                     return true;
                 }
@@ -527,7 +527,7 @@ public class MoveChecker {
                 int y = kingY + dir[1] * i;
                 if (!isOnBoard(x, y)) break;
 
-                byte piece = board[y][x];
+                byte piece = board[y * 8 + x];
                 if (PieceUtil.isEmpty(piece)) continue;
 
                 boolean isOpponent = PieceUtil.isWhite(piece) != isStartWhite;
@@ -550,7 +550,7 @@ public class MoveChecker {
             int x = kingX + xOffset;
             int y = kingY + pawnDir;
             if (isOnBoard(x, y)) {
-                byte piece = board[y][x];
+                byte piece = board[y * 8 + x];
                 if (PieceUtil.isPawn(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
                     return true;
                 }
@@ -561,7 +561,7 @@ public class MoveChecker {
             int x = kingX + dir[0];
             int y = kingY + dir[1];
             if (isOnBoard(x, y)) {
-                byte piece = board[y][x];
+                byte piece = board[y * 8 + x];
                 if (PieceUtil.isKing(piece) && PieceUtil.isWhite(piece) != isStartWhite) {
                     return true;
                 }
@@ -643,7 +643,7 @@ public class MoveChecker {
         var board = field.getBoard();
         for (int i = 0; i < 8; i++)
             for (int j = 0; j < 8; j++)
-                if (PieceUtil.isKing(board[i][j])) {
+                if (PieceUtil.isKing(board[i * 8 + j])) {
                     kings.add(new Square(j, i));
                     if (kings.size() >= 2)
                         return kings;
@@ -689,14 +689,14 @@ public class MoveChecker {
      * Gets piece byte from board
      */
     private byte getPieceBySquare(Square square) {
-        return field.getBoard()[square.y()][square.x()];
+        return field.getBoard()[square.y() * 8 + square.x()];
     }
 
     /**
      * Sets piece byte on board
      */
     private void setPieceBySquare(Square square, byte piece) {
-        field.getBoard()[square.y()][square.x()] = piece;
+        field.getBoard()[square.y() * 8 + square.x()] = piece;
     }
 
     private boolean isCastlingMove(Move move) {
