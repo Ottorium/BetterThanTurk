@@ -166,6 +166,10 @@ public class BoardViewController implements Initializable {
                 updateSuggestions();
             }
         });
+
+        engineForSuggChoiceBox.setOnAction(l -> {
+            updateSuggestions();
+        });
         clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
     }
@@ -549,6 +553,7 @@ public class BoardViewController implements Initializable {
 
     private void updateSuggestions() {
         moveSuggestionsVBox.getChildren().clear();
+        clearArrows();
         if (engineToggleSwitch.isSelected() == false) return;
 
         // run engine in background and then coll fillMoveSuggestions
