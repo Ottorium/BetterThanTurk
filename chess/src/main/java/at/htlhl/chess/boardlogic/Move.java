@@ -136,4 +136,13 @@ public class Move {
     public void setCapturedPiece(byte capturedPiece) {
         this.capturedPiece = capturedPiece;
     }
+
+    /**
+     * parses a move from a string like a1a2
+     */
+    public static Move valueOf(String text){
+        Square startingSquare = Square.parseString(text.substring(0, 2));
+        Square endingSquare = Square.parseString(text.substring(2, 4));
+        return new Move(startingSquare, endingSquare);
+    }
 }

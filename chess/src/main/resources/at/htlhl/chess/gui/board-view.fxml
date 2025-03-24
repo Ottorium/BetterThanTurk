@@ -3,43 +3,49 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
 
-<?import javafx.scene.control.ScrollPane?>
-<VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="at.htlhl.chess.gui.BoardViewController">
+<?import org.controlsfx.control.ToggleSwitch?>
+<VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.htlhl.chess.gui.BoardViewController">
     <children>
         <ToolBar fx:id="toolBar" prefHeight="40.0">
             <items>
-                <Button fx:id="newGameButton" text="New Game"/>
-                <Label text="White"/>
-                <ChoiceBox fx:id="whitePlayerChoiceBox"/>
-                <Label text="Black"/>
-                <ChoiceBox fx:id="blackPlayerChoiceBox"/>
-                <Button fx:id="clearSettingsButton" text="ClearSettings"/>
+                <Button fx:id="newGameButton" text="New Game" />
+                <Label text="White" />
+                <ChoiceBox fx:id="whitePlayerChoiceBox" />
+                <Label text="Black" />
+                <ChoiceBox fx:id="blackPlayerChoiceBox" />
+                <Button fx:id="clearSettingsButton" text="ClearSettings" />
             </items>
         </ToolBar>
-        <SplitPane dividerPositions="0.2, 0.8" VBox.vgrow="ALWAYS">
+        <SplitPane dividerPositions="0.2, 0.8, 0.5" VBox.vgrow="ALWAYS">
             <items>
                 <VBox>
+                    <ToolBar prefHeight="40.0" prefWidth="200.0">
+                        <items>
+                            <Label text="Engine"></Label>
+                            <ToggleSwitch fx:id="engineToggleSwitch"/>
+                            <ChoiceBox fx:id="engineForSuggChoiceBox"></ChoiceBox>
+                        </items>
+                    </ToolBar>
                     <ScrollPane fitToWidth="true">
-                        <VBox fx:id="moveSuggestionsVBox"/>
+                        <VBox fx:id="moveSuggestionsVBox" />
                     </ScrollPane>
                 </VBox>
                 <VBox>
                     <children>
                         <BorderPane minHeight="40" VBox.vgrow="SOMETIMES">
                             <bottom>
-                                <FlowPane fx:id="capturedWhitePieces" prefHeight="40.0" prefWrapLength="5000.0"
-                                          style="-fx-alignment: center"/>
+                                <FlowPane fx:id="capturedWhitePieces" prefHeight="40.0" prefWrapLength="5000.0" style="-fx-alignment: center" />
                             </bottom>
                         </BorderPane>
                         <StackPane VBox.vgrow="ALWAYS">
@@ -50,15 +56,14 @@
                         </StackPane>
                         <BorderPane minHeight="40" VBox.vgrow="SOMETIMES">
                             <top>
-                                <FlowPane fx:id="capturedBlackPieces" prefHeight="40.0" prefWrapLength="5000.0"
-                                          style="-fx-alignment: center;"/>
+                                <FlowPane fx:id="capturedBlackPieces" prefHeight="40.0" prefWrapLength="5000.0" style="-fx-alignment: center;" />
                             </top>
                         </BorderPane>
                     </children>
                 </VBox>
                 <VBox>
                     <children>
-                        <TextArea fx:id="FENTextArea" text="THE FEN WILL BE HERE"/>
+                        <TextArea fx:id="FENTextArea" text="THE FEN WILL BE HERE" />
                     </children>
                 </VBox>
             </items>
