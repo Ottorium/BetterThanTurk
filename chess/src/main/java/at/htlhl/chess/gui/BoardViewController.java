@@ -78,6 +78,7 @@ public class BoardViewController implements Initializable {
     private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
     private PlayingEntity blackPlayingEntity;
     private PlayingEntity whitePlayingEntity;
+    private EngineConnector connector;
 
     private ChessBoardInteractionHandler chessBoardInteractionHandler;
 
@@ -520,6 +521,7 @@ public class BoardViewController implements Initializable {
     public void shutdown() {
         blackPlayingEntity.shutdown();
         whitePlayingEntity.shutdown();
+        connector.stopCurrentExecutions();
     }
 
     private void clearSettings() {
@@ -545,7 +547,7 @@ public class BoardViewController implements Initializable {
         if (engineToggleSwitch.isSelected() == false) return;
 
         // run engine in background and then coll fillMoveSuggestions
-        EngineConnector connector = new EngineConnector(getField());
+        connector = new EngineConnector(getField());
         connector.stopCurrentExecutions();
         connector.suggestMoves(this::fillMoveSuggestions);
     }
