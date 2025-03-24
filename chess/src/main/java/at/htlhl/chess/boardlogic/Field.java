@@ -442,7 +442,6 @@ public class Field {
         // If king moves, remove all castling rights for that side
         if (PieceUtil.isKing(movingPiece)) {
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
-            return;
         }
 
         // If rook moves from its starting position, remove that sides castling right
