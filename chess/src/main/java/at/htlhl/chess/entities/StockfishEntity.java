@@ -33,6 +33,6 @@ public class StockfishEntity extends PlayingEntity {
 
     @Override
     public void shutdown() {
-       connector.shutdown();
+        connector.shutdown();
     }
 }

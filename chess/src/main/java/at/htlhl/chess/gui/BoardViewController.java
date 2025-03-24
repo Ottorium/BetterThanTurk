@@ -201,8 +201,8 @@ public class BoardViewController implements Initializable {
     }
 
     private void removeSquareListeners() {
-        blackPlayingEntity.removeInteractions();
-        whitePlayingEntity.removeInteractions();
+        blackPlayingEntity.shutdown();
+        whitePlayingEntity.shutdown();
     }
 
     private void initPlayers() {

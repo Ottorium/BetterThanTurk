@@ -13,6 +13,11 @@ public abstract class PlayingEntity {
         this.boardViewController = boardViewController;
     }
 
+    /**
+     * Is used to call a move on board
+     *
+     * @return
+     */
     public boolean move(Move move) {
         if (move == null) {
             return false;
@@ -20,6 +25,9 @@ public abstract class PlayingEntity {
         return boardViewController.makeMove(move, this);
     }
 
+    /**
+     * Like a trigger, that is used for bots to tell them that they can move
+     */
     public void allowMove() {
     }
 
@@ -27,14 +35,20 @@ public abstract class PlayingEntity {
         return boardViewController;
     }
 
+    /**
+     * looks, if it is this player's time to move
+     *
+     * @return true if it is it's move
+     */
     public boolean isMyMove() {
         return (boardViewController.getField().isBlackTurn() && player.equals(Player.BLACK)) ||
                 (boardViewController.getField().isBlackTurn() == false && player.equals(Player.WHITE));
     }
 
-    public void removeInteractions() {
-    }
 
+    /**
+     * closes threads, removes event listeners. MUST be called when closing a programm, to prevent some threads from staying alive
+     */
     public void shutdown() {
     }
 
