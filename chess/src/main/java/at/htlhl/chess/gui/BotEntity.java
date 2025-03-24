@@ -2,15 +2,15 @@ package at.htlhl.chess.gui;
 
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
-import at.htlhl.chess.gui.util.EngineConnector;
+import at.htlhl.chess.gui.util.CustomEngineConnector;
 
 public class BotEntity extends PlayingEntity {
 
-    EngineConnector connector;
+    CustomEngineConnector connector;
 
     public BotEntity(Player player, BoardViewController boardViewController) {
         super(player, boardViewController);
-        connector = new EngineConnector(boardViewController.getField());
+        connector = new CustomEngineConnector(boardViewController.getField());
     }
 
     @Override
@@ -28,7 +28,7 @@ public class BotEntity extends PlayingEntity {
 
     private void startEngine() {
         connector.stopCurrentExecutions();
-        connector = new EngineConnector(boardViewController.getField());
+        connector = new CustomEngineConnector(boardViewController.getField());
         connector.suggestMove(this::suggestMove);
     }
 

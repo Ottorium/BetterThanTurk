@@ -5,7 +5,6 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
-import at.htlhl.chess.engine.Engine;
 import at.htlhl.chess.engine.EvaluatedMove;
 import at.htlhl.chess.gui.util.*;
 import javafx.application.Platform;
@@ -13,16 +12,13 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
@@ -177,10 +173,16 @@ public class BoardViewController implements Initializable {
     private void fillChoiceBoxes() {
         blackPlayerChoiceBox.getItems().clear();
         whitePlayerChoiceBox.getItems().clear();
+        engineForSuggChoiceBox.getItems().clear();
         blackPlayerChoiceBox.getItems().addAll(PlayingEntity.Type.values());
         blackPlayerChoiceBox.setValue(PlayingEntity.Type.values()[0]);
         whitePlayerChoiceBox.getItems().addAll(PlayingEntity.Type.values());
         whitePlayerChoiceBox.setValue(PlayingEntity.Type.values()[0]);
+        engineForSuggChoiceBox.getItems().addAll(EngineConnector.Type.values());
+        engineForSuggChoiceBox.setValue(EngineConnector.Type.values()[0]);
+
+        // switch toggles
+        engineToggleSwitch.setSelected(false);
     }
 
     private void newGame() {
@@ -547,7 +549,16 @@ public class BoardViewController implements Initializable {
         if (engineToggleSwitch.isSelected() == false) return;
 
         // run engine in background and then coll fillMoveSuggestions
-        connector = new EngineConnector(getField());
+        switch (engineForSuggChoiceBox.getValue()){
+            case EngineConnector.Type.CUSTOM:
+                connector = new CustomEngineConnector(getField());
+                break;
+            case EngineConnector.Type.STOCKFISH:
+                connector = new StockfishConnector(this);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + engineForSuggChoiceBox.getValue());
+        }
         connector.stopCurrentExecutions();
         connector.suggestMoves(this::fillMoveSuggestions);
     }

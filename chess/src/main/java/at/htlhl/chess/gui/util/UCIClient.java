@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.engine.EvaluatedMove;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -171,6 +172,11 @@ public class UCIClient {
      */
     public Move getBestMove() {
         return getBestMove("3000");
+    }
+
+    public List<EvaluatedMove> getBestMoves(String thinkTime) {
+        List<EvaluatedMove> moves = new ArrayList<>();
+        return null;
     }
 }
 
