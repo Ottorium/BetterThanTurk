@@ -16,10 +16,16 @@ public class Arrow {
     private Square endSquare;
     private byte promotionPiece = 0;
     private Color color = Color.rgb(110, 110, 110);
+    private double modifier;
 
     public Arrow(Square startingSquare, Square endSquare) {
+        this(startingSquare, endSquare, 1);
+    }
+
+    public Arrow(Square startingSquare, Square endSquare, double modifier) {
         this.startingSquare = startingSquare;
         this.endSquare = endSquare;
+        this.modifier = modifier;
     }
 
     public Square getStartingSquare() {
@@ -82,9 +88,9 @@ public class Arrow {
         DoubleBinding perpY = Bindings.createDoubleBinding(() -> dirX.get(), dirX);
 
         // Arrow dimensions
-        DoubleBinding thickness = squareSizeBinding.multiply(0.1);
-        DoubleBinding arrowHeadLength = squareSizeBinding.multiply(0.3);
-        DoubleBinding arrowHeadWidth = squareSizeBinding.multiply(0.2);
+        DoubleBinding thickness = squareSizeBinding.multiply(0.1).multiply(modifier);
+        DoubleBinding arrowHeadLength = squareSizeBinding.multiply(0.3).multiply(modifier);
+        DoubleBinding arrowHeadWidth = squareSizeBinding.multiply(0.2).multiply(modifier);
         DoubleBinding bodyEndX = Bindings.createDoubleBinding(() -> endX.get() - dirX.get() * arrowHeadLength.get(), endX, dirX, arrowHeadLength);
         DoubleBinding bodyEndY = Bindings.createDoubleBinding(() -> endY.get() - dirY.get() * arrowHeadLength.get(), endY, dirY, arrowHeadLength);
 

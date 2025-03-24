@@ -5,6 +5,8 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
+import at.htlhl.chess.engine.Engine;
+import at.htlhl.chess.engine.EvaluatedMove;
 import at.htlhl.chess.gui.util.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -53,6 +55,8 @@ public class BoardViewController implements Initializable {
     public ChoiceBox blackPlayerChoiceBox;
     @FXML
     public Button clearSettingsButton;
+    @FXML
+    public VBox moveSuggestionsVBox;
     @FXML
     ToolBar toolBar;
     @FXML
@@ -209,8 +213,8 @@ public class BoardViewController implements Initializable {
         updateMoveOrder();
     }
 
-    private void updateMoveOrder(){
-        if (field.isBlackTurn()){
+    private void updateMoveOrder() {
+        if (field.isBlackTurn()) {
             blackPlayingEntity.allowMove();
         } else {
             whitePlayingEntity.allowMove();
@@ -254,17 +258,22 @@ public class BoardViewController implements Initializable {
 
     /**
      * Adds a new arrow to Arrows to draw list
-     *
-     * @param move
      */
     public void addArrow(Move move) {
+        addArrow(move, 1);
+    }
+
+    /**
+     * Adds a new arrow to Arrows to draw list with scale parameter
+     */
+    public void addArrow(Move move, double modifier) {
         if (move == null) {
             return;
         }
         Square arrowStartSquare = move.getStartingSquare();
         Square arrowEndSquare = move.getTargetSquare();
         byte arrowPromotionPiece = move.getPromotionPiece();
-        Arrow arrow = new Arrow(arrowStartSquare, arrowEndSquare);
+        Arrow arrow = new Arrow(arrowStartSquare, arrowEndSquare, modifier);
         arrow.setPromotionPiece(arrowPromotionPiece);
         arrow.setColor(ARROW_COLOR);
         arrowsToDraw.add(arrow);
@@ -326,6 +335,8 @@ public class BoardViewController implements Initializable {
     private void updateUI(Move moveToHighlight) {
         updateFENinFENTextArea();
         updateCapturedPieces();
+        updateSuggestions();
+        // I think clear arrows and draw pieces MUST be the last one
         clearArrows();
         drawPieces(moveToHighlight, field.getSquareOfCheck());
     }
@@ -339,8 +350,8 @@ public class BoardViewController implements Initializable {
 
     private void playMoveSound(Move move) {
         SoundEffect soundEffect;
-        if (move.isCapture()){
-            if (PieceUtil.isRook(move.getCapturedPiece())){
+        if (move.isCapture()) {
+            if (PieceUtil.isRook(move.getCapturedPiece())) {
                 soundEffect = SoundEffect.THE_ROOK;
             } else {
                 soundEffect = SoundEffect.CAPTURE;
@@ -500,7 +511,7 @@ public class BoardViewController implements Initializable {
         whitePlayingEntity.shutdown();
     }
 
-    private void clearSettings(){
+    private void clearSettings() {
         ChessApplication.prop.clear();
         ChessApplication.saveProperties();
         System.exit(0);
@@ -508,12 +519,52 @@ public class BoardViewController implements Initializable {
 
     /**
      * Shows alert and starts a new game with default settings
-     * @param headerText alert header
+     *
+     * @param headerText  alert header
      * @param contentText alert content
      */
     public void alertWithNewGame(String headerText, String contentText) {
         boardViewUtil.alertProblem(headerText, contentText);
         fillChoiceBoxes();
         newGame();
+    }
+
+    private void updateSuggestions() {
+        moveSuggestionsVBox.getChildren().clear();
+        // run engine in background and then coll fillMoveSuggestions
+        EngineConnector connector = new EngineConnector(getField());
+        connector.stopCurrentExecutions();
+        connector.suggestMoves(this::fillMoveSuggestions);
+    }
+
+    private void fillMoveSuggestions(List<EvaluatedMove> moves) {
+        if (moves == null) return;
+        double i = 0;
+        for (EvaluatedMove move : moves) {
+            if (move == null) continue;
+            if (i < 3) {
+                addArrow(move.move(), (1.7 - (i * 0.5)));
+                i++;
+            }
+            moveSuggestionsVBox.getChildren().add(boardViewUtil.buildMoveBox(move, getPlayerThatWillMove()));
+        }
+    }
+
+    /**
+     * Returns the player that already made the move, so if the isBlackTurn is true, the player is white
+     *
+     * @return Player color that moved
+     */
+    public Player getPlayerThatMoved() {
+        return field.isBlackTurn() ? Player.WHITE : Player.BLACK;
+    }
+
+    /**
+     * Returns the player that will make a move now
+     *
+     * @return player
+     */
+    public Player getPlayerThatWillMove() {
+        return field.isBlackTurn() ? Player.BLACK : Player.WHITE;
     }
 }

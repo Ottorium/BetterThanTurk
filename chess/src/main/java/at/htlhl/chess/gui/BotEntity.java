@@ -10,7 +10,7 @@ public class BotEntity extends PlayingEntity {
 
     public BotEntity(Player player, BoardViewController boardViewController) {
         super(player, boardViewController);
-        connector = new EngineConnector(boardViewController.getField(), boardViewController::addArrow);
+        connector = new EngineConnector(boardViewController.getField());
     }
 
     @Override
@@ -28,8 +28,8 @@ public class BotEntity extends PlayingEntity {
 
     private void startEngine() {
         connector.stopCurrentExecutions();
-        connector = new EngineConnector(boardViewController.getField(), this::suggestMove);
-        connector.suggestMove();
+        connector = new EngineConnector(boardViewController.getField());
+        connector.suggestMove(this::suggestMove);
     }
 
     /**
