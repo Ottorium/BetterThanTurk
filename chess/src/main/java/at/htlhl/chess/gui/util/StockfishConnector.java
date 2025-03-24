@@ -21,7 +21,7 @@ public class StockfishConnector extends EngineConnector {
 
     public StockfishConnector(BoardViewController boardViewController) {
         this.boardViewController = boardViewController;
-        connectToStockfish();
+        executor.execute(this::connectToStockfish);
     }
 
     private void connectToStockfish() {
@@ -46,7 +46,13 @@ public class StockfishConnector extends EngineConnector {
 
     @Override
     public void suggestMoves(Consumer<List<EvaluatedMove>> movesCallback) {
-
+        executor.submit(() -> {
+            client.setPosition(boardViewController.getField().getFEN());
+            List<EvaluatedMove> moves = client.getBestMoves();
+            if (moves != null) {
+                Platform.runLater(() -> movesCallback.accept(moves));
+            }
+        });
     }
 
     @Override

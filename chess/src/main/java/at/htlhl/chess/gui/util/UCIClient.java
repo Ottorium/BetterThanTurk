@@ -4,14 +4,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
@@ -142,7 +142,7 @@ public class UCIClient {
     /**
      * Gets the best move in given position
      *
-     * @param thinkTime time that engine will spend thinking
+     * @param thinkTime time that engine will spend thinking smaller then 50000
      * @return Move best move
      */
     public Move getBestMove(String thinkTime) {
@@ -152,11 +152,9 @@ public class UCIClient {
                     "go movetime " + thinkTime,
                     lines -> lines.stream().filter(s -> s.startsWith("bestmove")).findFirst().get(),
                     line -> line.startsWith("bestmove"),
-                    5000l)
+                    50000l)
                     .split(" ")[1];
-            Square startingSquare = Square.parseString(bestMove.substring(0, 2));
-            Square endingSquare = Square.parseString(bestMove.substring(2, 4));
-            return new Move(startingSquare, endingSquare);
+            return Move.valueOf(bestMove);
         } catch (InterruptedException | ExecutionException e) {
             System.err.println("Something went wrong while getting best Move" + e.getMessage());
         } catch (TimeoutException e) {
@@ -174,9 +172,67 @@ public class UCIClient {
         return getBestMove("3000");
     }
 
+    /**
+     * Gets the best Moves array, with
+     * @param thinkTime
+     * @return
+     */
     public List<EvaluatedMove> getBestMoves(String thinkTime) {
-        List<EvaluatedMove> moves = new ArrayList<>();
-        return null;
+        // We set MultiPV to 10
+
+        Map<Integer, EvaluatedMove> moves = new TreeMap<>();
+        String analysisLineRegex = "info depth ([\\w]*) seldepth [\\w]* multipv ([\\w]*) score (cp ([\\-\\w]*)|mate ([\\w*])) [\\s\\w]*pv ([\\w]*)\\s*([\\s\\w]*)";
+        final var pattern = Pattern.compile(analysisLineRegex);
+        try {
+            // To get 10 best moves
+            command("setoption name MultiPV value 10", Function.identity(), s->s.startsWith("readyok"), 2000l);
+            moves = command(
+                "go movetime " + thinkTime,
+                lines -> {
+                    Map<Integer, EvaluatedMove> result = new TreeMap<>();
+                    for(String line : lines) {
+                        var matcher = pattern.matcher(line);
+                        if (matcher.matches()) {
+                            Integer pv = Integer.parseInt(matcher.group(2));
+                            String move = matcher.group(6);                  // Move (e.g., "e2e4")
+                            String scoreType = matcher.group(3);            // "cp X" or "mate X"
+                            double score;
+
+                            if (scoreType.startsWith("cp")) {
+                                // Centipawn score (group 4 is the cp value)
+                                score = Double.parseDouble(matcher.group(4)) * 100.0; // Convert to pawns
+                            } else {
+                                // Mate score (group 5 is the mate value)
+                                int mateMoves = Integer.parseInt(matcher.group(5));
+                                // Assign a large value, positive for positive mate, negative for negative
+                                score = mateMoves > 0 ? 10000.0 - mateMoves : -10000.0 - mateMoves;
+                            }
+                            result.put(pv, new EvaluatedMove(Move.valueOf(move), (int) score));
+                        }
+                    }
+                    return result;
+                },
+                s -> s.startsWith("bestmove"),
+                50000l);
+            // To clear settings
+            command("setoption name MultiPV value 1", Function.identity(), s->s.startsWith("readyok"), 2000l);
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Something went wrong while getting best Moves" + e.getMessage());
+        } catch (TimeoutException e) {
+            System.err.println("engine timeout");
+        }
+        List<EvaluatedMove> out = new ArrayList<>();
+        out.addAll(moves.values());
+        return out;
+    }
+
+
+    /**
+     * Gets 10 best moves in given position
+     * @return
+     */
+    public List<EvaluatedMove> getBestMoves() {
+        return getBestMoves("3000");
     }
 }
 

@@ -523,7 +523,10 @@ public class BoardViewController implements Initializable {
     public void shutdown() {
         blackPlayingEntity.shutdown();
         whitePlayingEntity.shutdown();
-        connector.stopCurrentExecutions();
+        if (connector != null) {
+            connector.stopCurrentExecutions();
+            connector = null;
+        }
     }
 
     private void clearSettings() {
