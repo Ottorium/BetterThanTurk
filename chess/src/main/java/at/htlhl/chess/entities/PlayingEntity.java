@@ -16,13 +16,13 @@ public abstract class PlayingEntity {
     /**
      * Is used to call a move on board
      *
-     * @return
+     * @return true if move was successfully made
      */
     public boolean move(Move move) {
         if (move == null) {
             return false;
         }
-        return boardViewController.makeMove(move, this);
+        return boardViewController.makeMove(move);
     }
 
     /**

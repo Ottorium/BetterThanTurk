@@ -1,6 +1,5 @@
 package at.htlhl.chess.gui.util;
 
-import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.engine.EvaluatedMove;
 import at.htlhl.chess.gui.BoardViewController;
@@ -15,8 +14,8 @@ import java.util.function.Consumer;
 
 public class StockfishConnector extends EngineConnector {
 
-    private UCIClient client = new UCIClient();
-    private BoardViewController boardViewController;
+    private final UCIClient client = new UCIClient();
+    private final BoardViewController boardViewController;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public StockfishConnector(BoardViewController boardViewController) {

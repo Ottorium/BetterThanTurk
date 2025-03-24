@@ -47,7 +47,8 @@ public class BoardViewController implements Initializable {
     private static final Color LAST_MOVE_HIGHLIGHT_COLOR = Color.rgb(255, 255, 0, 0.4);
     private static final Color KING_CHECK_COLOR = Color.rgb(255, 0, 0);
     private final Field field = new Field();
-
+    private final BoardViewUtil boardViewUtil = new BoardViewUtil();
+    private final List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
     @FXML
     public Button newGameButton;
     @FXML
@@ -74,16 +75,9 @@ public class BoardViewController implements Initializable {
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
-    private BoardViewUtil boardViewUtil = new BoardViewUtil();
-    private List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
     private PlayingEntity blackPlayingEntity;
     private PlayingEntity whitePlayingEntity;
     private EngineConnector connector;
-
-    private ChessBoardInteractionHandler chessBoardInteractionHandler;
-
-
-    private boolean updatingBoardListeners = false; // Guard flag to prevent chaining
 
     private static Rectangle getCheckHighlight() {
         Rectangle checkHighlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
@@ -171,9 +165,7 @@ public class BoardViewController implements Initializable {
             }
         });
 
-        engineForSuggChoiceBox.setOnAction(l -> {
-            updateSuggestions();
-        });
+        engineForSuggChoiceBox.setOnAction(l -> updateSuggestions());
         clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
     }
@@ -339,7 +331,7 @@ public class BoardViewController implements Initializable {
      *
      * @param move that has been made
      */
-    public boolean makeMove(Move move, PlayingEntity me) {
+    public boolean makeMove(Move move) {
         boolean success = field.move(move);
         if (success) {
             updateUI(move);

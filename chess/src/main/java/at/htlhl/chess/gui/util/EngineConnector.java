@@ -9,15 +9,11 @@ import java.util.function.Consumer;
 public abstract class EngineConnector {
     /**
      * Calls the moveCallback with the best found move
-     *
-     * @param moveCallback
      */
     public abstract void suggestMove(Consumer<Move> moveCallback);
 
     /**
      * Calls the callback with the list of best found moves
-     *
-     * @param movesCallback
      */
     public abstract void suggestMoves(Consumer<List<EvaluatedMove>> movesCallback);
 
