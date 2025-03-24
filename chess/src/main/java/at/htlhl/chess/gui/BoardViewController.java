@@ -334,7 +334,7 @@ public class BoardViewController implements Initializable {
     public boolean makeMove(Move move) {
         boolean success = field.move(move);
         if (success) {
-            updateUI(field.getCurrentPlayerAttackSquares());
+            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
             updateMoveOrder();
             playMoveSound(move);
         }
