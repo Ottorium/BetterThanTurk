@@ -150,34 +150,28 @@ public class AttackedSquaresUtil {
     }
 
     private void addAttackSquares(List<Square> targetSquares, boolean isWhite) {
-        HashMap<Square, Integer> attackMap = isWhite ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
+        byte[] attackMap = isWhite ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
         for (Square target : targetSquares) {
-            int oldCount = attackMap.getOrDefault(target, 0);
-            int newCount = oldCount + 1;
-            attackMap.put(target, newCount);
+            var idx = target.getBoardIndex();
+            byte oldCount = attackMap[idx];
+            byte newCount = (byte) (oldCount + 1);
+            attackMap[idx] = newCount;
         }
     }
 
     private void removeAttackSquares(List<Square> targetSquares, boolean isWhite) {
-        HashMap<Square, Integer> attackMap = isWhite ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
+        byte[] attackMap = isWhite ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
         for (Square target : targetSquares) {
-            int oldCount = attackMap.getOrDefault(target, 0);
-            if (oldCount > 0) {
-                int newCount = oldCount - 1;
-                if (newCount > 0) {
-                    attackMap.put(target, newCount);
-                } else {
-                    attackMap.remove(target);
-                }
-
-            }
+            var idx = target.getBoardIndex();
+            byte oldCount = attackMap[idx];
+            if (oldCount > 0) attackMap[idx] = (byte) (oldCount - 1);
         }
     }
 
     /**
      * Finds the squares that the given player is attacking and how often they are attacked.
      */
-    public HashMap<Square, Integer> findAttackedSquares(Player player) {
+    public byte[] findAttackedSquares(Player player) {
         var turnBefore = field.isBlackTurn();
         var blackTurn = player.equals(Player.BLACK);
         field.setBlackTurn(blackTurn);
@@ -202,13 +196,14 @@ public class AttackedSquaresUtil {
                 )
         );
 
-        HashMap<Square, Integer> squareFrequency = new HashMap<>();
-        for (Square square : attackedSquares)
-            squareFrequency.put(square, squareFrequency.getOrDefault(square, 0) + 1);
-
+        var result = new byte[64];
+        for (Square square : attackedSquares) {
+            var idx = square.getBoardIndex();
+            result[idx] = (byte) (result[idx] + 1);
+        }
 
         field.setBlackTurn(turnBefore);
-        return squareFrequency;
+        return result;
     }
 
     public ArrayList<Pin> lookForPins(Player player) {
@@ -329,7 +324,8 @@ public class AttackedSquaresUtil {
         if (checks.isEmpty())
             return null;
         if (checks.size() > 1) {
-            if (checks.size() > 2) throw new RuntimeException("This exception was thrown because there are 3 checks on the board. Though at the time of writing this, this is probably because the undo move method doesnt always work. ");
+            if (checks.size() > 2)
+                throw new RuntimeException("This exception was thrown because there are 3 checks on the board. Though at the time of writing this, this is probably because the undo move method doesnt always work. ");
             ArrayList<int[]> combinedDirections = checks.getFirst().getDirectionsFromWhichTheChecksAreComingIfSlidingPiece();
             combinedDirections.addAll(checks.get(1).getDirectionsFromWhichTheChecksAreComingIfSlidingPiece());
             return new Check(player, new ArrayList<>(), combinedDirections, true);

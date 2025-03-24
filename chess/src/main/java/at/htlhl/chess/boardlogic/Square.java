@@ -40,4 +40,8 @@ public record Square(int x, int y) {
         int rank = 8 - y;
         return String.valueOf(file) + rank;
     }
+
+    public int getBoardIndex() {
+        return y * 8 + x;
+    }
 }

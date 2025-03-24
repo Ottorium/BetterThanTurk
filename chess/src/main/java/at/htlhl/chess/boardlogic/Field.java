@@ -2,6 +2,7 @@ package at.htlhl.chess.boardlogic;
 
 import at.htlhl.chess.boardlogic.util.*;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -100,12 +101,12 @@ public class Field {
     /**
      * Stores the Squares that black is currently attacking and how often it is attacked
      */
-    private HashMap<Square, Integer> blackAttackSquares;
+    private byte[] blackAttackSquares;
 
     /**
      * Stores the Squares that white is currently attacking and how often it is attacked
      */
-    private HashMap<Square, Integer> whiteAttackSquares;
+    private byte[] whiteAttackSquares;
 
     /**
      * Stored the Pieces that are currently pinned
@@ -271,8 +272,8 @@ public class Field {
             }));
         }
 
-        var blackAttackSquaresBefore = (HashMap<Square, Integer>) blackAttackSquares.clone();
-        var whiteAttackSquaresBefore = (HashMap<Square, Integer>) whiteAttackSquares.clone();
+        var blackAttackSquaresBefore = Arrays.copyOf(blackAttackSquares, 64);
+        var whiteAttackSquaresBefore = Arrays.copyOf(whiteAttackSquares, 64);
         attackedSquaresUtil.updateCachedAttackSquares(move);
         changesInLastMove.add(new FieldChange("blackAttackSquares", undo -> blackAttackSquares = blackAttackSquaresBefore));
         changesInLastMove.add(new FieldChange("whiteAttackSquares", undo -> whiteAttackSquares = whiteAttackSquaresBefore));
@@ -579,8 +580,8 @@ public class Field {
         clone.pieceEvaluation = this.pieceEvaluation;
 
         clone.cachedKingPositions = (ArrayList<Square>) this.cachedKingPositions.clone();
-        clone.blackAttackSquares = (HashMap<Square, Integer>) this.blackAttackSquares.clone();
-        clone.whiteAttackSquares = (HashMap<Square, Integer>) this.whiteAttackSquares.clone();
+        clone.blackAttackSquares = Arrays.copyOf(this.blackAttackSquares, 64);
+        clone.whiteAttackSquares = Arrays.copyOf(this.whiteAttackSquares, 64);
         clone.pins = new ArrayList<>(this.pins.stream().map(Pin::clone).toList());
         clone.check = check == null ? null : this.check.clone();
 
@@ -623,19 +624,19 @@ public class Field {
         cachedKingPositions = kingPositions;
     }
 
-    public HashMap<Square, Integer> getWhiteAttackSquares() {
+    public byte[] getWhiteAttackSquares() {
         return whiteAttackSquares;
     }
 
-    public void setWhiteAttackSquares(HashMap<Square, Integer> value) {
+    public void setWhiteAttackSquares(byte[] value) {
         whiteAttackSquares = value;
     }
 
-    public HashMap<Square, Integer> getBlackAttackSquares() {
+    public byte[] getBlackAttackSquares() {
         return blackAttackSquares;
     }
 
-    public void setBlackAttackSquares(HashMap<Square, Integer> value) {
+    public void setBlackAttackSquares(byte[] value) {
         blackAttackSquares = value;
     }
 
@@ -645,7 +646,15 @@ public class Field {
      * @return ArrayList of Squares attacked by the current player
      */
     public ArrayList<Square> getCurrentPlayerAttackSquares() {
-        return blackTurn ? new ArrayList<>(blackAttackSquares.keySet()) : new ArrayList<>(whiteAttackSquares.keySet());
+        var array = blackTurn ? blackAttackSquares : whiteAttackSquares;
+        ArrayList<Square> result = new ArrayList<>(10);
+        for (int i = 0; i < array.length; i++) {
+            var thing = array[i];
+            if (thing == 0) continue;
+            if (thing < 0) throw new InvalidParameterException();
+            result.add(Square.parseBoardIndex(i));
+        }
+        return result;
     }
 
     /**
@@ -654,7 +663,15 @@ public class Field {
      * @return ArrayList of Squares attacked by the current player
      */
     public ArrayList<Square> getPassivePlayerAttackSquares() {
-        return blackTurn ? new ArrayList<>(whiteAttackSquares.keySet()) : new ArrayList<>(blackAttackSquares.keySet());
+        var array = blackTurn ? whiteAttackSquares : blackAttackSquares;
+        ArrayList<Square> result = new ArrayList<>(10);
+        for (int i = 0; i < array.length; i++) {
+            var thing = array[i];
+            if (thing == 0) continue;
+            if (thing < 0) throw new InvalidParameterException();
+            result.add(Square.parseBoardIndex(i));
+        }
+        return result;
     }
 
     public MoveChecker getMoveChecker() {
