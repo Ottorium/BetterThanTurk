@@ -144,7 +144,7 @@ public class Move {
         this.capturedPiece = capturedPiece;
     }
 
-    public int[] getDirection() {
+    public int[] getDirection(boolean isKnightMove) {
         if (startingSquare == null || targetSquare == null) {
             return new int[]{0, 0};
         }
@@ -152,6 +152,8 @@ public class Move {
         int dx = targetSquare.x() - startingSquare.x();
         int dy = targetSquare.y() - startingSquare.y();
 
+        if (isKnightMove)
+            return new int[]{dx, dy};
 
         if (dx != 0)
             dx = dx > 0 ? 1 : -1;

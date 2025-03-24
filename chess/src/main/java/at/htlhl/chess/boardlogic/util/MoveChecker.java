@@ -381,10 +381,11 @@ public class MoveChecker {
     }
 
     private boolean wouldPutCurrentPlayerInCheck(Move move) {
+        boolean isKnightMove = PieceUtil.isKnight(field.getPieceBySquare(move.getStartingSquare()));
         // Check if the piece is pinned and if the move direction is allowed
         for (Pin pin : field.getPins()) {
             if (pin.getPinnedPiece().equals(move.getStartingSquare())) {
-                var moveDirection = move.getDirection();
+                var moveDirection = move.getDirection(isKnightMove);
                 var allowedDirections = pin.getAllowedMoveDirections();
                 if (allowedDirections.stream().noneMatch(dir -> Arrays.equals(dir, moveDirection)))
                     return true;
@@ -408,7 +409,7 @@ public class MoveChecker {
                 // Make sure king isn't moving along a check line
                 return check.getDirectionsFromWhichTheChecksAreComingIfSlidingPiece()
                         .stream()
-                        .anyMatch(dir -> Arrays.equals(dir, move.getDirection()));
+                        .anyMatch(dir -> Arrays.equals(dir, move.getDirection(isKnightMove)));
             }
 
             // If it's a double check, king must move
