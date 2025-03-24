@@ -271,7 +271,11 @@ public class Field {
             }));
         }
 
+        var blackAttackSquaresBefore = (HashMap<Square, Integer>) blackAttackSquares.clone();
+        var whiteAttackSquaresBefore = (HashMap<Square, Integer>) whiteAttackSquares.clone();
         attackedSquaresUtil.updateCachedAttackSquares(move);
+        changesInLastMove.add(new FieldChange("blackAttackSquares", undo -> blackAttackSquares = blackAttackSquaresBefore));
+        changesInLastMove.add(new FieldChange("whiteAttackSquares", undo -> whiteAttackSquares = whiteAttackSquaresBefore));
 
         var pinsBefore = pins;
         pins = attackedSquaresUtil.lookForPins(blackTurn ? Player.BLACK : Player.WHITE);

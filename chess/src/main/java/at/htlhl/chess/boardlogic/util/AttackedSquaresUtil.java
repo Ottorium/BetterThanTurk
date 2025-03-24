@@ -88,13 +88,8 @@ public class AttackedSquaresUtil {
 
         // lazy approach: calculate everything new, as castling and en passant moves don't occur that often.
         if (move.isCastlingMove() || move.isEnPassantMove()) {
-            var whiteBefore = (HashMap<Square, Integer>) field.getWhiteAttackSquares().clone();
             field.setWhiteAttackSquares(findAttackedSquares(Player.WHITE));
-            field.getChangesInLastMove().add(new FieldChange("whiteAttackSquares", undo -> field.setWhiteAttackSquares(whiteBefore)));
-
-            var blackBefore = (HashMap<Square, Integer>) field.getBlackAttackSquares().clone();
             field.setBlackAttackSquares(findAttackedSquares(Player.BLACK));
-            field.getChangesInLastMove().add(new FieldChange("blackAttackSquares", undo -> field.setBlackAttackSquares(blackBefore)));
         }
 
 
@@ -156,33 +151,15 @@ public class AttackedSquaresUtil {
 
     private void addAttackSquares(List<Square> targetSquares, boolean isWhite) {
         HashMap<Square, Integer> attackMap = isWhite ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
-
-        ArrayList<Runnable> undoActions = new ArrayList<>();
-
         for (Square target : targetSquares) {
             int oldCount = attackMap.getOrDefault(target, 0);
             int newCount = oldCount + 1;
             attackMap.put(target, newCount);
-
-            undoActions.add(() -> {
-                if (oldCount == 0) {
-                    attackMap.remove(target);
-                } else {
-                    attackMap.put(target, oldCount);
-                }
-            });
         }
-
-        field.getChangesInLastMove().add(new FieldChange(
-                isWhite ? "whiteAttackSquares" : "blackAttackSquares",
-                undo -> undoActions.forEach(Runnable::run)
-        ));
     }
 
     private void removeAttackSquares(List<Square> targetSquares, boolean isWhite) {
         HashMap<Square, Integer> attackMap = isWhite ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
-
-        ArrayList<Runnable> undoActions = new ArrayList<>();
         for (Square target : targetSquares) {
             int oldCount = attackMap.getOrDefault(target, 0);
             if (oldCount > 0) {
@@ -193,14 +170,8 @@ public class AttackedSquaresUtil {
                     attackMap.remove(target);
                 }
 
-                undoActions.add(() -> attackMap.put(target, oldCount));
             }
         }
-
-        field.getChangesInLastMove().add(new FieldChange(
-                isWhite ? "whiteAttackSquares" : "blackAttackSquares",
-                undo -> undoActions.forEach(Runnable::run)
-        ));
     }
 
     /**
