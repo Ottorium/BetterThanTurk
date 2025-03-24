@@ -24,6 +24,7 @@ public class UCIClient {
     private Process process = null;
     private BufferedReader reader = null;
     private OutputStreamWriter writer = null;
+    private final String defaultThinkTime = "300";
 
     public UCIClient() {
     }
@@ -169,7 +170,7 @@ public class UCIClient {
      * @return Move best move
      */
     public Move getBestMove() {
-        return getBestMove("3000");
+        return getBestMove(defaultThinkTime);
     }
 
     /**
@@ -232,7 +233,7 @@ public class UCIClient {
      * @return
      */
     public List<EvaluatedMove> getBestMoves() {
-        return getBestMoves("3000");
+        return getBestMoves(defaultThinkTime);
     }
 }
 
