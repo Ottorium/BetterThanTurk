@@ -29,6 +29,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
+import org.controlsfx.control.ToggleSwitch;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -57,6 +58,10 @@ public class BoardViewController implements Initializable {
     public Button clearSettingsButton;
     @FXML
     public VBox moveSuggestionsVBox;
+    @FXML
+    public ToggleSwitch engineToggleSwitch;
+    @FXML
+    public ChoiceBox engineForSuggChoiceBox;
     @FXML
     ToolBar toolBar;
     @FXML
@@ -158,6 +163,12 @@ public class BoardViewController implements Initializable {
 
     private void initMenu() {
         newGameButton.setOnAction(l -> newGame());
+        // add on toggle
+        engineToggleSwitch.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                updateSuggestions();
+            }
+        });
         clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
     }
@@ -531,6 +542,8 @@ public class BoardViewController implements Initializable {
 
     private void updateSuggestions() {
         moveSuggestionsVBox.getChildren().clear();
+        if (engineToggleSwitch.isSelected() == false) return;
+
         // run engine in background and then coll fillMoveSuggestions
         EngineConnector connector = new EngineConnector(getField());
         connector.stopCurrentExecutions();
