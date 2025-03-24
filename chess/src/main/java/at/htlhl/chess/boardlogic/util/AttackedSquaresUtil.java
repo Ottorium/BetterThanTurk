@@ -329,7 +329,7 @@ public class AttackedSquaresUtil {
         if (checks.isEmpty())
             return null;
         if (checks.size() > 1) {
-            if (checks.size() > 2) throw new RuntimeException("Triple checks ????");
+            if (checks.size() > 2) throw new RuntimeException("This exception was thrown because there are 3 checks on the board. Though at the time of writing this, this is probably because the undo move method doesnt always work. ");
             ArrayList<int[]> combinedDirections = checks.getFirst().getDirectionsFromWhichTheChecksAreComingIfSlidingPiece();
             combinedDirections.addAll(checks.get(1).getDirectionsFromWhichTheChecksAreComingIfSlidingPiece());
             return new Check(player, new ArrayList<>(), combinedDirections, true);

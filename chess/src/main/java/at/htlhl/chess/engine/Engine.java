@@ -76,9 +76,15 @@ public class Engine {
         orderMoves(moves);
         for (var move : moves) {
 
-            field.forceMove(move, false);
-            executedMoves++;
-            var eval = minimax(depth - 1, alpha, beta);
+            int eval;
+            try {
+                field.forceMove(move, false);
+                executedMoves++;
+                eval = minimax(depth - 1, alpha, beta);
+            } catch (RuntimeException e) {
+                // look at the exception message for further info
+                eval = isBlacksTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            }
             field.undoMove();
 
             if (isBlacksTurn ? eval < bestScore : eval > bestScore)
