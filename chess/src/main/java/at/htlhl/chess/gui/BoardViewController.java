@@ -528,7 +528,7 @@ public class BoardViewController implements Initializable {
         blackPlayingEntity.shutdown();
         whitePlayingEntity.shutdown();
         if (connector != null) {
-            connector.stopCurrentExecutions();
+            connector.shutdown();
             connector = null;
         }
     }
