@@ -31,9 +31,18 @@ public class Move {
 
     @Override
     public boolean equals(Object o) {
+        if (o == this) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Move move = (Move) o;
-        return Objects.equals(targetSquare, move.targetSquare) && Objects.equals(startingSquare, move.startingSquare);
+        return Objects.equals(startingSquare, move.startingSquare) &&
+                Objects.equals(targetSquare, move.targetSquare) &&
+                promotionPiece == move.promotionPiece &&
+                isCastlingMove == move.isCastlingMove &&
+                isEnPassantMove == move.isEnPassantMove &&
+                isLegal == move.isLegal &&
+                Objects.equals(possibleEnPassantSquare, move.possibleEnPassantSquare) &&
+                capturedPiece == move.capturedPiece;
     }
 
     public Move clone() {
@@ -47,7 +56,7 @@ public class Move {
         clonedMove.isEnPassantMove = this.isEnPassantMove;
         clonedMove.isLegal = this.isLegal;
         clonedMove.capturedPiece = this.capturedPiece;
-        if (clonedMove.possibleEnPassantSquare != null)
+        if (this.possibleEnPassantSquare != null)
             clonedMove.possibleEnPassantSquare = new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y());
 
         return clonedMove;
@@ -55,7 +64,16 @@ public class Move {
 
     @Override
     public int hashCode() {
-        return Objects.hash(startingSquare, targetSquare);
+        return Objects.hash(
+                startingSquare,
+                targetSquare,
+                promotionPiece,
+                isCastlingMove,
+                isEnPassantMove,
+                isLegal,
+                possibleEnPassantSquare,
+                capturedPiece
+        );
     }
 
     public Square getStartingSquare() {
