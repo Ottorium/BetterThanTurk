@@ -5,10 +5,7 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
-import at.htlhl.chess.gui.util.BoardViewUtil;
-import at.htlhl.chess.gui.util.ChessBoardInteractionHandler;
-import at.htlhl.chess.gui.util.EngineConnector;
-import at.htlhl.chess.gui.util.PieceImageUtil;
+import at.htlhl.chess.gui.util.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -316,6 +313,7 @@ public class BoardViewController implements Initializable {
         if (success) {
             updateUI(move);
             updateMoveOrder();
+            playMoveSound(move);
         }
         return success;
     }
@@ -339,6 +337,19 @@ public class BoardViewController implements Initializable {
         updateUI(null);
     }
 
+    private void playMoveSound(Move move) {
+        SoundEffect soundEffect;
+        if (move.isCapture()){
+            if (PieceUtil.isRook(move.getCapturedPiece())){
+                soundEffect = SoundEffect.THE_ROOK;
+            } else {
+                soundEffect = SoundEffect.CAPTURE;
+            }
+        } else {
+            soundEffect = SoundEffect.MOVE;
+        }
+        soundEffect.playSound();
+    }
 
     /**
      * Draws chess pieces on the board based on the current state of the {@link Field}.
