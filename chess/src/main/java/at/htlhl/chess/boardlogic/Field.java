@@ -228,8 +228,9 @@ public class Field {
         if (move.isEnPassantMove()) {
             Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
             capturedPiece = getPieceBySquare(capturedEnPassantPawn);
+            byte capturedPawn = getPieceBySquare(capturedEnPassantPawn);
             setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
-            changesInLastMove.add(new FieldChange("board", undo -> setPieceOnSquare(capturedEnPassantPawn, finalCapturedPiece)));
+            changesInLastMove.add(new FieldChange("board", undo -> setPieceOnSquare(capturedEnPassantPawn, capturedPawn)));
         }
         var before = possibleEnPassantSquare;
         possibleEnPassantSquare = move.getPossibleEnPassantSquare();
@@ -294,7 +295,7 @@ public class Field {
         changesInLastMove.add(new FieldChange("gameState", undo -> gameState = gameStateBefore));
 
         var lastMoveBefore = lastMove;
-        lastMove = move;
+        lastMove = move.clone();
         changesInLastMove.add(new FieldChange("lastMove", undo -> lastMove = lastMoveBefore));
 
         if (verbose) System.out.println("Game state: " + gameState);
@@ -413,7 +414,11 @@ public class Field {
                 setPieceOnSquare(rookTarget, PieceUtil.EMPTY);
             }));
 
+            byte castlingInformationBefore = castlingInformation;
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
+            changesInLastMove.add(new FieldChange("castlingInformation", undo -> {
+                castlingInformation = castlingInformationBefore;
+            }));
         }
     }
 
