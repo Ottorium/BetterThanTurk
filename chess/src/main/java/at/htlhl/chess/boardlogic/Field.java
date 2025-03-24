@@ -206,8 +206,8 @@ public class Field {
      * @param move The move to execute. Undefined behaviour if the move is not valid
      */
     public void forceMove(Move move, boolean verbose) {
-        var changesInLastMoveBefore = (ArrayList<FieldChange>) changesInLastMove.clone();
-        changesInLastMove.clear();
+        var changesInLastMoveBefore = changesInLastMove;
+        changesInLastMove = new ArrayList<>(10);
         changesInLastMove.add(new FieldChange("changesInLastMove", undo -> changesInLastMove = changesInLastMoveBefore));
 
 
