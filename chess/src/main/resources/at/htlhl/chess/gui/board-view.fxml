@@ -11,7 +11,9 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 
+<?import javafx.scene.control.ScrollPane?>
 <VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="at.htlhl.chess.gui.BoardViewController">
     <children>
@@ -28,9 +30,9 @@
         <SplitPane dividerPositions="0.2, 0.8" VBox.vgrow="ALWAYS">
             <items>
                 <VBox>
-                    <children>
-
-                    </children>
+                    <ScrollPane fitToWidth="true">
+                        <VBox fx:id="moveSuggestionsVBox"/>
+                    </ScrollPane>
                 </VBox>
                 <VBox>
                     <children>
