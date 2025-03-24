@@ -14,13 +14,8 @@ public class PlayerEntity extends PlayingEntity {
     }
 
     @Override
-    protected boolean move(Move move) {
+    public boolean move(Move move) {
         return super.move(move);
-    }
-
-    @Override
-    public boolean tryMove(Move move) {
-        return move(move);
     }
 
     /**

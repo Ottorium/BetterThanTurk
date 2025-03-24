@@ -55,6 +55,8 @@ public class BoardViewController implements Initializable {
     @FXML
     public ChoiceBox blackPlayerChoiceBox;
     @FXML
+    public Button clearSettingsButton;
+    @FXML
     ToolBar toolBar;
     @FXML
     private FlowPane capturedWhitePieces;
@@ -155,6 +157,7 @@ public class BoardViewController implements Initializable {
 
     private void initMenu() {
         newGameButton.setOnAction(l -> newGame());
+        clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
     }
 
@@ -188,8 +191,7 @@ public class BoardViewController implements Initializable {
                 blackPlayingEntity = new BotEntity(Player.BLACK, this);
                 break;
             case PlayingEntity.Type.STOCKFISH:
-                System.err.println("Stockfish is not connected yet, using custom_bot");
-                blackPlayingEntity = new BotEntity(Player.BLACK, this);
+                blackPlayingEntity = new StockfishEntity(Player.BLACK, this);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
@@ -202,11 +204,10 @@ public class BoardViewController implements Initializable {
                 whitePlayingEntity = new BotEntity(Player.WHITE, this);
                 break;
             case PlayingEntity.Type.STOCKFISH:
-                System.err.println("Stockfish is not connected yet, using custom_bot");
-                whitePlayingEntity = new BotEntity(Player.WHITE, this);
+                whitePlayingEntity = new StockfishEntity(Player.WHITE, this);
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + blackPlayerChoiceBox.getValue());
+                throw new IllegalStateException("Unexpected value: " + whitePlayerChoiceBox.getValue());
         }
         updateMoveOrder();
     }
@@ -314,11 +315,7 @@ public class BoardViewController implements Initializable {
         boolean success = field.move(move);
         if (success) {
             updateUI(move);
-            if (blackPlayingEntity == me) {
-                whitePlayingEntity.allowMove();
-            } else {
-                blackPlayingEntity.allowMove();
-            }
+            updateMoveOrder();
         }
         return success;
     }
@@ -490,5 +487,22 @@ public class BoardViewController implements Initializable {
     public void shutdown() {
         blackPlayingEntity.shutdown();
         whitePlayingEntity.shutdown();
+    }
+
+    private void clearSettings(){
+        ChessApplication.prop.clear();
+        ChessApplication.saveProperties();
+        System.exit(0);
+    }
+
+    /**
+     * Shows alert and starts a new game with default settings
+     * @param headerText alert header
+     * @param contentText alert content
+     */
+    public void alertWithNewGame(String headerText, String contentText) {
+        boardViewUtil.alertProblem(headerText, contentText);
+        fillChoiceBoxes();
+        newGame();
     }
 }

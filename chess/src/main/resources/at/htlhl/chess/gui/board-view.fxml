@@ -22,6 +22,7 @@
                 <ChoiceBox fx:id="whitePlayerChoiceBox"/>
                 <Label text="Black"/>
                 <ChoiceBox fx:id="blackPlayerChoiceBox"/>
+                <Button fx:id="clearSettingsButton" text="ClearSettings"/>
             </items>
         </ToolBar>
         <SplitPane dividerPositions="0.2, 0.8" VBox.vgrow="ALWAYS">

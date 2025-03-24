@@ -436,7 +436,7 @@ public class ChessBoardInteractionHandler {
     private boolean handleMove(Square startingSquare, Square targetSquare) {
         Move move = new Move(startingSquare, targetSquare);
         move.setPromotionPiece(getPromotionPiece(startingSquare, targetSquare));
-        boolean success = playingEntity.tryMove(move);
+        boolean success = playingEntity.move(move);
         clearSelection();
         if (success == false) {
             return false;
