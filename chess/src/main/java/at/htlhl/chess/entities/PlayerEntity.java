@@ -1,7 +1,8 @@
-package at.htlhl.chess.gui;
+package at.htlhl.chess.entities;
 
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
+import at.htlhl.chess.gui.BoardViewController;
 import at.htlhl.chess.gui.util.ChessBoardInteractionHandler;
 
 public class PlayerEntity extends PlayingEntity {

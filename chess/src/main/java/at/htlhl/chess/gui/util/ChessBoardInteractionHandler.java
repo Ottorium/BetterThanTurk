@@ -5,8 +5,7 @@ import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.gui.BoardViewController;
-import at.htlhl.chess.gui.PlayingEntity;
-import javafx.application.Platform;
+import at.htlhl.chess.entities.PlayingEntity;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -24,7 +23,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 
 /**

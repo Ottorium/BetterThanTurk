@@ -1,7 +1,8 @@
-package at.htlhl.chess.gui;
+package at.htlhl.chess.entities;
 
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
+import at.htlhl.chess.gui.BoardViewController;
 import at.htlhl.chess.gui.util.CustomEngineConnector;
 
 public class BotEntity extends PlayingEntity {
@@ -19,7 +20,7 @@ public class BotEntity extends PlayingEntity {
     }
 
     @Override
-    protected void allowMove() {
+    public void allowMove() {
         super.allowMove();
         if (isMyMove() == true) {
             startEngine();

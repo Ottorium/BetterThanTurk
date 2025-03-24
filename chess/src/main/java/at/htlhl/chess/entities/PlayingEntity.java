@@ -1,7 +1,8 @@
-package at.htlhl.chess.gui;
+package at.htlhl.chess.entities;
 
 import at.htlhl.chess.boardlogic.Move;
 import at.htlhl.chess.boardlogic.Player;
+import at.htlhl.chess.gui.BoardViewController;
 
 public abstract class PlayingEntity {
     protected Player player;
@@ -19,7 +20,7 @@ public abstract class PlayingEntity {
         return boardViewController.makeMove(move, this);
     }
 
-    protected void allowMove() {
+    public void allowMove() {
     }
 
     public BoardViewController getBoardViewController() {
