@@ -275,11 +275,11 @@ public class Field {
 
         var pinsBefore = pins;
         pins = attackedSquaresUtil.lookForPins(blackTurn ? Player.BLACK : Player.WHITE);
-        changesInLastMoveBefore.add(new FieldChange("pinsBefore", undo -> pins = pinsBefore));
+        changesInLastMove.add(new FieldChange("pinsBefore", undo -> pins = pinsBefore));
 
         var checkBefore = check;
         check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.BLACK : Player.WHITE);
-        changesInLastMoveBefore.add(new FieldChange("checkBefore", undo -> check = checkBefore));
+        changesInLastMove.add(new FieldChange("checkBefore", undo -> check = checkBefore));
 
         var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesBefore.add(legalMove.clone());
@@ -524,6 +524,10 @@ public class Field {
         return blackTurn;
     }
 
+    public void setBlackTurn(boolean blackTurn) {
+        this.blackTurn = blackTurn;
+    }
+
     public byte getCastlingInformation() {
         return castlingInformation;
     }
@@ -616,12 +620,12 @@ public class Field {
         return whiteAttackSquares;
     }
 
-    public HashMap<Square, Integer> getBlackAttackSquares() {
-        return blackAttackSquares;
-    }
-
     public void setWhiteAttackSquares(HashMap<Square, Integer> value) {
         whiteAttackSquares = value;
+    }
+
+    public HashMap<Square, Integer> getBlackAttackSquares() {
+        return blackAttackSquares;
     }
 
     public void setBlackAttackSquares(HashMap<Square, Integer> value) {
@@ -630,6 +634,7 @@ public class Field {
 
     /**
      * Gets all squares currently attacked by the current player's pieces
+     *
      * @return ArrayList of Squares attacked by the current player
      */
     public ArrayList<Square> getCurrentPlayerAttackSquares() {
@@ -638,6 +643,7 @@ public class Field {
 
     /**
      * Gets all squares currently attacked by the current player's pieces
+     *
      * @return ArrayList of Squares attacked by the current player
      */
     public ArrayList<Square> getPassivePlayerAttackSquares() {
@@ -650,10 +656,6 @@ public class Field {
 
     public ArrayList<FieldChange> getChangesInLastMove() {
         return changesInLastMove;
-    }
-
-    public void setBlackTurn(boolean blackTurn) {
-        this.blackTurn = blackTurn;
     }
 
     public ArrayList<Pin> getPins() {
