@@ -26,6 +26,7 @@ public class StockfishConnector extends EngineConnector {
     private void connectToStockfish() {
         try {
             client.start(ChessApplication.prop.getProperty("stockfish_path"));
+            client.setThreadCount(ChessApplication.prop.getProperty("stockfish_thread_count"));
         } catch (IOException e) {
             System.err.println("Stockfish connection failed: " + e.getMessage());
             boardViewController.alertWithNewGame("Stockfish connection failed", e.getMessage());
