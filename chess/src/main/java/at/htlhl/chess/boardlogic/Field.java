@@ -191,10 +191,9 @@ public class Field {
         if (getGameState() != GameState.NOT_DECIDED)
             return false;
 
-        if (legalMoves.stream().anyMatch(legalMove ->
-                legalMove.getStartingSquare().equals(move.getStartingSquare())
-                        && legalMove.getTargetSquare().equals(move.getTargetSquare()))) {
+        moveChecker.validateMove(move);
 
+        if (move.isLegal()) {
             forceMove(move, true);
             return true;
         }
