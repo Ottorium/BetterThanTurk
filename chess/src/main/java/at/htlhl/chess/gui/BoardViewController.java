@@ -258,17 +258,21 @@ public class BoardViewController implements Initializable {
 
     /**
      * Adds a new arrow to Arrows to draw list
-     *
-     * @param move
      */
     public void addArrow(Move move) {
+        addArrow(move, 1);
+    }
+    /**
+     * Adds a new arrow to Arrows to draw list with scale parameter
+     */
+    public void addArrow(Move move, double modifier){
         if (move == null) {
             return;
         }
         Square arrowStartSquare = move.getStartingSquare();
         Square arrowEndSquare = move.getTargetSquare();
         byte arrowPromotionPiece = move.getPromotionPiece();
-        Arrow arrow = new Arrow(arrowStartSquare, arrowEndSquare);
+        Arrow arrow = new Arrow(arrowStartSquare, arrowEndSquare, modifier);
         arrow.setPromotionPiece(arrowPromotionPiece);
         arrow.setColor(ARROW_COLOR);
         arrowsToDraw.add(arrow);
@@ -533,8 +537,13 @@ public class BoardViewController implements Initializable {
 
     private void fillMoveSuggestions(List<EvaluatedMove> moves) {
         if (moves == null) return;
+        double i = 0;
         for (EvaluatedMove move : moves) {
             if (move == null) continue;
+            if (i < 3){
+                addArrow(move.move(), (1.7-(i*0.5)));
+                i++;
+            }
             moveSuggestionsVBox.getChildren().add(boardViewUtil.buildMoveBox(move, getPlayerThatWillMove()));
         }
     }
