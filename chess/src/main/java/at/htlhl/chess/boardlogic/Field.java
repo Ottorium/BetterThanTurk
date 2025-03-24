@@ -129,6 +129,7 @@ public class Field {
         } catch (InvalidFENException e) {
             return false;
         }
+        gameState = GameState.NOT_DECIDED;
         moveChecker = new MoveChecker(this);
         positionCounts.clear();
         Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
