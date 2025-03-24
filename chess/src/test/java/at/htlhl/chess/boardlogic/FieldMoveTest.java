@@ -199,10 +199,21 @@ public class FieldMoveTest {
         int count = 0;
         for (var move : field.getLegalMoves()) {
             field.forceMove(move, false);
-            count += field.getLegalMoves().size();
+            int inner = 0;
+            for (var move2 : field.getLegalMoves()) {
+                field.forceMove(move2, false);
+                for (var move3 : field.getLegalMoves()) {
+                    field.forceMove(move3, false);
+                    inner += field.getLegalMoves().size();
+                    field.undoMove();
+                }
+                field.undoMove();
+            }
+            count += inner;
             field.undoMove();
+            System.out.println(move + ": " + inner);
         }
-        assertEquals(2039, count, "Kiwipete position should have 2039 legal moves at depth 2");
+        assertEquals(4085603, count, "Kiwipete position should have 4085603 legal moves at depth 4");
     }
 
     @Test
