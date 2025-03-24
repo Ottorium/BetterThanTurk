@@ -37,7 +37,7 @@ public class CustomEngineConnector extends EngineConnector {
         });
     }
 
-    public void stopCurrentExecutions() {
+    public void renewExecutions() {
         shutdown();
         executor = Executors.newSingleThreadExecutor();
     }

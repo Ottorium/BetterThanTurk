@@ -56,8 +56,9 @@ public class StockfishConnector extends EngineConnector {
     }
 
     @Override
-    public void stopCurrentExecutions() {
-
+    public void renewExecutions() {
+        shutdown();
+        connectToStockfish();
     }
 
     @Override

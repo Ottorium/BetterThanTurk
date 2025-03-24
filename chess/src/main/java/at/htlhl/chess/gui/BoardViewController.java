@@ -553,11 +553,12 @@ public class BoardViewController implements Initializable {
 
     private void updateSuggestions() {
         moveSuggestionsVBox.getChildren().clear();
+        if (connector != null) connector.shutdown();
         clearArrows();
         if (engineToggleSwitch.isSelected() == false) return;
 
         // run engine in background and then coll fillMoveSuggestions
-        switch (engineForSuggChoiceBox.getValue()){
+        switch (engineForSuggChoiceBox.getValue()) {
             case EngineConnector.Type.CUSTOM:
                 connector = new CustomEngineConnector(getField());
                 break;
@@ -567,7 +568,6 @@ public class BoardViewController implements Initializable {
             default:
                 throw new IllegalStateException("Unexpected value: " + engineForSuggChoiceBox.getValue());
         }
-        connector.stopCurrentExecutions();
         connector.suggestMoves(this::fillMoveSuggestions);
     }
 

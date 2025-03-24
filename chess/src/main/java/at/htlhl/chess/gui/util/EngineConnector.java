@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 public abstract class EngineConnector {
     public abstract void suggestMove(Consumer<Move> moveCallback);
     public abstract void suggestMoves(Consumer<List<EvaluatedMove>> movesCallback);
-    public abstract void stopCurrentExecutions();
+    public abstract void renewExecutions();
     public abstract void shutdown();
     public enum Type{
         CUSTOM, STOCKFISH
