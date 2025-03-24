@@ -245,7 +245,7 @@ public class AttackedSquaresUtil {
                                 new ArrayList<>(Arrays.asList(dir, new int[]{dir[0] * -1, dir[1] * -1}))));
                     }
                     break;
-                }
+                } else break;
             }
         }
 
