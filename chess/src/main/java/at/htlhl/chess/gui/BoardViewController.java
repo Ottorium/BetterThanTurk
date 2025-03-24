@@ -213,8 +213,8 @@ public class BoardViewController implements Initializable {
         updateMoveOrder();
     }
 
-    private void updateMoveOrder(){
-        if (field.isBlackTurn()){
+    private void updateMoveOrder() {
+        if (field.isBlackTurn()) {
             blackPlayingEntity.allowMove();
         } else {
             whitePlayingEntity.allowMove();
@@ -262,10 +262,11 @@ public class BoardViewController implements Initializable {
     public void addArrow(Move move) {
         addArrow(move, 1);
     }
+
     /**
      * Adds a new arrow to Arrows to draw list with scale parameter
      */
-    public void addArrow(Move move, double modifier){
+    public void addArrow(Move move, double modifier) {
         if (move == null) {
             return;
         }
@@ -349,8 +350,8 @@ public class BoardViewController implements Initializable {
 
     private void playMoveSound(Move move) {
         SoundEffect soundEffect;
-        if (move.isCapture()){
-            if (PieceUtil.isRook(move.getCapturedPiece())){
+        if (move.isCapture()) {
+            if (PieceUtil.isRook(move.getCapturedPiece())) {
                 soundEffect = SoundEffect.THE_ROOK;
             } else {
                 soundEffect = SoundEffect.CAPTURE;
@@ -510,7 +511,7 @@ public class BoardViewController implements Initializable {
         whitePlayingEntity.shutdown();
     }
 
-    private void clearSettings(){
+    private void clearSettings() {
         ChessApplication.prop.clear();
         ChessApplication.saveProperties();
         System.exit(0);
@@ -518,7 +519,8 @@ public class BoardViewController implements Initializable {
 
     /**
      * Shows alert and starts a new game with default settings
-     * @param headerText alert header
+     *
+     * @param headerText  alert header
      * @param contentText alert content
      */
     public void alertWithNewGame(String headerText, String contentText) {
@@ -527,7 +529,7 @@ public class BoardViewController implements Initializable {
         newGame();
     }
 
-    private void updateSuggestions(){
+    private void updateSuggestions() {
         moveSuggestionsVBox.getChildren().clear();
         // run engine in background and then coll fillMoveSuggestions
         EngineConnector connector = new EngineConnector(getField());
@@ -540,8 +542,8 @@ public class BoardViewController implements Initializable {
         double i = 0;
         for (EvaluatedMove move : moves) {
             if (move == null) continue;
-            if (i < 3){
-                addArrow(move.move(), (1.7-(i*0.5)));
+            if (i < 3) {
+                addArrow(move.move(), (1.7 - (i * 0.5)));
                 i++;
             }
             moveSuggestionsVBox.getChildren().add(boardViewUtil.buildMoveBox(move, getPlayerThatWillMove()));
@@ -550,6 +552,7 @@ public class BoardViewController implements Initializable {
 
     /**
      * Returns the player that already made the move, so if the isBlackTurn is true, the player is white
+     *
      * @return Player color that moved
      */
     public Player getPlayerThatMoved() {
@@ -558,9 +561,10 @@ public class BoardViewController implements Initializable {
 
     /**
      * Returns the player that will make a move now
+     *
      * @return player
      */
     public Player getPlayerThatWillMove() {
-        return field.isBlackTurn() ? Player.BLACK: Player.WHITE;
+        return field.isBlackTurn() ? Player.BLACK : Player.WHITE;
     }
 }
