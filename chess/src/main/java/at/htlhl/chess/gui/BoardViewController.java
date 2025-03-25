@@ -8,11 +8,14 @@ import at.htlhl.chess.entities.PlayerEntity;
 import at.htlhl.chess.entities.PlayingEntity;
 import at.htlhl.chess.entities.StockfishEntity;
 import at.htlhl.chess.gui.util.*;
+import javafx.animation.Interpolator;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextArea;
@@ -26,6 +29,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import org.controlsfx.control.ToggleSwitch;
 
 import java.net.URL;
@@ -46,6 +50,7 @@ public class BoardViewController implements Initializable {
     private final Field field = new Field();
     private final BoardViewUtil boardViewUtil = new BoardViewUtil();
     private final List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
+    public boolean playAnimations = true;
     @FXML
     public Button newGameButton;
     @FXML
@@ -74,6 +79,7 @@ public class BoardViewController implements Initializable {
     private Button undoButton;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
+    private Pane animationPane;
     private PlayingEntity blackPlayingEntity;
     private PlayingEntity whitePlayingEntity;
     private EngineConnector connector;
@@ -134,6 +140,7 @@ public class BoardViewController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         createEmptyChessBoard();
         initArrowPane();
+        initAnimationPane();
         initFENTextArea();
         initMenu();
         initPlayers(); // must be after initMenu
@@ -153,6 +160,14 @@ public class BoardViewController implements Initializable {
         chessBoard.add(arrowPane, 0, 0);
         GridPane.setColumnSpan(arrowPane, 8);
         GridPane.setRowSpan(arrowPane, 8);
+    }
+
+    private void initAnimationPane() {
+        animationPane = new Pane();
+        animationPane.setMouseTransparent(true);
+        chessBoard.add(animationPane, 0, 0);
+        GridPane.setColumnSpan(animationPane, 8);
+        GridPane.setRowSpan(animationPane, 8);
     }
 
     private void initMenu() {
@@ -340,9 +355,7 @@ public class BoardViewController implements Initializable {
     public boolean makeMove(Move move) {
         boolean success = field.move(move);
         if (success) {
-            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
-            updateMoveOrder();
-            playMoveSound(move);
+            processMoveInGUI(move);
         }
         return success;
     }
@@ -455,6 +468,56 @@ public class BoardViewController implements Initializable {
         imageView.fitHeightProperty().bind(((Rectangle) stackpane.getChildren().getFirst()).heightProperty());
 
         stackpane.getChildren().add(imageView);
+    }
+
+    private void processMoveInGUI(Move move) {
+        //play animation and then call updates
+        ImageView movingPiece = null;
+        for (Node node : getSquarePane(chessBoard, move.getStartingSquare().x(), move.getStartingSquare().y()).getChildren()) {
+            if (node instanceof ImageView) {
+                movingPiece = (ImageView) node;
+                break;
+            }
+        }
+        StackPane targetPane = getSquarePane(chessBoard, move.getTargetSquare().x(), move.getTargetSquare().y());
+        if (movingPiece == null || targetPane == null) return;
+
+        ((StackPane) movingPiece.getParent()).getChildren().remove(movingPiece);
+        //create transition
+        double startingX = squareSizeBinding.get() * move.getStartingSquare().x();
+        double startingY = squareSizeBinding.get() * move.getStartingSquare().y();
+        double targetX = squareSizeBinding.get() * move.getTargetSquare().x();
+        double targetY = squareSizeBinding.get() * move.getTargetSquare().y();
+        double deltaX = targetX - startingX;
+        double deltaY = targetY - startingY;
+
+        //clone image
+        ImageView clone = new ImageView(movingPiece.getImage()); // Copy the image
+        clone.setFitWidth(movingPiece.getFitWidth());           // Copy width
+        clone.setFitHeight(movingPiece.getFitHeight());         // Copy height
+        clone.setPreserveRatio(movingPiece.isPreserveRatio());  // Copy ratio setting
+
+        animationPane.getChildren().add(clone);
+        clone.setLayoutX(startingX);
+        clone.setLayoutY(startingY);
+
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(playAnimations ? 0.1 : 0));
+        transition.setNode(clone);
+        transition.setToX(deltaX);
+        transition.setToY(deltaY);
+        transition.setInterpolator(Interpolator.EASE_OUT);
+
+        //remove piece from pane
+        transition.setOnFinished(event -> {
+            animationPane.getChildren().remove(clone);
+            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
+            updateMoveOrder();
+            playMoveSound(move);
+        });
+
+        transition.play();
+
+        System.out.println("Transition");
     }
 
 

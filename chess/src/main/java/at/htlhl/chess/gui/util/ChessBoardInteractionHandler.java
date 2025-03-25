@@ -55,6 +55,7 @@ public class ChessBoardInteractionHandler {
      */
     private final double squareSize;
     private final PlayingEntity playingEntity;
+    private final BoardViewController boardViewController;
     /**
      * The currently selected square, or null if no square is selected.
      */
@@ -121,8 +122,9 @@ public class ChessBoardInteractionHandler {
             if (playingEntity.isMyMove() == false) {
                 return;
             }
-
+            boardViewController.playAnimations = false;
             handleDrop(event, (StackPane) event.getSource());
+            boardViewController.playAnimations = true;
         }
     };
 
@@ -131,6 +133,7 @@ public class ChessBoardInteractionHandler {
      */
     public ChessBoardInteractionHandler(PlayingEntity playingEntity) {
         BoardViewController boardViewController = playingEntity.getBoardViewController();
+        this.boardViewController = boardViewController;
         this.chessBoard = boardViewController.getChessBoard();
         this.field = boardViewController.getField();
         this.squareSize = boardViewController.getSquareSize();
