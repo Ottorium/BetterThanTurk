@@ -3,13 +3,150 @@ package at.htlhl.chess.engine;
 import at.htlhl.chess.boardlogic.Field;
 import at.htlhl.chess.boardlogic.GameState;
 import at.htlhl.chess.boardlogic.Move;
+import at.htlhl.chess.boardlogic.util.PieceUtil;
 
 import java.util.ArrayList;
 
 public class Engine {
 
-    private Field field;
+    private static final int[][] whitePieceSquareTables = {
+            // PAWN
+            {
+                    0,   0,   0,   0,   0,   0,   0,   0,
+                    11,  14,  16,  19,  19,  16,  14,  11,
+                    4,   7,  10,  13,  13,  10,   7,   4,
+                    1,   4,   7,  12,  12,   7,   4,   1,
+                    0,   1,   5,  11,  11,   5,   1,   0,
+                    0,  -2,   2,   0,   0,   2,  -2,   0,
+                    0,   0,   0, -50, -50,   0,   0,   0,
+                    0,   0,   0,   0,   0,   0,   0,   0
+            },
+            // KNIGHT
+            {
+                    -25, -20, -15, -15, -15, -15, -20, -25,
+                    -20, -10,   0,   3,   3,   0, -10, -20,
+                    -15,   3,   5,   8,   8,   5,   3, -15,
+                    -15,   5,   8,  10,  10,   8,   5, -15,
+                    -15,   5,   8,  10,  10,   8,   5, -15,
+                    -15,   3,   5,   8,   8,   5,   3, -15,
+                    -20, -10,   0,   3,   3,   0, -10, -20,
+                    -25, -20, -15, -15, -15, -15, -20, -25
+            },
+            // BISHOP
+            {
+                    -10,  -5,  -5,  -5,  -5,  -5,  -5, -10,
+                    -5,   0,   0,   0,   0,   0,   0,  -5,
+                    -5,   0,   3,   5,   5,   3,   0,  -5,
+                    -5,   0,   5,   8,   8,   5,   0,  -5,
+                    -5,   3,   5,   8,   8,   5,   3,  -5,
+                    -5,   3,   5,   5,   5,   5,   3,  -5,
+                    -5,   0,   0,   0,   0,   0,   0,  -5,
+                    -10,  -5,  -5,  -5,  -5,  -5,  -5, -10
+            },
+            // ROOK
+            {
+                    0,   3,   3,   3,   3,   3,   3,   0,
+                    3,   5,   5,   5,   5,   5,   5,   3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    0,   0,   0,   0,   0,   0,   0,   0
+            },
+            // QUEEN
+            {
+                    -10,  -5,  -5,  -3,  -3,  -5,  -5, -10,
+                    -5,   0,   0,   3,   3,   0,   0,  -5,
+                    -5,   0,   3,   5,   5,   3,   0,  -5,
+                    -3,  0,   5,   8,   8,   5,   0,  -3,
+                    -3,  0,   5,   8,   8,   5,   0,  -3,
+                    -5,   0,   3,   5,   5,   3,   0,  -5,
+                    -5,   0,   0,   0,   0,   0,   0,  -5,
+                    -10,  -5,  -5,  -3,  -3,  -5,  -5, -10
+            },
+            // KING
+            {
+                    -15, -20, -20, -25, -25, -20, -20, -15,
+                    -15, -20, -20, -25, -25, -20, -20, -15,
+                    -15, -20, -20, -25, -25, -20, -20, -15,
+                    -10, -15, -15, -20, -20, -15, -15, -10,
+                    -5, -10, -10, -15, -15, -10, -10,  -5,
+                    0,   0,  -5, -10, -10,  -5,   0,   0,
+                    10,  10,   0,  -3,  -3,   0,  10,  10,
+                    15,  20,  10,   0,   0,   5,  20,  15
+            }
+    };
 
+    private static final int[][] blackPieceSquareTables = {
+            // PAWN
+            {
+                    0,   0,   0,   0,   0,   0,   0,   0,
+                    0,   0,   0, -50, -50,   0,   0,   0,
+                    0,  -2,   2,   0,   0,   2,  -2,   0,
+                    0,   1,   5,  11,  11,   5,   1,   0,
+                    1,   4,   7,  12,  12,   7,   4,   1,
+                    4,   7,  10,  13,  13,  10,   7,   4,
+                    11,  14,  16,  19,  19,  16,  14,  11,
+                    0,   0,   0,   0,   0,   0,   0,   0
+            },
+            // KNIGHT
+            {
+                    -25, -20, -15, -15, -15, -15, -20, -25,
+                    -20, -10,   0,   3,   3,   0, -10, -20,
+                    -15,   3,   5,   8,   8,   5,   3, -15,
+                    -15,   5,   8,  10,  10,   8,   5, -15,
+                    -15,   5,   8,  10,  10,   8,   5, -15,
+                    -15,   3,   5,   8,   8,   5,   3, -15,
+                    -20, -10,   0,   3,   3,   0, -10, -20,
+                    -25, -20, -15, -15, -15, -15, -20, -25
+            },
+            // BISHOP
+            {
+                    -10,  -5,  -5,  -5,  -5,  -5,  -5, -10,
+                    -5,   0,   0,   0,   0,   0,   0,  -5,
+                    -5,   3,   5,   5,   5,   5,   3,  -5,
+                    -5,   3,   5,   8,   8,   5,   3,  -5,
+                    -5,   0,   5,   8,   8,   5,   0,  -5,
+                    -5,   0,   3,   5,   5,   3,   0,  -5,
+                    -5,   0,   0,   0,   0,   0,   0,  -5,
+                    -10,  -5,  -5,  -5,  -5,  -5,  -5, -10
+            },
+            // ROOK
+            {
+                    0,   0,   0,   0,   0,   0,   0,   0,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    -3,  0,   0,   0,   0,   0,   0,  -3,
+                    3,   5,   5,   5,   5,   5,   5,   3,
+                    0,   3,   3,   3,   3,   3,   3,   0
+            },
+            // QUEEN
+            {
+                    -10,  -5,  -5,  -3,  -3,  -5,  -5, -10,
+                    -5,   0,   0,   0,   0,   0,   0,  -5,
+                    -5,   0,   3,   5,   5,   3,   0,  -5,
+                    -3,  0,   5,   8,   8,   5,   0,  -3,
+                    -3,  0,   5,   8,   8,   5,   0,  -3,
+                    -5,   0,   3,   5,   5,   3,   0,  -5,
+                    -5,   0,   0,   3,   3,   0,   0,  -5,
+                    -10,  -5,  -5,  -3,  -3,  -5,  -5, -10
+            },
+            // KING
+            {
+                    15,  20,  10,   0,   0,   5,  20,  15,
+                    10,  10,   0,  -3,  -3,   0,  10,  10,
+                    0,   0,  -5, -10, -10,  -5,   0,   0,
+                    -5, -10, -10, -15, -15, -10, -10,  -5,
+                    -10, -15, -15, -20, -20, -15, -15, -10,
+                    -15, -20, -20, -25, -25, -20, -20, -15,
+                    -15, -20, -20, -25, -25, -20, -20, -15,
+                    -15, -20, -20, -25, -25, -20, -20, -15
+            }
+    };
+    private Field field;
     private ArrayList<EvaluatedMove> evaluatedMoves = null;
     private int maxDepth;
     private int executedMoves = 0;
@@ -40,7 +177,7 @@ public class Engine {
         evaluatedMoves = new ArrayList<>(15);
         evaluatedPositions = 0;
         executedMoves = 0;
-        maxDepth = 7;
+        maxDepth = 6;
         var timeBefore = System.nanoTime();
         try {
             minimax(maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -120,6 +257,30 @@ public class Engine {
             if (field.getGameState() == GameState.WHITE_WIN)
                 return Integer.MAX_VALUE - maxDepth + depth;
         }
-        return field.getPieceEvaluation();
+
+        int material = field.getPieceEvaluation();
+
+        int positional = 0;
+        byte[] board = field.getBoard();
+        for (int i = 0; i < 64; i++) {
+            byte piece = board[i];
+            if (piece == PieceUtil.EMPTY) continue;
+
+            int pieceType;
+            if (PieceUtil.isPawn(piece)) pieceType = 0;
+            else if (PieceUtil.isKnight(piece)) pieceType = 1;
+            else if (PieceUtil.isBishop(piece)) pieceType = 2;
+            else if (PieceUtil.isRook(piece)) pieceType = 3;
+            else if (PieceUtil.isQueen(piece)) pieceType = 4;
+            else if (PieceUtil.isKing(piece)) pieceType = 5;
+            else continue;
+
+            if (PieceUtil.isWhite(piece))
+                positional += whitePieceSquareTables[pieceType][i];
+            else
+                positional -= blackPieceSquareTables[pieceType][i];
+        }
+
+        return material + positional;
     }
 }
