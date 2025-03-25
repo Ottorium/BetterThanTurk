@@ -11,11 +11,13 @@ import at.htlhl.chess.entities.PlayerEntity;
 import at.htlhl.chess.entities.PlayingEntity;
 import at.htlhl.chess.entities.StockfishEntity;
 import at.htlhl.chess.gui.util.*;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextArea;
@@ -29,6 +31,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import org.controlsfx.control.ToggleSwitch;
 
 import java.net.URL;
@@ -75,6 +78,7 @@ public class BoardViewController implements Initializable {
     private GridPane chessBoard;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
+    private Pane animationPane;
     private PlayingEntity blackPlayingEntity;
     private PlayingEntity whitePlayingEntity;
     private EngineConnector connector;
@@ -135,6 +139,7 @@ public class BoardViewController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         createEmptyChessBoard();
         initArrowPane();
+        initAnimationPane();
         initFENTextArea();
         initMenu();
         initPlayers(); // must be after initMenu
@@ -154,6 +159,14 @@ public class BoardViewController implements Initializable {
         chessBoard.add(arrowPane, 0, 0);
         GridPane.setColumnSpan(arrowPane, 8);
         GridPane.setRowSpan(arrowPane, 8);
+    }
+
+    private void initAnimationPane() {
+        animationPane = new Pane();
+        animationPane.setMouseTransparent(true);
+        chessBoard.add(animationPane, 0, 0);
+        GridPane.setColumnSpan(animationPane, 8);
+        GridPane.setRowSpan(animationPane, 8);
     }
 
     private void initMenu() {
@@ -334,6 +347,7 @@ public class BoardViewController implements Initializable {
     public boolean makeMove(Move move) {
         boolean success = field.move(move);
         if (success) {
+            playMoveAnimation(move);
             updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
             updateMoveOrder();
             playMoveSound(move);
@@ -443,6 +457,53 @@ public class BoardViewController implements Initializable {
         imageView.fitHeightProperty().bind(((Rectangle) stackpane.getChildren().getFirst()).heightProperty());
 
         stackpane.getChildren().add(imageView);
+    }
+
+    private void playMoveAnimation(Move move) {
+        ImageView movingPiece = null;
+        for (Node node : getSquarePane(chessBoard, move.getStartingSquare().x(), move.getStartingSquare().y()).getChildren()) {
+            if (node instanceof ImageView) {
+                movingPiece = (ImageView) node;
+                break;
+            }
+        }
+        StackPane targetPane = getSquarePane(chessBoard, move.getTargetSquare().x(), move.getTargetSquare().y());
+        if (movingPiece == null || targetPane == null) return;
+
+        //create transition
+        double startingX = squareSizeBinding.get()*move.getStartingSquare().x();
+        double startingY = squareSizeBinding.get()*move.getStartingSquare().y();
+        double targetX = squareSizeBinding.get()*move.getTargetSquare().x();
+        double targetY = squareSizeBinding.get()*move.getTargetSquare().y();
+        double deltaX = targetX - startingX;
+        double deltaY = targetY - startingY;
+
+        //clone image
+        ImageView clone = new ImageView(movingPiece.getImage()); // Copy the image
+        clone.setFitWidth(movingPiece.getFitWidth());           // Copy width
+        clone.setFitHeight(movingPiece.getFitHeight());         // Copy height
+        clone.setPreserveRatio(movingPiece.isPreserveRatio());  // Copy ratio setting
+
+        StackPane startingPane = (StackPane) movingPiece.getParent();
+        animationPane.getChildren().add(clone);
+        clone.setLayoutX(startingX);
+        clone.setLayoutY(startingY);
+
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(1));
+        transition.setNode(clone);
+        transition.setFromX(startingX);
+        transition.setFromY(startingY);
+        transition.setToX(deltaX);
+        transition.setToY(deltaY);
+
+        //remove piece from pane
+        transition.setOnFinished(event -> {
+            animationPane.getChildren().remove(clone);
+        });
+
+        transition.play();
+
+        System.out.println("Transition");
     }
 
 
