@@ -40,7 +40,7 @@ public class Engine {
         evaluatedMoves = new ArrayList<>(15);
         evaluatedPositions = 0;
         executedMoves = 0;
-        maxDepth = 6;
+        maxDepth = 7;
         var timeBefore = System.nanoTime();
         try {
             minimax(maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
