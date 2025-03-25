@@ -25,7 +25,7 @@
                 <Label text="Black" />
                 <ChoiceBox fx:id="blackPlayerChoiceBox" />
                 <Button fx:id="clearSettingsButton" text="ClearSettings" />
-                <Button fx:id="undoButton" text="undoButton" />
+                <Button fx:id="undoButton" text="Undo move" />
             </items>
         </ToolBar>
         <SplitPane dividerPositions="0.2, 0.8, 0.5" VBox.vgrow="ALWAYS">
