@@ -123,7 +123,7 @@ public class FieldMoveTest {
 
     @Test
     public void testEnPassantDiscoveredCheck() {
-        field.trySetFEN("8/8/8/K1pP2r1/8/8/8/8 w - c6 0 1");
+        field.trySetFEN("7k/8/8/K1pP2r1/8/8/8/8 w - - 0 1");
 
         Square start = Square.parseString("d5");
         Square target = Square.parseString("c6");
@@ -160,7 +160,7 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertTrue(result, "Valid check move should return true");
-        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check");
+        assertEquals(Player.BLACK, field.getPlayerInCheck(), "Black king should be in check");
     }
 
     @Test
@@ -190,28 +190,42 @@ public class FieldMoveTest {
     @Test
     public void testPerftInitialPosition() {
         field.resetBoard();
-        List<Square> startingSquares = getAllPieceSquares(field, false);
-        int moveCount = countLegalMoves(field, startingSquares);
-
-        assertEquals(20, moveCount, "Initial position should have 20 legal moves");
+        assertEquals(20, field.getLegalMoves().size(), "Initial position should have 20 legal moves");
     }
 
     @Test
     public void testPerftPosition2() {
         field.trySetFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        List<Square> startingSquares = getAllPieceSquares(field, false);
-        int moveCount = countLegalMoves(field, startingSquares);
-
-        assertEquals(48, moveCount, "Kiwipete position should have 48 legal moves");
+        int count = 0;
+        for (var move : field.getLegalMoves()) {
+            field.forceMove(move, false);
+            int inner = 0;
+            for (var move2 : field.getLegalMoves()) {
+                field.forceMove(move2, false);
+                for (var move3 : field.getLegalMoves()) {
+                    field.forceMove(move3, false);
+                    inner += field.getLegalMoves().size();
+                    field.undoMove();
+                }
+                field.undoMove();
+            }
+            count += inner;
+            field.undoMove();
+            System.out.println(move + ": " + inner);
+        }
+        assertEquals(4085603, count, "Kiwipete position should have 4085603 legal moves at depth 4");
     }
 
     @Test
     public void testPerftPosition3() {
         field.trySetFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-        List<Square> startingSquares = getAllPieceSquares(field, false);
-        int moveCount = countLegalMoves(field, startingSquares);
-
-        assertEquals(14, moveCount, "Position 3 should have 14 legal moves");
+        int count = 0;
+        for (var move : field.getLegalMoves()) {
+            field.forceMove(move, false);
+            count += field.getLegalMoves().size();
+            field.undoMove();
+        }
+        assertEquals(191, count, "Position 3 should have 191 legal moves at depth 2");
     }
 
     @Test
@@ -342,7 +356,7 @@ public class FieldMoveTest {
         field.move(move);
 
         assertEquals(GameState.BLACK_WIN, field.getGameState(), "Game should end in black's victory (Fool's Mate)");
-        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+        assertEquals(Player.WHITE, field.getPlayerInCheck(), "White king should be in check");
     }
 
     @Test
@@ -356,7 +370,7 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertTrue(result, "Valid discovered check move should return true");
-        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check via discovered check");
+        assertEquals(Player.BLACK, field.getPlayerInCheck(), "Black king should be in check via discovered check");
     }
 
     @Test
@@ -445,7 +459,7 @@ public class FieldMoveTest {
     public void testCastlingFromCheck() {
         field.trySetFEN("rnbqk2r/pppp1ppp/5n2/4p3/1b2P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 4");
 
-        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+        assertEquals(Player.WHITE, field.getPlayerInCheck(), "White king should be in check");
 
         Square start = Square.parseString("e1");
         Square target = Square.parseString("g1");
@@ -539,7 +553,7 @@ public class FieldMoveTest {
 
         assertTrue(result, "Checkmate move should be valid");
         assertEquals(GameState.WHITE_WIN, field.getGameState(), "Game should end in white's victory");
-        assertEquals(Player.BLACK, field.getKingInCheck(), "Black king should be in check");
+        assertEquals(Player.BLACK, field.getPlayerInCheck(), "Black king should be in check");
     }
 
     @Test
@@ -596,7 +610,7 @@ public class FieldMoveTest {
     public void testMoveBlockingCheck() {
         field.trySetFEN("rnb1kbnr/pppp1ppp/8/4p3/7q/5P2/PPPPP1PP/RNBQKBNR w KQkq - 0 1");
 
-        assertEquals(Player.WHITE, field.getKingInCheck(), "White king should be in check");
+        assertEquals(Player.WHITE, field.getPlayerInCheck(), "White king should be in check");
 
         Square start = Square.parseString("g2");
         Square target = Square.parseString("g3");
@@ -605,7 +619,7 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertTrue(result, "Valid blocking move should return true");
-        assertNull(field.getKingInCheck(), "No king should be in check after blocking");
+        assertNull(field.getPlayerInCheck(), "No king should be in check after blocking");
     }
 
     @Test
@@ -655,7 +669,7 @@ public class FieldMoveTest {
         field.trySetFEN("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1");
 
         assertEquals(GameState.DRAW, field.getGameState(), "Game should be stalemate despite having multiple pieces");
-        assertNull(field.getKingInCheck(), "King should not be in check during stalemate");
+        assertNull(field.getPlayerInCheck(), "King should not be in check during stalemate");
     }
 
     @Test
@@ -808,16 +822,6 @@ public class FieldMoveTest {
         boolean result = field.move(move);
 
         assertFalse(result, "Promotion must be to a piece of the same color as the pawn");
-    }
-
-    // Helper method to count legal moves
-    private int countLegalMoves(Field field, List<Square> startingSquares) {
-        int count = 0;
-        for (Square start : startingSquares) {
-            List<Square> targets = field.getLegalTargetsForSquare(start);
-            count += targets.size();
-        }
-        return count;
     }
 
     // Helper method to get all squares with pieces of the current player

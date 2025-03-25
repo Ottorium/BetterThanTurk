@@ -2,6 +2,7 @@ package at.htlhl.chess.boardlogic;
 
 import at.htlhl.chess.boardlogic.util.*;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -88,11 +89,6 @@ public class Field {
     private ArrayList<Move> legalMoves = new ArrayList<>();
 
     /**
-     * Stores the Player that is currently in check.
-     */
-    private Player kingInCheck = null;
-
-    /**
      * The {@link MoveChecker} used to validate moves.
      */
     private MoveChecker moveChecker = new MoveChecker(this);
@@ -101,6 +97,31 @@ public class Field {
      * Stores the current position of both kings (for faster lookup in move checking)
      */
     private ArrayList<Square> cachedKingPositions;
+
+    /**
+     * Stores the Squares that black is currently attacking and how often it is attacked
+     */
+    private byte[] blackAttackSquares;
+
+    /**
+     * Stores the Squares that white is currently attacking and how often it is attacked
+     */
+    private byte[] whiteAttackSquares;
+
+    /**
+     * Stored the Pieces that are currently pinned
+     */
+    private ArrayList<Pin> pins;
+
+    /**
+     * Stores the current check, if there is one
+     */
+    private Check check;
+
+    /**
+     * Util for finding and updating the white and black attack squares
+     */
+    private AttackedSquaresUtil attackedSquaresUtil;
 
     /**
      * Makes a new Field and initialized it with the starting chess position.
@@ -130,11 +151,15 @@ public class Field {
             return false;
         }
         gameState = GameState.NOT_DECIDED;
+        pins = new ArrayList<>();
         moveChecker = new MoveChecker(this);
         positionCounts.clear();
-        Player currentPlayer = isBlackTurn() ? Player.BLACK : Player.WHITE;
         cachedKingPositions = moveChecker.findKings();
-        kingInCheck = moveChecker.lookForChecksOnBoard().contains(currentPlayer) ? currentPlayer : null;
+        attackedSquaresUtil = new AttackedSquaresUtil(this);
+        blackAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.BLACK);
+        whiteAttackSquares = attackedSquaresUtil.findAttackedSquares(Player.WHITE);
+        pins = attackedSquaresUtil.lookForPins(blackTurn ? Player.BLACK : Player.WHITE);
+        check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.BLACK : Player.WHITE);
         legalMoves = moveChecker.getAllLegalMoves();
         gameState = computeGameState();
         return true;
@@ -182,8 +207,8 @@ public class Field {
      * @param move The move to execute. Undefined behaviour if the move is not valid
      */
     public void forceMove(Move move, boolean verbose) {
-        var changesInLastMoveBefore = (ArrayList<FieldChange>) changesInLastMove.clone();
-        changesInLastMove.clear();
+        var changesInLastMoveBefore = changesInLastMove;
+        changesInLastMove = new ArrayList<>(10);
         changesInLastMove.add(new FieldChange("changesInLastMove", undo -> changesInLastMove = changesInLastMoveBefore));
 
 
@@ -204,8 +229,9 @@ public class Field {
         if (move.isEnPassantMove()) {
             Square capturedEnPassantPawn = new Square(possibleEnPassantSquare.x(), possibleEnPassantSquare.y() + (isBlackTurn() ? -1 : 1));
             capturedPiece = getPieceBySquare(capturedEnPassantPawn);
+            byte capturedPawn = getPieceBySquare(capturedEnPassantPawn);
             setPieceOnSquare(capturedEnPassantPawn, PieceUtil.EMPTY);
-            changesInLastMove.add(new FieldChange("board", undo -> setPieceOnSquare(capturedEnPassantPawn, finalCapturedPiece)));
+            changesInLastMove.add(new FieldChange("board", undo -> setPieceOnSquare(capturedEnPassantPawn, capturedPawn)));
         }
         var before = possibleEnPassantSquare;
         possibleEnPassantSquare = move.getPossibleEnPassantSquare();
@@ -226,10 +252,6 @@ public class Field {
                                             PieceUtil.BLACK_PAWN
                                             : PieceUtil.WHITE_PAWN)));
         }
-        var kingInCheckBefore = kingInCheck;
-        kingInCheck = move.getAppearedCheck();
-        if (kingInCheckBefore != kingInCheck)
-            changesInLastMove.add(new FieldChange("kingInCheck", undo -> kingInCheck = kingInCheckBefore));
 
         calculateMaterial(capturedPiece, move);
         updatePlayedHalfMovesSinceLastPawnMoveOrCapture(move);
@@ -250,6 +272,20 @@ public class Field {
             }));
         }
 
+        var blackAttackSquaresBefore = Arrays.copyOf(blackAttackSquares, 64);
+        var whiteAttackSquaresBefore = Arrays.copyOf(whiteAttackSquares, 64);
+        attackedSquaresUtil.updateCachedAttackSquares(move);
+        changesInLastMove.add(new FieldChange("blackAttackSquares", undo -> blackAttackSquares = blackAttackSquaresBefore));
+        changesInLastMove.add(new FieldChange("whiteAttackSquares", undo -> whiteAttackSquares = whiteAttackSquaresBefore));
+
+        var pinsBefore = pins;
+        pins = attackedSquaresUtil.lookForPins(blackTurn ? Player.BLACK : Player.WHITE);
+        changesInLastMove.add(new FieldChange("pinsBefore", undo -> pins = pinsBefore));
+
+        var checkBefore = check;
+        check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.BLACK : Player.WHITE);
+        changesInLastMove.add(new FieldChange("checkBefore", undo -> check = checkBefore));
+
         var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesBefore.add(legalMove.clone());
         legalMoves = moveChecker.getAllLegalMoves();
@@ -260,7 +296,7 @@ public class Field {
         changesInLastMove.add(new FieldChange("gameState", undo -> gameState = gameStateBefore));
 
         var lastMoveBefore = lastMove;
-        lastMove = move;
+        lastMove = move.clone();
         changesInLastMove.add(new FieldChange("lastMove", undo -> lastMove = lastMoveBefore));
 
         if (verbose) System.out.println("Game state: " + gameState);
@@ -292,21 +328,21 @@ public class Field {
      * @return the current gameState computed from the position of the board
      */
     private GameState computeGameState() {
-        if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50) {
+        if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50)
             return GameState.DRAW;
-        }
 
 
         int current = Arrays.hashCode(board);
-
-        int count = positionCounts.getOrDefault(current, 0) + 1;
-        var before = (HashMap<Integer, Integer>) positionCounts.clone();
+        Integer previousCount = positionCounts.get(current);
+        int count = (previousCount != null ? previousCount : 0) + 1;
         positionCounts.put(current, count);
-        changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts = before));
-
-        if (count >= 3) {
+        if (previousCount == null)
+            changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts.remove(current)));
+        else
+            changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts.put(current, previousCount)));
+        if (count >= 3)
             return GameState.DRAW; // Threefold repetition
-        }
+
 
 
         boolean insufficient = true;
@@ -329,12 +365,13 @@ public class Field {
         if (legalMoves.isEmpty() == false)
             return GameState.NOT_DECIDED;
 
-        if (kingInCheck == (blackTurn ? Player.BLACK : Player.WHITE)) {
+        if (getPlayerInCheck() == (blackTurn ? Player.BLACK : Player.WHITE)) {
             return isBlackTurn() ? GameState.WHITE_WIN : GameState.BLACK_WIN;
         } else {
             return GameState.DRAW; // Stalemate
         }
     }
+
 
     /**
      * Adds the Captured piece to the class variables keeping track of the current captured pieces
@@ -378,7 +415,11 @@ public class Field {
                 setPieceOnSquare(rookTarget, PieceUtil.EMPTY);
             }));
 
+            byte castlingInformationBefore = castlingInformation;
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
+            changesInLastMove.add(new FieldChange("castlingInformation", undo -> {
+                castlingInformation = castlingInformationBefore;
+            }));
         }
     }
 
@@ -402,7 +443,6 @@ public class Field {
         // If king moves, remove all castling rights for that side
         if (PieceUtil.isKing(movingPiece)) {
             castlingInformation = CastlingUtil.removeCastlingRights(castlingInformation, blackTurn ? Player.BLACK : Player.WHITE);
-            return;
         }
 
         // If rook moves from its starting position, remove that sides castling right
@@ -451,12 +491,12 @@ public class Field {
      * @return Position of the king in check, null if the current player is not in check
      */
     public Square getSquareOfCheck() {
-        if (kingInCheck != (blackTurn ? Player.BLACK : Player.WHITE))
+        if (getPlayerInCheck() != (blackTurn ? Player.BLACK : Player.WHITE))
             return null;
 
         for (int i = 0; i < board.length; i++)
             if (board[i] == (blackTurn ? PieceUtil.BLACK_KING : PieceUtil.WHITE_KING))
-                return new Square(i % 8, (int)Math.floor((double)i/(double)8));
+                return Square.parseBoardIndex(i);
 
         return null;
     }
@@ -492,6 +532,10 @@ public class Field {
         return blackTurn;
     }
 
+    public void setBlackTurn(boolean blackTurn) {
+        this.blackTurn = blackTurn;
+    }
+
     public byte getCastlingInformation() {
         return castlingInformation;
     }
@@ -500,8 +544,8 @@ public class Field {
         return possibleEnPassantSquare;
     }
 
-    public Player getKingInCheck() {
-        return kingInCheck;
+    public Player getPlayerInCheck() {
+        return check == null ? null : check.getPlayerInCheck();
     }
 
     public GameState getGameState() {
@@ -534,8 +578,12 @@ public class Field {
         clone.numberOfNextMove = this.numberOfNextMove;
         clone.gameState = this.gameState;
         clone.pieceEvaluation = this.pieceEvaluation;
-        clone.kingInCheck = this.kingInCheck;
-        clone.cachedKingPositions = this.cachedKingPositions;
+
+        clone.cachedKingPositions = (ArrayList<Square>) this.cachedKingPositions.clone();
+        clone.blackAttackSquares = Arrays.copyOf(this.blackAttackSquares, 64);
+        clone.whiteAttackSquares = Arrays.copyOf(this.whiteAttackSquares, 64);
+        clone.pins = new ArrayList<>(this.pins.stream().map(Pin::clone).toList());
+        clone.check = check == null ? null : this.check.clone();
 
         clone.possibleEnPassantSquare = this.possibleEnPassantSquare != null
                 ? new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y())
@@ -551,6 +599,7 @@ public class Field {
         clone.capturedBlackPieces.addAll(this.capturedBlackPieces);
 
         clone.moveChecker = new MoveChecker(clone);
+        clone.attackedSquaresUtil = new AttackedSquaresUtil(clone);
 
         var legalMovesClone = new ArrayList<Move>(legalMoves.size());
         for (Move legalMove : legalMoves) legalMovesClone.add(legalMove.clone());
@@ -573,5 +622,71 @@ public class Field {
 
     public void setCachedKingPositions(ArrayList<Square> kingPositions) {
         cachedKingPositions = kingPositions;
+    }
+
+    public byte[] getWhiteAttackSquares() {
+        return whiteAttackSquares;
+    }
+
+    public void setWhiteAttackSquares(byte[] value) {
+        whiteAttackSquares = value;
+    }
+
+    public byte[] getBlackAttackSquares() {
+        return blackAttackSquares;
+    }
+
+    public void setBlackAttackSquares(byte[] value) {
+        blackAttackSquares = value;
+    }
+
+    /**
+     * Gets all squares currently attacked by the current player's pieces
+     *
+     * @return ArrayList of Squares attacked by the current player
+     */
+    public ArrayList<Square> getCurrentPlayerAttackSquares() {
+        var array = blackTurn ? blackAttackSquares : whiteAttackSquares;
+        ArrayList<Square> result = new ArrayList<>(10);
+        for (int i = 0; i < array.length; i++) {
+            var thing = array[i];
+            if (thing == 0) continue;
+            if (thing < 0) throw new InvalidParameterException();
+            result.add(Square.parseBoardIndex(i));
+        }
+        return result;
+    }
+
+    /**
+     * Gets all squares currently attacked by the current player's pieces
+     *
+     * @return ArrayList of Squares attacked by the current player
+     */
+    public ArrayList<Square> getPassivePlayerAttackSquares() {
+        var array = blackTurn ? whiteAttackSquares : blackAttackSquares;
+        ArrayList<Square> result = new ArrayList<>(10);
+        for (int i = 0; i < array.length; i++) {
+            var thing = array[i];
+            if (thing == 0) continue;
+            if (thing < 0) throw new InvalidParameterException();
+            result.add(Square.parseBoardIndex(i));
+        }
+        return result;
+    }
+
+    public MoveChecker getMoveChecker() {
+        return moveChecker;
+    }
+
+    public ArrayList<FieldChange> getChangesInLastMove() {
+        return changesInLastMove;
+    }
+
+    public ArrayList<Pin> getPins() {
+        return pins;
+    }
+
+    public Check getCheck() {
+        return check;
     }
 }

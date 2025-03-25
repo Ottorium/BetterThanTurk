@@ -40,7 +40,7 @@ public class Engine {
         evaluatedMoves = new ArrayList<>(15);
         evaluatedPositions = 0;
         executedMoves = 0;
-        maxDepth = 6;
+        maxDepth = 7;
         var timeBefore = System.nanoTime();
         try {
             minimax(maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -76,9 +76,15 @@ public class Engine {
         orderMoves(moves);
         for (var move : moves) {
 
-            field.forceMove(move, false);
-            executedMoves++;
-            var eval = minimax(depth - 1, alpha, beta);
+            int eval;
+            try {
+                field.forceMove(move, false);
+                executedMoves++;
+                eval = minimax(depth - 1, alpha, beta);
+            } catch (RuntimeException e) {
+                // look at the exception message for further info
+                eval = isBlacksTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            }
             field.undoMove();
 
             if (isBlacksTurn ? eval < bestScore : eval > bestScore)

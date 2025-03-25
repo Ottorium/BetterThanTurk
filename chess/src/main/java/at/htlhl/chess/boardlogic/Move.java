@@ -11,7 +11,6 @@ public class Move {
     private boolean isCastlingMove;
     private boolean isEnPassantMove;
     private boolean isLegal;
-    private Player appearedCheck;
     private Square possibleEnPassantSquare;
     private byte capturedPiece;
 
@@ -21,7 +20,6 @@ public class Move {
         this.promotionPiece = PieceUtil.EMPTY;
         this.isLegal = false;
         this.isCastlingMove = false;
-        this.appearedCheck = null;
         this.possibleEnPassantSquare = null;
         this.capturedPiece = PieceUtil.EMPTY;
     }
@@ -33,9 +31,18 @@ public class Move {
 
     @Override
     public boolean equals(Object o) {
+        if (o == this) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Move move = (Move) o;
-        return Objects.equals(targetSquare, move.targetSquare) && Objects.equals(startingSquare, move.startingSquare);
+        return Objects.equals(startingSquare, move.startingSquare) &&
+                Objects.equals(targetSquare, move.targetSquare) &&
+                promotionPiece == move.promotionPiece &&
+                isCastlingMove == move.isCastlingMove &&
+                isEnPassantMove == move.isEnPassantMove &&
+                isLegal == move.isLegal &&
+                Objects.equals(possibleEnPassantSquare, move.possibleEnPassantSquare) &&
+                capturedPiece == move.capturedPiece;
     }
 
     public Move clone() {
@@ -48,9 +55,8 @@ public class Move {
         clonedMove.isCastlingMove = this.isCastlingMove;
         clonedMove.isEnPassantMove = this.isEnPassantMove;
         clonedMove.isLegal = this.isLegal;
-        clonedMove.appearedCheck = this.appearedCheck;
         clonedMove.capturedPiece = this.capturedPiece;
-        if (clonedMove.possibleEnPassantSquare != null)
+        if (this.possibleEnPassantSquare != null)
             clonedMove.possibleEnPassantSquare = new Square(this.possibleEnPassantSquare.x(), this.possibleEnPassantSquare.y());
 
         return clonedMove;
@@ -58,7 +64,16 @@ public class Move {
 
     @Override
     public int hashCode() {
-        return Objects.hash(startingSquare, targetSquare);
+        return Objects.hash(
+                startingSquare,
+                targetSquare,
+                promotionPiece,
+                isCastlingMove,
+                isEnPassantMove,
+                isLegal,
+                possibleEnPassantSquare,
+                capturedPiece
+        );
     }
 
     public Square getStartingSquare() {
@@ -101,14 +116,6 @@ public class Move {
         isLegal = legal;
     }
 
-    public Player getAppearedCheck() {
-        return appearedCheck;
-    }
-
-    public void setAppearedCheck(Player appearedCheck) {
-        this.appearedCheck = appearedCheck;
-    }
-
     public Square getPossibleEnPassantSquare() {
         return possibleEnPassantSquare;
     }
@@ -135,6 +142,25 @@ public class Move {
 
     public void setCapturedPiece(byte capturedPiece) {
         this.capturedPiece = capturedPiece;
+    }
+
+    public int[] getDirection(boolean isKnightMove) {
+        if (startingSquare == null || targetSquare == null) {
+            return new int[]{0, 0};
+        }
+
+        int dx = targetSquare.x() - startingSquare.x();
+        int dy = targetSquare.y() - startingSquare.y();
+
+        if (isKnightMove)
+            return new int[]{dx, dy};
+
+        if (dx != 0)
+            dx = dx > 0 ? 1 : -1;
+        if (dy != 0)
+            dy = dy > 0 ? 1 : -1;
+
+        return new int[]{dx, dy};
     }
 
     /**

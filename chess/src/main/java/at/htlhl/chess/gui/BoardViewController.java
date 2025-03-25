@@ -334,7 +334,7 @@ public class BoardViewController implements Initializable {
     public boolean makeMove(Move move) {
         boolean success = field.move(move);
         if (success) {
-            updateUI(move);
+            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
             updateMoveOrder();
             playMoveSound(move);
         }
@@ -344,15 +344,15 @@ public class BoardViewController implements Initializable {
     /**
      * calls all ui update methods, like drawPieces or updateFEN
      *
-     * @param moveToHighlight for drawPieces
+     * @param squaresToHighlight for drawPieces
      */
-    private void updateUI(Move moveToHighlight) {
+    private void updateUI(ArrayList<Square> squaresToHighlight) {
         updateFENinFENTextArea();
         updateCapturedPieces();
         updateSuggestions();
         // I think clear arrows and draw pieces MUST be the last one
         clearArrows();
-        drawPieces(moveToHighlight, field.getSquareOfCheck());
+        drawPieces(squaresToHighlight, field.getSquareOfCheck());
     }
 
     /**
@@ -378,13 +378,13 @@ public class BoardViewController implements Initializable {
 
     /**
      * Draws chess pieces on the board based on the current state of the {@link Field}.
-     * Removes any existing pieces and adds new ones where applicable. Highlights the last move
+     * Removes any existing pieces and adds new ones where applicable. Highlights specific squares
      * with a yellow background and the king in check with a red radial gradient background.
      *
-     * @param moveToHighlight    The move to highlight with a yellow background (source and target squares).
+     * @param squaresToHighlight List of squares to highlight with a yellow background.
      * @param kingCheckHighlight The square containing the king in check, to highlight with a red radial gradient.
      */
-    private void drawPieces(Move moveToHighlight, Square kingCheckHighlight) {
+    private void drawPieces(ArrayList<Square> squaresToHighlight, Square kingCheckHighlight) {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 StackPane square = getSquarePane(chessBoard, col, row);
@@ -396,10 +396,8 @@ public class BoardViewController implements Initializable {
                 while (square.getChildren().size() > 1)
                     square.getChildren().remove(1);
 
-                // Add highlight for last move
-                if (moveToHighlight != null
-                        && ((col == moveToHighlight.getStartingSquare().x() && row == moveToHighlight.getStartingSquare().y())
-                        || (col == moveToHighlight.getTargetSquare().x() && row == moveToHighlight.getTargetSquare().y()))) {
+                // Add highlight for specified squares
+                if (squaresToHighlight != null && squaresToHighlight.contains(new Square(col, row))) {
                     Rectangle highlight = new Rectangle(INITIAL_SQUARE_SIZE, INITIAL_SQUARE_SIZE);
                     highlight.setFill(LAST_MOVE_HIGHLIGHT_COLOR);
                     highlight.widthProperty().bind(((Rectangle) square.getChildren().getFirst()).widthProperty());
