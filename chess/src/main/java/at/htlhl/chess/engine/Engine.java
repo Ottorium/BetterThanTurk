@@ -7,6 +7,7 @@ import at.htlhl.chess.boardlogic.util.PieceUtil;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class Engine {
 
@@ -39,7 +40,7 @@ public class Engine {
     }
 
     public ArrayList<EvaluatedMove> getBestMoves(long thinkingTimeNS) {
-        evaluatedMoves = new ArrayList<>(15);
+        evaluatedMoves = null;
         evaluatedPositions = 0;
         executedMoves = 0;
         maxDepth = 2;
@@ -70,13 +71,22 @@ public class Engine {
         }
     }
 
-    private void firstIteration(int maxDepth, int alpha, int beta, long endNanoTime) throws InterruptedException, TimeoutException{
+    private void firstIteration(int maxDepth, int alpha, int beta, long endNanoTime) throws InterruptedException, TimeoutException {
         var newEvaluatedMoves = new ArrayList<EvaluatedMove>(30);
         boolean isBlacksTurn = field.isBlackTurn();
         int bestScore = isBlacksTurn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-        var moves = field.getLegalMoves();
-        orderMoves(moves);
-        for (var move : moves) {
+        int worstScore = isBlacksTurn ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+
+        ArrayList<Move> moves;
+        if (evaluatedMoves == null) {
+            moves = field.getLegalMoves();
+            orderMoves(moves);
+        } else {
+            moves = evaluatedMoves.stream().map(EvaluatedMove::move).collect(Collectors.toCollection(ArrayList::new));
+        }
+
+        for (int i = 0; i < moves.size(); i++) {
+            var move = moves.get(i);
 
             int eval;
             try {
@@ -100,7 +110,8 @@ public class Engine {
             else
                 alpha = Math.max(alpha, eval);
             if (beta <= alpha) {
-                // TODO: add the rest of the moves to newEvaluatedMoves with worst score
+                for (int j = i + 1; j < moves.size(); j++)
+                    newEvaluatedMoves.add(new EvaluatedMove(moves.get(j), worstScore));
                 break;
             }
         }
