@@ -27,7 +27,7 @@ public class BotEntity extends PlayingEntity {
     }
 
     private void startEngine() {
-        connector.stopCurrentExecutions();
+        connector.renewExecutions();
         connector = new CustomEngineConnector(boardViewController.getField());
         connector.suggestMove(this::suggestMove);
     }
