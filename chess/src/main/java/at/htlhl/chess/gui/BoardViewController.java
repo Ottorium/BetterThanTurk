@@ -189,6 +189,7 @@ public class BoardViewController implements Initializable {
     private void undoMove() {
         field.undoMove();
         updateUI();
+        updateMoveOrder();
     }
 
     private void fillChoiceBoxes() {
