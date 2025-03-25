@@ -179,6 +179,8 @@ public class Field {
      */
     public void resetBoard() {
         trySetFEN(INITIAL_FEN);
+        capturedWhitePieces.clear();
+        capturedBlackPieces.clear();
     }
 
     /**
