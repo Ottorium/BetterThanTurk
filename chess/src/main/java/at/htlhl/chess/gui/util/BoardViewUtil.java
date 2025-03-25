@@ -6,25 +6,29 @@ import at.htlhl.chess.engine.EvaluatedMove;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
+import java.util.Optional;
+
 public class BoardViewUtil {
 
-    public BoardViewUtil (){
+    public BoardViewUtil() {
 
     }
 
     /**
      * Displays an error alert with the specified header and content text.
-     * @param headerText the header text for the alert
+     *
+     * @param headerText  the header text for the alert
      * @param contentText the content text for the alert
      */
-    public void alertProblem(String headerText, String contentText){
+    public void alertProblem(String headerText, String contentText) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(headerText);
@@ -34,11 +38,30 @@ public class BoardViewUtil {
     }
 
     /**
+     * Shows an alert with button to call a method back
+     *
+     * @param action method to call on button
+     */
+    public void alertWithAction(String headerText, String contentText, String buttonText, Runnable action) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Info");
+        alert.setHeaderText(headerText);
+        alert.setContentText(contentText);
+        ((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText(buttonText);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isEmpty() == false && result.get() == ButtonType.OK) {
+            action.run();
+        }
+    }
+
+    /**
      * Creates a HBox containing a move name, styled based on payer color
+     *
      * @param move to show
      * @return built HBox
      */
-    public HBox buildMoveBox(Move move, Player playerThatMoved){
+    public HBox buildMoveBox(Move move, Player playerThatMoved) {
         // Create the HBox container
         HBox box = new HBox();
         Text moveText = new Text(move.toString());
@@ -51,7 +74,7 @@ public class BoardViewUtil {
                         "-fx-border-radius: 4;" +      // Rounded corners for a modern look
                         "-fx-background-radius: 4;"    // Match background to border radius
         );
-        box.setMinWidth(100); // Ensure consistent sizing (adjust as needed)
+        box.setMinWidth(200); // Ensure consistent sizing (adjust as needed)
         box.setAlignment(Pos.CENTER_LEFT); // Align text neatly
 
         // Customize based on player
@@ -85,10 +108,11 @@ public class BoardViewUtil {
 
     /**
      * Creates a HBox with move and evaluation
+     *
      * @param move to build from
      * @return built box
      */
-    public HBox buildMoveBox(EvaluatedMove move, Player playerThatMoved){
+    public HBox buildMoveBox(EvaluatedMove move, Player playerThatMoved) {
         HBox box = buildMoveBox(move.move(), playerThatMoved);
         Text evaluation = new Text();
 

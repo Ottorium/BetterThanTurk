@@ -1,9 +1,6 @@
 package at.htlhl.chess.gui;
 
-import at.htlhl.chess.boardlogic.Field;
-import at.htlhl.chess.boardlogic.Move;
-import at.htlhl.chess.boardlogic.Player;
-import at.htlhl.chess.boardlogic.Square;
+import at.htlhl.chess.boardlogic.*;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 import at.htlhl.chess.engine.EvaluatedMove;
 import at.htlhl.chess.entities.BotEntity;
@@ -362,6 +359,7 @@ public class BoardViewController implements Initializable {
         // I think clear arrows and draw pieces MUST be the last one
         clearArrows();
         drawPieces(squaresToHighlight, field.getSquareOfCheck());
+        updateGameState();
     }
 
     /**
@@ -371,6 +369,11 @@ public class BoardViewController implements Initializable {
         updateUI(null);
     }
 
+    private void updateGameState(){
+        if (field.getGameState().equals(GameState.NOT_DECIDED) == false) {
+            boardViewUtil.alertWithAction("Game ended", String.valueOf(field.getGameState()), "New game", this::newGame);
+        }
+    }
     private void playMoveSound(Move move) {
         SoundEffect soundEffect;
         if (move.isCapture()) {
