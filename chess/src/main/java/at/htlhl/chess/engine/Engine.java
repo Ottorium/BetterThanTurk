@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class Engine {
 
-    public static final long DEFAULT_THINKING_TIME = 5_000_000_000l;
+    public static final long DEFAULT_THINKING_TIME = 2_500_000_000l;
     private Field field;
     private ArrayList<EvaluatedMove> evaluatedMoves = null;
     private int maxDepth;
