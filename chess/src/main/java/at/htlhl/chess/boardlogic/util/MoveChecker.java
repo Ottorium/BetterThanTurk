@@ -381,10 +381,13 @@ public class MoveChecker {
     }
 
     private boolean wouldPutCurrentPlayerInCheck(Move move) {
-        boolean isKnightMove = PieceUtil.isKnight(field.getPieceBySquare(move.getStartingSquare()));
+        Square startingSquare = move.getStartingSquare();
+        Square targetSquare = move.getTargetSquare();
+        byte startingPiece = getPieceBySquare(startingSquare);
+        boolean isKnightMove = PieceUtil.isKnight(startingPiece);
         // Check if the piece is pinned and if the move direction is allowed
         for (Pin pin : field.getPins()) {
-            if (pin.getPinnedPiece().equals(move.getStartingSquare())) {
+            if (pin.getPinnedPiece().equals(startingSquare)) {
                 var moveDirection = move.getDirection(isKnightMove);
                 var allowedDirections = pin.getAllowedMoveDirections();
                 if (allowedDirections.stream().noneMatch(dir -> Arrays.equals(dir, moveDirection)))
@@ -393,10 +396,10 @@ public class MoveChecker {
         }
 
         // If king is moving, make sure it's not moving to an attacked square
-        boolean isKingMove = PieceUtil.isKing(getPieceBySquare(move.getStartingSquare()));
+        boolean isKingMove = PieceUtil.isKing(startingPiece);
         if (isKingMove) {
-            ArrayList<Square> passivePlayerAttackSquares = field.getPassivePlayerAttackSquares();
-            if (passivePlayerAttackSquares.contains(move.getTargetSquare()))
+            var array = field.isBlackTurn() ? field.getWhiteAttackSquares() : field.getBlackAttackSquares();
+            if (array[targetSquare.getBoardIndex()] > 0)
                 return true;
         }
 
@@ -418,7 +421,7 @@ public class MoveChecker {
 
             // Otherwise, the move must block or capture the checking piece
             return possibleBlockingOrCapturingSquares.stream()
-                    .noneMatch(square -> square.equals(move.getTargetSquare()));
+                    .noneMatch(square -> square.equals(targetSquare));
         }
 
         // handle en passant discovered check
@@ -427,20 +430,20 @@ public class MoveChecker {
                     PieceUtil.isWhite(field.getPieceBySquare(kingSquare)) != field.isBlackTurn()).findFirst().orElse(null);
             if (kingPosition == null)
                 throw new IllegalStateException("King position not found for the current player.");
-            if (kingPosition.y() == move.getStartingSquare().y()) {
-                int capturedPawnY = move.getTargetSquare().y() + (field.isBlackTurn() ? -1 : 1);
-                Square capturedPawnSquare = new Square(move.getTargetSquare().x(), capturedPawnY);
-                byte originalStartingPiece = field.getPieceBySquare(move.getStartingSquare());
+            if (kingPosition.y() == startingSquare.y()) {
+                int capturedPawnY = targetSquare.y() + (field.isBlackTurn() ? -1 : 1);
+                Square capturedPawnSquare = new Square(targetSquare.x(), capturedPawnY);
+                byte originalStartingPiece = field.getPieceBySquare(startingSquare);
                 byte originalCapturedPawn = field.getPieceBySquare(capturedPawnSquare);
 
                 // simulate en passant move
-                setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+                setPieceBySquare(startingSquare, PieceUtil.EMPTY);
                 setPieceBySquare(capturedPawnSquare, PieceUtil.EMPTY);
 
                 boolean kingInCheck = manuallyTestIfKingIsChecked(kingPosition);
 
                 // restore board
-                setPieceBySquare(move.getStartingSquare(), originalStartingPiece);
+                setPieceBySquare(startingSquare, originalStartingPiece);
                 setPieceBySquare(capturedPawnSquare, originalCapturedPawn);
 
                 if (kingInCheck) return true;
