@@ -1,5 +1,6 @@
 package at.htlhl.chess.boardlogic;
 
+import at.htlhl.chess.boardlogic.util.FENParser;
 import at.htlhl.chess.boardlogic.util.PieceUtil;
 
 import java.util.Objects;
@@ -171,7 +172,7 @@ public class Move {
         Square endingSquare = Square.parseString(text.substring(2, 4));
         Move move = new Move(startingSquare, endingSquare);
         if (text.length() == 5){
-            move.setPromotionPiece(PieceUtil.getPieceByName(text.charAt(4)));
+            move.setPromotionPiece(FENParser.fenPieceMap.get(text.charAt(4)));
         }
         return move;
     }

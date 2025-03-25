@@ -8,8 +8,8 @@ import java.util.Hashtable;
 
 public class FENParser {
 
-    private static final Dictionary<Character, Byte> fenPieceMap = new Hashtable<>();
-    private static final Dictionary<Byte, Character> pieceFenMap = new Hashtable<>();
+    public static final Dictionary<Character, Byte> fenPieceMap = new Hashtable<>();
+    public static final Dictionary<Byte, Character> pieceFenMap = new Hashtable<>();
 
     static {
         fenPieceMap.put('p', PieceUtil.BLACK_PAWN);
