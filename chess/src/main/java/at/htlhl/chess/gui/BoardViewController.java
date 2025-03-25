@@ -11,6 +11,7 @@ import at.htlhl.chess.entities.PlayerEntity;
 import at.htlhl.chess.entities.PlayingEntity;
 import at.htlhl.chess.entities.StockfishEntity;
 import at.htlhl.chess.gui.util.*;
+import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -347,10 +348,7 @@ public class BoardViewController implements Initializable {
     public boolean makeMove(Move move) {
         boolean success = field.move(move);
         if (success) {
-            playMoveAnimation(move);
-            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
-            updateMoveOrder();
-            playMoveSound(move);
+            processMoveInGUI(move);
         }
         return success;
     }
@@ -459,7 +457,8 @@ public class BoardViewController implements Initializable {
         stackpane.getChildren().add(imageView);
     }
 
-    private void playMoveAnimation(Move move) {
+    private void processMoveInGUI(Move move) {
+        //play animation and then call updates
         ImageView movingPiece = null;
         for (Node node : getSquarePane(chessBoard, move.getStartingSquare().x(), move.getStartingSquare().y()).getChildren()) {
             if (node instanceof ImageView) {
@@ -470,11 +469,12 @@ public class BoardViewController implements Initializable {
         StackPane targetPane = getSquarePane(chessBoard, move.getTargetSquare().x(), move.getTargetSquare().y());
         if (movingPiece == null || targetPane == null) return;
 
+        ((StackPane) movingPiece.getParent()).getChildren().remove(movingPiece);
         //create transition
-        double startingX = squareSizeBinding.get()*move.getStartingSquare().x();
-        double startingY = squareSizeBinding.get()*move.getStartingSquare().y();
-        double targetX = squareSizeBinding.get()*move.getTargetSquare().x();
-        double targetY = squareSizeBinding.get()*move.getTargetSquare().y();
+        double startingX = squareSizeBinding.get() * move.getStartingSquare().x();
+        double startingY = squareSizeBinding.get() * move.getStartingSquare().y();
+        double targetX = squareSizeBinding.get() * move.getTargetSquare().x();
+        double targetY = squareSizeBinding.get() * move.getTargetSquare().y();
         double deltaX = targetX - startingX;
         double deltaY = targetY - startingY;
 
@@ -484,21 +484,22 @@ public class BoardViewController implements Initializable {
         clone.setFitHeight(movingPiece.getFitHeight());         // Copy height
         clone.setPreserveRatio(movingPiece.isPreserveRatio());  // Copy ratio setting
 
-        StackPane startingPane = (StackPane) movingPiece.getParent();
         animationPane.getChildren().add(clone);
         clone.setLayoutX(startingX);
         clone.setLayoutY(startingY);
 
-        TranslateTransition transition = new TranslateTransition(Duration.seconds(1));
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(0.15));
         transition.setNode(clone);
-        transition.setFromX(startingX);
-        transition.setFromY(startingY);
         transition.setToX(deltaX);
         transition.setToY(deltaY);
+        transition.setInterpolator(Interpolator.EASE_OUT);
 
         //remove piece from pane
         transition.setOnFinished(event -> {
             animationPane.getChildren().remove(clone);
+            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
+            updateMoveOrder();
+            playMoveSound(move);
         });
 
         transition.play();
