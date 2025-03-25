@@ -14,13 +14,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 import at.htlhl.chess.boardlogic.Move;
-import at.htlhl.chess.boardlogic.Square;
 import at.htlhl.chess.engine.EvaluatedMove;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 public class UCIClient {
 
+    private final String defaultThinkTime = "300";
     private Process process = null;
     private BufferedReader reader = null;
     private OutputStreamWriter writer = null;
@@ -30,6 +30,7 @@ public class UCIClient {
 
     /**
      * Looks if process is alive
+     *
      * @return true if is alive
      */
     public boolean isAlive() {
@@ -114,7 +115,7 @@ public class UCIClient {
     /**
      * Is used to tell engine process that we speak with uci
      */
-    public void initialiseEngineUci() {
+    private void initialiseEngineUci() {
         try {
             command("uci", Function.identity(), (s) -> s.startsWith("uciok"), 2000l);
         } catch (InterruptedException | ExecutionException e) {
@@ -169,11 +170,12 @@ public class UCIClient {
      * @return Move best move
      */
     public Move getBestMove() {
-        return getBestMove("3000");
+        return getBestMove(defaultThinkTime);
     }
 
     /**
      * Gets the best Moves array, with
+     *
      * @param thinkTime
      * @return
      */
@@ -185,37 +187,37 @@ public class UCIClient {
         final var pattern = Pattern.compile(analysisLineRegex);
         try {
             // To get 10 best moves
-            command("setoption name MultiPV value 10", Function.identity(), s->s.startsWith("readyok"), 2000l);
+            command("setoption name MultiPV value 10", Function.identity(), s -> s.startsWith("readyok"), 2000l);
             moves = command(
-                "go movetime " + thinkTime,
-                lines -> {
-                    Map<Integer, EvaluatedMove> result = new TreeMap<>();
-                    for(String line : lines) {
-                        var matcher = pattern.matcher(line);
-                        if (matcher.matches()) {
-                            Integer pv = Integer.parseInt(matcher.group(2));
-                            String move = matcher.group(6);                  // Move (e.g., "e2e4")
-                            String scoreType = matcher.group(3);            // "cp X" or "mate X"
-                            double score;
+                    "go movetime " + thinkTime,
+                    lines -> {
+                        Map<Integer, EvaluatedMove> result = new TreeMap<>();
+                        for (String line : lines) {
+                            var matcher = pattern.matcher(line);
+                            if (matcher.matches()) {
+                                Integer pv = Integer.parseInt(matcher.group(2));
+                                String move = matcher.group(6);                  // Move (e.g., "e2e4")
+                                String scoreType = matcher.group(3);            // "cp X" or "mate X"
+                                double score;
 
-                            if (scoreType.startsWith("cp")) {
-                                // Centipawn score (group 4 is the cp value)
-                                score = Double.parseDouble(matcher.group(4)) * 100.0; // Convert to pawns
-                            } else {
-                                // Mate score (group 5 is the mate value)
-                                int mateMoves = Integer.parseInt(matcher.group(5));
-                                // Assign a large value, positive for positive mate, negative for negative
-                                score = mateMoves > 0 ? 10000.0 - mateMoves : -10000.0 - mateMoves;
+                                if (scoreType.startsWith("cp")) {
+                                    // Centipawn score (group 4 is the cp value)
+                                    score = Double.parseDouble(matcher.group(4)) * 100.0; // Convert to pawns
+                                } else {
+                                    // Mate score (group 5 is the mate value)
+                                    int mateMoves = Integer.parseInt(matcher.group(5));
+                                    // Assign a large value, positive for positive mate, negative for negative
+                                    score = mateMoves > 0 ? 10000.0 - mateMoves : -10000.0 - mateMoves;
+                                }
+                                result.put(pv, new EvaluatedMove(Move.valueOf(move), (int) score));
                             }
-                            result.put(pv, new EvaluatedMove(Move.valueOf(move), (int) score));
                         }
-                    }
-                    return result;
-                },
-                s -> s.startsWith("bestmove"),
-                50000l);
+                        return result;
+                    },
+                    s -> s.startsWith("bestmove"),
+                    50000l);
             // To clear settings
-            command("setoption name MultiPV value 1", Function.identity(), s->s.startsWith("readyok"), 2000l);
+            command("setoption name MultiPV value 1", Function.identity(), s -> s.startsWith("readyok"), 2000l);
         } catch (InterruptedException | ExecutionException e) {
             System.err.println("Something went wrong while getting best Moves" + e.getMessage());
         } catch (TimeoutException e) {
@@ -229,10 +231,27 @@ public class UCIClient {
 
     /**
      * Gets 10 best moves in given position
+     *
      * @return
      */
     public List<EvaluatedMove> getBestMoves() {
-        return getBestMoves("3000");
+        return getBestMoves(defaultThinkTime);
+    }
+
+    /**
+     * sets stockfishe's threadcount to this number
+     *
+     * @param threadCount
+     */
+    public void setThreadCount(String threadCount) {
+        try {
+            command("setoption name Threads value " + threadCount, Function.identity(), s -> s.startsWith("readyok"),
+                    2000l);
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Something went wrong while setting the Thread count " + e.getMessage());
+        } catch (TimeoutException e) {
+            System.err.println("engine timeout");
+        }
     }
 }
 
