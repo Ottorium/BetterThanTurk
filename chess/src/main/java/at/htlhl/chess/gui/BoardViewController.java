@@ -510,7 +510,7 @@ public class BoardViewController implements Initializable {
         //remove piece from pane
         transition.setOnFinished(event -> {
             animationPane.getChildren().remove(clone);
-            updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare())));
+            Platform.runLater(() -> updateUI(new ArrayList<>(List.of(move.getStartingSquare(), move.getTargetSquare()))));
             updateMoveOrder();
             playMoveSound(move);
         });
