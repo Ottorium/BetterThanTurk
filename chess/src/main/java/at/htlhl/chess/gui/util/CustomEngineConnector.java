@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public class CustomEngineConnector extends EngineConnector {
 
-    private Engine engine;
+    private final Engine engine;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public CustomEngineConnector(Field field) {
