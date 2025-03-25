@@ -68,6 +68,8 @@ public class BoardViewController implements Initializable {
     private TextArea FENTextArea;
     @FXML
     private GridPane chessBoard;
+    @FXML
+    private Button undoButton;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
     private BoardViewUtil boardViewUtil = new BoardViewUtil();
@@ -172,6 +174,13 @@ public class BoardViewController implements Initializable {
         });
         clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
+
+        undoButton.setOnAction(l -> undoMove());
+    }
+
+    private void undoMove() {
+        field.undoMove();
+        updateUI();
     }
 
     private void fillChoiceBoxes() {
