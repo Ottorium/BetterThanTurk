@@ -516,8 +516,6 @@ public class BoardViewController implements Initializable {
         });
 
         transition.play();
-
-        System.out.println("Transition");
     }
 
 
