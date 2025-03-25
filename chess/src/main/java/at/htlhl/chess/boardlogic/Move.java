@@ -169,6 +169,10 @@ public class Move {
     public static Move valueOf(String text){
         Square startingSquare = Square.parseString(text.substring(0, 2));
         Square endingSquare = Square.parseString(text.substring(2, 4));
-        return new Move(startingSquare, endingSquare);
+        Move move = new Move(startingSquare, endingSquare);
+        if (text.length() == 5){
+            move.setPromotionPiece(PieceUtil.getPieceByName(text.charAt(4)));
+        }
+        return move;
     }
 }
