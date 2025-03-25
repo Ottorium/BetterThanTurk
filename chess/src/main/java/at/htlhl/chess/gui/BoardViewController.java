@@ -73,6 +73,8 @@ public class BoardViewController implements Initializable {
     private TextArea FENTextArea;
     @FXML
     private GridPane chessBoard;
+    @FXML
+    private Button undoButton;
     private DoubleBinding squareSizeBinding;
     private Pane arrowPane;
     private PlayingEntity blackPlayingEntity;
@@ -168,6 +170,13 @@ public class BoardViewController implements Initializable {
         engineForSuggChoiceBox.setOnAction(l -> updateSuggestions());
         clearSettingsButton.setOnAction(l -> clearSettings());
         fillChoiceBoxes();
+
+        undoButton.setOnAction(l -> undoMove());
+    }
+
+    private void undoMove() {
+        field.undoMove();
+        updateUI();
     }
 
     private void fillChoiceBoxes() {
