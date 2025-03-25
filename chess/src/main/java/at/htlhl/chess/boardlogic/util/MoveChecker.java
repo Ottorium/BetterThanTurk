@@ -86,7 +86,7 @@ public class MoveChecker {
      * @return A list of valid squares the rook can move to.
      */
     private List<Square> getPossibleRookTargetSquares(Square position, boolean isStartWhite, boolean captureOwnPieces) {
-        List<Square> squares = new ArrayList<>();
+        List<Square> squares = new ArrayList<>(14);
 
         for (int[] dir : rookDirections) {
             for (int i = 1; i < 8; i++) {

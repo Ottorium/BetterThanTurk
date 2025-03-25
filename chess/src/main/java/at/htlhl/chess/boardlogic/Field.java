@@ -328,21 +328,21 @@ public class Field {
      * @return the current gameState computed from the position of the board
      */
     private GameState computeGameState() {
-        if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50) {
+        if (playedHalfMovesSinceLastPawnMoveOrCapture >= 50)
             return GameState.DRAW;
-        }
 
 
         int current = Arrays.hashCode(board);
-
-        int count = positionCounts.getOrDefault(current, 0) + 1;
-        var before = (HashMap<Integer, Integer>) positionCounts.clone();
+        Integer previousCount = positionCounts.get(current);
+        int count = (previousCount != null ? previousCount : 0) + 1;
         positionCounts.put(current, count);
-        changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts = before));
-
-        if (count >= 3) {
+        if (previousCount == null)
+            changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts.remove(current)));
+        else
+            changesInLastMove.add(new FieldChange("positionCounts", undo -> positionCounts.put(current, previousCount)));
+        if (count >= 3)
             return GameState.DRAW; // Threefold repetition
-        }
+
 
 
         boolean insufficient = true;
