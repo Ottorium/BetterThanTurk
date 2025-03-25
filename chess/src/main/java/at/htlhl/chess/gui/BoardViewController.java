@@ -53,6 +53,7 @@ public class BoardViewController implements Initializable {
     private final Field field = new Field();
     private final BoardViewUtil boardViewUtil = new BoardViewUtil();
     private final List<Arrow> arrowsToDraw = new ArrayList<>(); // Will be reset after each move
+    public boolean playAnimations = true;
     @FXML
     public Button newGameButton;
     @FXML
@@ -488,7 +489,7 @@ public class BoardViewController implements Initializable {
         clone.setLayoutX(startingX);
         clone.setLayoutY(startingY);
 
-        TranslateTransition transition = new TranslateTransition(Duration.seconds(0.15));
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(playAnimations ? 0.1 : 0));
         transition.setNode(clone);
         transition.setToX(deltaX);
         transition.setToY(deltaY);
