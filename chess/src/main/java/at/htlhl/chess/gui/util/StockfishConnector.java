@@ -66,7 +66,9 @@ public class StockfishConnector extends EngineConnector {
         if (client.isAlive()) {
             client.close();
         }
-        executor.shutdownNow();
-        executor = null;
+        if( executor != null ) {
+            executor.shutdownNow();
+            executor = null;
+        }
     }
 }
