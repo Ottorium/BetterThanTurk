@@ -288,8 +288,7 @@ public class Field {
         check = attackedSquaresUtil.lookForCheck(blackTurn ? Player.BLACK : Player.WHITE);
         changesInLastMove.add(new FieldChange("checkBefore", undo -> check = checkBefore));
 
-        var legalMovesBefore = new ArrayList<Move>(legalMoves.size());
-        for (Move legalMove : legalMoves) legalMovesBefore.add(legalMove.clone());
+        var legalMovesBefore = legalMoves;
         legalMoves = moveChecker.getAllLegalMoves();
         changesInLastMove.add(new FieldChange("legalMoves", undo -> legalMoves = legalMovesBefore));
 
