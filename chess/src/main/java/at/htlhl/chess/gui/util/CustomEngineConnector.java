@@ -46,7 +46,8 @@ public class CustomEngineConnector extends EngineConnector {
      * Shuts down the Engine. Use this right before the {@link CustomEngineConnector} goes out of scope (fuck java for not having destructors)
      */
     public void shutdown() {
-        executor.shutdownNow();
+        if (executor != null)
+            executor.shutdownNow();
         executor = null;
     }
 
