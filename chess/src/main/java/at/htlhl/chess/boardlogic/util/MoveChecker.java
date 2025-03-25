@@ -421,6 +421,33 @@ public class MoveChecker {
                     .noneMatch(square -> square.equals(move.getTargetSquare()));
         }
 
+        // handle en passant discovered check
+        if (move.isEnPassantMove()) {
+            Square kingPosition = field.getCachedKingPositions().stream().filter(kingSquare ->
+                    PieceUtil.isWhite(field.getPieceBySquare(kingSquare)) != field.isBlackTurn()).findFirst().orElse(null);
+            if (kingPosition == null)
+                throw new IllegalStateException("King position not found for the current player.");
+            if (kingPosition.y() == move.getStartingSquare().y()) {
+                int capturedPawnY = move.getTargetSquare().y() + (field.isBlackTurn() ? -1 : 1);
+                Square capturedPawnSquare = new Square(move.getTargetSquare().x(), capturedPawnY);
+                byte originalStartingPiece = field.getPieceBySquare(move.getStartingSquare());
+                byte originalCapturedPawn = field.getPieceBySquare(capturedPawnSquare);
+
+                // simulate en passant move
+                setPieceBySquare(move.getStartingSquare(), PieceUtil.EMPTY);
+                setPieceBySquare(capturedPawnSquare, PieceUtil.EMPTY);
+
+                boolean kingInCheck = manuallyTestIfKingIsChecked(kingPosition);
+
+                // restore board
+                setPieceBySquare(move.getStartingSquare(), originalStartingPiece);
+                setPieceBySquare(capturedPawnSquare, originalCapturedPawn);
+
+                if (kingInCheck) return true;
+
+            }
+        }
+
         return false;
     }
 
